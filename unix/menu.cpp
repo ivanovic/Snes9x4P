@@ -45,7 +45,7 @@ void menu_dispupdate(void){
 		}	
 	}
 
-	strcpy(disptxt[0],"Snes9x for DINGUX(ver.20091014)");
+	strcpy(disptxt[0],"Snes9x for DINGUX(ver.20100218)");
 	strcpy(disptxt[1],"");
 	//strcpy(disptxt[2],"Resume Game          ");
 	strcpy(disptxt[2],"Reset Game           ");
@@ -280,7 +280,7 @@ void menu_loop(void){
 							vol = 0;
 					break;
 					case 10:
-						//ShowCredit();
+						ShowCredit();
 					break;
 					case 11:
 						if (keyssnes[sfc_key[A_1]] == SDL_PRESSED)

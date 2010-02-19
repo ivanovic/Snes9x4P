@@ -1,0 +1,20 @@
+Changlist using the following base http://www9.atpages.jp/~drowsnug95/?p=252 source code
+(http://www9.atpages.jp/~drowsnug95/wp-content/uploads/2009/10/snes9x_src.zip)
+
+ver 20100218
++Added Star Ocean support using the Star Ocean Grpahic Set.
+You have to put "sdd1gfx.dat" & "sdd1gfx.idx" in "local\home\.snes96_snapshots\socnsdd1\" of your Dingux OS.
+
+v1.39-ff
+-base source see changes.txt
+
+Blog:
+http://crankgaming.blogspot.com/
+
+Sources:
+svn://zwischenwelt.org:20684/dingoo/Snes9x-sdl-1.39ff
+
+Contact:
+seabeams at gmx.de
+
+^SiENcE
