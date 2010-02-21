@@ -1,5 +1,12 @@
-Changlist using the following base http://www9.atpages.jp/~drowsnug95/?p=252 source code
+changelist
+----------
+using the following codebase http://www9.atpages.jp/~drowsnug95/?p=252 source code
 (http://www9.atpages.jp/~drowsnug95/wp-content/uploads/2009/10/snes9x_src.zip)
+
+
+ver 20100221
++support for SDD1 Emu added (GraphicPack NOT needed anymore!! -> removed)
++Street Fighter Alpha 2 & Star Ocean (all work)
 
 ver 20100218
 +Added Star Ocean support using the Star Ocean Grpahic Set.
@@ -13,6 +20,13 @@ http://crankgaming.blogspot.com/
 
 Sources:
 svn://zwischenwelt.org:20684/dingoo/Snes9x-sdl-1.39ff
+
+
+
+compiled against + with elta's patches
+http://dingoo-linux.googlecode.com/files/dingux_toolchain_20091022.tar.bz2
+
+Use elta's root.
 
 Contact:
 seabeams at gmx.de
