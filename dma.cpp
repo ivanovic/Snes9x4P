@@ -53,16 +53,13 @@
 #include "gfx.h"
 #include "sa1.h"
 
-
-
-
 #ifdef SDD1_DECOMP
 #include "sdd1emu.h"
 #endif
 
 #ifdef SDD1_DECOMP
-uint32 __yo_for_alignement;
-uint8 *sdd1_buffer;//[0x10000];
+//uint8 *sdd1_buffer;//[0x10000];
+static uint8	sdd1_decode_buffer[0x10000];
 #endif
 
 
@@ -101,14 +98,14 @@ void S9xDoDMA (uint8 Channel)
 	
     cpu->InDMA = TRUE;
     bool8_32 in_sa1_dma = FALSE;
-    uint8 *in_sdd1_dma = NULL;
+	uint8 *in_sdd1_dma = NULL;
     uint8 *spc7110_dma=NULL;
     bool8_32 s7_wrap=false;
     SDMA *d = &DMA[Channel];
-	
 
     int count = d->TransferBytes;
-	
+
+	// Prepare for custom chip DMA
     if (count == 0)
 		count = 0x10000;
 	
@@ -132,121 +129,30 @@ void S9xDoDMA (uint8 Channel)
 			FLUSH_REDRAW ();
 		break;
     }
-    if (Settings.SDD1)
-    {
-		if (d->AAddressFixed && Memory.FillRAM [0x4801] > 0)
+
+	// S-DD1
+#ifdef SDD1_DECOMP
+	if (Settings.SDD1)
+	{
+		if (d->AAddressFixed && Memory.FillRAM[0x4801] > 0)
 		{
+			// XXX: Should probably verify that we're DMAing from ROM?
+			// And somewhere we should make sure we're not running across a mapping boundary too.
 			// Hacky support for pre-decompressed S-DD1 data
 			inc = !d->AAddressDecrement ? 1 : -1;
-			uint32 address = (((d->ABank << 16) | d->AAddress) & 0xfffff) << 4;
-			
-			address |= Memory.FillRAM [0x4804 + ((d->ABank - 0xc0) >> 4)];
-#ifdef SDD1_DECOMP
-			if(Settings.SDD1Pack)
-			{
-				uint8* in_ptr=GetBasePointer(((d->ABank << 16) | d->AAddress));
-				in_ptr+=d->AAddress;
 
-				SDD1_decompress(sdd1_buffer,in_ptr,d->TransferBytes);
-				in_sdd1_dma=sdd1_buffer;´
-/*
-#ifdef SDD1_VERIFY
-				void *ptr = bsearch (&address, Memory.SDD1Index, 
-					Memory.SDD1Entries, 12, S9xCompareSDD1IndexEntries);
-				if(memcmp(sdd1_buffer, ptr, d->TransferBytes))
-				{
-					uint8 *p = Memory.SDD1LoggedData;
-					bool8_32 found = FALSE;
-					uint8 SDD1Bank = Memory.FillRAM [0x4804 + ((d->ABank - 0xc0) >> 4)] | 0xf0;
-					
-					for (uint32 i = 0; i < Memory.SDD1LoggedDataCount; i++, p += 8)
-					{
-						if (*p == d->ABank ||
-							*(p + 1) == (d->AAddress >> 8) &&
-							*(p + 2) == (d->AAddress & 0xff) &&
-							*(p + 3) == (count >> 8) &&
-							*(p + 4) == (count & 0xff) &&
-							*(p + 7) == SDD1Bank)
-						{
-							found = TRUE;
-							break;
-						}
-					}
-					if (!found && Memory.SDD1LoggedDataCount < MEMMAP_MAX_SDD1_LOGGED_ENTRIES)
-					{
-						*p = d->ABank;
-						*(p + 1) = d->AAddress >> 8;
-						*(p + 2) = d->AAddress & 0xff;
-						*(p + 3) = count >> 8;
-						*(p + 4) = count & 0xff;
-						*(p + 7) = SDD1Bank;
-						Memory.SDD1LoggedDataCount += 1;
-					}
-				}
-#endif //SDD1_VERIFY
-*/
+			uint8	*in_ptr = GetBasePointer(((d->ABank << 16) | d->AAddress));
+			if (in_ptr)
+			{
+				in_ptr += d->AAddress;
+				SDD1_decompress(sdd1_decode_buffer, in_ptr, d->TransferBytes);
 			}
+			in_sdd1_dma = sdd1_decode_buffer;
+		}
 
-			else
-			{
-#endif //SDD1_DECOMP
-#if defined(__linux__) || defined (__WIN32__) || defined(__MACOSX__)
-			void *ptr = bsearch (&address, Memory.SDD1Index, 
-				Memory.SDD1Entries, 12, S9xCompareSDD1IndexEntries);
-			if (ptr)
-				in_sdd1_dma = *(uint32 *) ((uint8 *) ptr + 4) + Memory.SDD1Data;
-#else
-			uint8 *ptr = Memory.SDD1Index;
-			
-			for (uint32 e = 0; e < Memory.SDD1Entries; e++, ptr += 12)
-			{
-				if (address == *(uint32 *) ptr)
-				{
-					in_sdd1_dma = *(uint32 *) (ptr + 4) + Memory.SDD1Data;
-					break;
-				}
-			}
+		Memory.FillRAM[0x4801] = 0;
+	}
 #endif
-			
-			if (!in_sdd1_dma)
-			{
-				// No matching decompressed data found. Must be some new 
-				// graphics not encountered before. Log it if it hasn't been
-				// already.
-				uint8 *p = Memory.SDD1LoggedData;
-				bool8_32 found = FALSE;
-				uint8 SDD1Bank = Memory.FillRAM [0x4804 + ((d->ABank - 0xc0) >> 4)] | 0xf0;
-				
-				for (uint32 i = 0; i < Memory.SDD1LoggedDataCount; i++, p += 8)
-				{
-					if (*p == d->ABank ||
-						*(p + 1) == (d->AAddress >> 8) &&
-						*(p + 2) == (d->AAddress & 0xff) &&
-						*(p + 3) == (count >> 8) &&
-						*(p + 4) == (count & 0xff) &&
-						*(p + 7) == SDD1Bank)
-					{
-						found = TRUE;
-						break;
-					}
-				}
-				if (!found && Memory.SDD1LoggedDataCount < MEMMAP_MAX_SDD1_LOGGED_ENTRIES)
-				{
-					*p = d->ABank;
-					*(p + 1) = d->AAddress >> 8;
-					*(p + 2) = d->AAddress & 0xff;
-					*(p + 3) = count >> 8;
-					*(p + 4) = count & 0xff;
-					*(p + 7) = SDD1Bank;
-					Memory.SDD1LoggedDataCount += 1;
-				}
-			}
-		}
-#ifdef SDD1_DECOMP
-		}
-#endif
-		Memory.FillRAM [0x4801] = 0;
-    }
 /*
 	if(Settings.SPC7110&&(d->AAddress==0x4800||d->ABank==0x50))
 	{

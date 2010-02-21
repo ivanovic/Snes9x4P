@@ -206,7 +206,7 @@ bool8_32 CMemory::Init ()
     SFXPlotTable = ROM + 0x400000;
 #else
     SuperFX.pvRegisters = &Memory.FillRAM [0x3000];
-    SuperFX.nRamBanks = 1;
+    SuperFX.nRamBanks = 2;	// Most only use 1.  1=64KB, 2=128KB=1024Mb
     SuperFX.pvRam = ::SRAM;
     SuperFX.nRomBanks = (2 * 1024 * 1024) / (32 * 1024);
     SuperFX.pvRom = (uint8 *) ROM;
@@ -700,12 +700,11 @@ void CMemory::InitROM (bool8_32 Interleaved)
     Settings.MultiPlayer5Master = Settings.MultiPlayer5;
     Settings.MouseMaster = Settings.Mouse;
     Settings.SuperScopeMaster = Settings.SuperScope;
-    Settings.DSP1Master = Settings.ForceDSP1;
+    Settings.DSP1Master = TRUE; //Settings.ForceDSP1;
     Settings.SuperFX = FALSE;
     Settings.SA1 = FALSE;
     Settings.C4 = FALSE;
     Settings.SDD1 = TRUE;
-    Settings.SDD1Pack = TRUE;
     Settings.SRTC = FALSE;
 
     ZeroMemory (BlockIsRAM, MEMMAP_NUM_BLOCKS);
@@ -742,14 +741,14 @@ void CMemory::InitROM (bool8_32 Interleaved)
 	else
 	if ((ROMSpeed & ~0x10) == 0x25)
 	    TalesROMMap (Interleaved);
-#ifndef _ZAURUS
+//#ifndef _ZAURUS
 	else 
 	if ((ROMSpeed & ~0x10) == 0x22 &&
 	    strncmp (ROMName, "Super Street Fighter", 20) != 0)
 	{
 	    AlphaROMMap ();
 	}
-#endif
+//#endif
 	else
 	    HiROMMap ();
     }
@@ -779,10 +778,10 @@ void CMemory::InitROM (bool8_32 Interleaved)
 	Settings.SDD1 = Settings.ForceSDD1;
 	if ((ROMType & 0xf0) == 0x40)
 	    Settings.SDD1 = !Settings.ForceNoSDD1;
-
+/* flo:
 	if (Settings.SDD1)
 	    S9xLoadSDD1Data ();
-
+*/
 	Settings.C4 = Settings.ForceC4;
 	if ((ROMType & 0xf0) == 0xf0 &&
             (strncmp (ROMName, "MEGAMAN X", 9) == 0 ||
@@ -851,14 +850,14 @@ void CMemory::InitROM (bool8_32 Interleaved)
  	    SufamiTurboLoROMMap(); 
 	    Memory.SRAMSize = 3;
 	}
-#ifndef _ZAURUS
+//#ifndef _ZAURUS
 	else
 	if ((ROMSpeed & ~0x10) == 0x22 &&
 	    strncmp (ROMName, "Super Street Fighter", 20) != 0)
 	{
 	    AlphaROMMap ();
 	}
-#endif
+//#endif
 	else
 	    LoROMMap ();
     }
@@ -1009,8 +1008,8 @@ bool8_32 CMemory::LoadSRAM (const char *filename)
 	return (FALSE);
     }
 //#ifndef _ZAURUS
-    if (Settings.SDD1)
-	S9xSDD1LoadLoggedData ();
+//    if (Settings.SDD1)
+//	S9xSDD1LoadLoggedData ();
 //#endif
     return (TRUE);
 }
@@ -1026,8 +1025,8 @@ bool8_32 CMemory::SaveSRAM (const char *filename)
 	S9xSRTCPreSaveState ();
     }
 #endif
-    if (Settings.SDD1)
-	S9xSDD1SaveLoggedData ();
+//    if (Settings.SDD1)
+//	S9xSDD1SaveLoggedData ();
 //#endif
     if (size > 0x20000)
 	size = 0x20000;
@@ -2547,6 +2546,12 @@ if (ROM [adr] == ov) \
     {
 	RomPatch (0x1e4, 0x50, 0xea);
 	RomPatch (0x1e5, 0xfb, 0xea);
+    }
+
+    if (strncmp(ROMName, "FF MYSTIC QUEST",15) == 0)
+    {
+    	if (Settings.CyclesPercentage == 100) 
+    		Settings.H_Max = (SNES_CYCLES_PER_SCANLINE * 120) / 100;
     }
 }
 

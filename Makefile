@@ -6,7 +6,7 @@
 UNZIP=1
 #GLIDE=1
 #OPENGL=1
-#THREAD_SOUND=1
+THREAD_SOUND=1
 #ASMKREED=1
 
 
@@ -14,7 +14,6 @@ ifdef SPC700ASM
 SOUNDOBJ=spctool/spc700.o spctool/dsp.o spctool.o spctool/soundmod.o spc.o
 SOUNDDEFINES=-DSPCTOOL
 else
-#SOUNDOBJ=spc700.o soundux.o apu.o i386/spc.o
 SOUNDOBJ=spc700.o soundux.o apu.o
 SOUNDDEFINES=-DSPC700_C
 endif
@@ -39,7 +38,7 @@ OBJECTS=$(CPUOBJ) $(FXOBJ) $(C4OBJ) \
 	$(SOUNDOBJ) unix/svga.o sdd1.o sdd1emu.o dsp1.o \
     snes9x.o snapshot.o data.o globals.o \
 	$(KREEDOBJ)
-
+#sa1.o sa1cpu.o
 ifdef NETPLAY
 OBJECTS += netplay.o server.o
 NETPLAYDEFINES=-DNETPLAY_SUPPORT
@@ -53,7 +52,8 @@ endif
 
 ifdef THREAD_SOUND
 CPUDEFINES += -DUSE_THREADS
-EXTRALIBS += -lpthread -lcygipc
+EXTRALIBS += -lpthread
+#-lcygipc
 endif
 
 ifdef GLIDE
@@ -209,6 +209,7 @@ ppu.o: snes9x.h memmap.h ppu.h missing.h port.h cpuexec.h \
 dsp1.o: snes9x.h port.h dsp1.h
 sdd1.o: snes9x.h sdd1.h
 sdd1emu.o: sdd1emu.h
+#sa1.o: sa1.h
 snapshot.o: snapshot.h memmap.h snes9x.h 65c816.h ppu.h \
 	cpuexec.h display.h apu.h spc700.h soundux.h
 snes96.o: port.h snes9x.h memmap.h

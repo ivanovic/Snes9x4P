@@ -88,7 +88,7 @@ typedef long			int16_32;
 #define END_EXTERN_C
 #endif
 
-//#define SDD1_DECOMP
+#define SDD1_DECOMP
 
 #ifndef PATH_MAX
 #define PATH_MAX 1024

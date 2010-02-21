@@ -705,56 +705,67 @@ bool8_32 S9xDeinitUpdate (int Width, int Height)
 		}
 */
 //  		SDL_UnlockSurface(screen);
-		if (ffc < 5) {
+		if (ffc < 5)
+		{
 			SDL_UpdateRect(screen,0,0,0,0);
 			++ffc;
-		} else{
-//start stretch
-		int yoffset = 8*(Height == 224);
-		if(Scale){
-			int x,y,s;
-			uint32 x_error;
-			static uint32 x_fraction=52428;
-		 	char temp[512];
-			register uint8 *d;
-			//x_fraction = (SNES_WIDTH * 0x10000) / 320;		
-			//x_fraction = 52428;		
-
-			for (y = Height-1;y >= 0; y--)
-			{
-			    d = GFX.Screen + y * 640;
-			    memcpy(temp,d,512);
-			    d += yoffset*640;
-			    x_error = x_fraction;
-			    s=0;
-			    for (x = 0; x < 320; x++)
-			    {
-				x_error += x_fraction;
-				if(x_error >= 0x10000)
-				{
-				    *d++ = temp[s++];
-				    *d++ = temp[s++];
-				    x_error -= 0x10000;
-				}
-				else{  //同じ色を連続で登場させるとき混色処理（簡易アンチエイリアス）いれてみる
-					*d++ = ((temp[s-2] ^ temp[s])>>1)&0xEF | ((temp[s-2] & temp[s]));
-					*d++ = ((temp[s-1] ^ temp[s+1])>>1)&0x7B | ((temp[s-1] & temp[s+1]));
-				}
-			    }
-			}
 		}
+		else
+		{
+			//start stretch
+			int yoffset = 8*(Height == 224);
+			
+			if(Scale)
+			{
+				int x,y,s;
+				uint32 x_error;
+				static uint32 x_fraction=52428;
+			 	char temp[512];
+				register uint8 *d;
+				//x_fraction = (SNES_WIDTH * 0x10000) / 320;		
+				//x_fraction = 52428;		
+	
+				for (y = Height-1;y >= 0; y--)
+				{
+				    d = GFX.Screen + y * 640;
+				    memcpy(temp,d,512);
+				    d += yoffset*640;
+				    x_error = x_fraction;
+				    s=0;
+				    
+				    for (x = 0; x < 320; x++)
+				    {
+						x_error += x_fraction;
+						
+						if(x_error >= 0x10000)
+						{
+						    *d++ = temp[s++];
+						    *d++ = temp[s++];
+						    x_error -= 0x10000;
+						}
+						else
+						{
+							*d++ = ((temp[s-2] ^ temp[s])>>1)&0xEF | ((temp[s-2] & temp[s]));
+							*d++ = ((temp[s-1] ^ temp[s+1])>>1)&0x7B | ((temp[s-1] & temp[s+1]));
+						}
+				    }
+				}
+			}
 
-
-		if (GFX.InfoString)
-		    S9xDisplayString (GFX.InfoString, (uint8 *)screen->pixels + 64, 640,0);
-		else if (Settings.DisplayFrameRate)
-		    S9xDisplayFrameRate ((uint8 *)screen->pixels + 64, 640);
-
-//end stretch
-		if(Scale){
-			SDL_UpdateRect(screen,0,yoffset,320,Height+yoffset);
-		}else
-			SDL_UpdateRect(screen,32,0,256,Height);
+			if (GFX.InfoString)
+			    S9xDisplayString (GFX.InfoString, (uint8 *)screen->pixels + 64, 640,0);
+			else if (Settings.DisplayFrameRate)
+			    S9xDisplayFrameRate ((uint8 *)screen->pixels + 64, 640);
+	
+			//end stretch
+			if(Scale)
+			{
+				SDL_UpdateRect(screen,0,yoffset,320,Height+yoffset);
+			}
+			else
+			{
+				SDL_UpdateRect(screen,32,0,256,Height);
+			}
 		}
 //	}
 	return(TRUE);
@@ -1514,7 +1525,7 @@ fprintf(out_file, filename, "\n");
 
     if (dir)
     {
-fprintf(out_file, "Dir is da.\n");
+fprintf(out_file, " found.\n");
 		struct dirent *d;
 		
 		while ((d = readdir (dir)))
@@ -1532,7 +1543,8 @@ fprintf(out_file, "Dir is da.\n");
 			strcat (data, "/");
 			strcat (data, d->d_name);
 		    }
-		    /*if (strcasecmp (d->d_name, "SDD1GFX.PAT") == 0)
+		    /*
+		    if (strcasecmp (d->d_name, "SDD1GFX.PAT") == 0)
 		    {
 			strcpy (patch, filename);
 			strcat (patch, "/");
