@@ -188,122 +188,127 @@ void S9xDoDMA (uint8 Channel)
 		d->AAddress-=count;
 	}
 */
-    if (d->BAddress == 0x18 && SA1.in_char_dma && (d->ABank & 0xf0) == 0x40)
-    {
-		// Perform packed bitmap to PPU character format conversion on the
-		// data before transmitting it to V-RAM via-DMA.
-		int num_chars = 1 << ((Memory.FillRAM [0x2231] >> 2) & 7);
-		int depth = (Memory.FillRAM [0x2231] & 3) == 0 ? 8 :
-		(Memory.FillRAM [0x2231] & 3) == 1 ? 4 : 2;
-		
-		int bytes_per_char = 8 * depth;
-		int bytes_per_line = depth * num_chars;
-		int char_line_bytes = bytes_per_char * num_chars;
-		uint32 addr = (d->AAddress / char_line_bytes) * char_line_bytes;
-		uint8 *base = GetBasePointer ((d->ABank << 16) + addr) + addr;
-		uint8 *buffer = &Memory.ROM [CMemory::MAX_ROM_SIZE - 0x10000];
-		uint8 *p = buffer;
-		uint32 inc = char_line_bytes - (d->AAddress % char_line_bytes);
-		uint32 char_count = inc / bytes_per_char;
-		
-		in_sa1_dma = TRUE;
-		
-		//printf ("%08x,", base); fflush (stdout);
-		//printf ("depth = %d, count = %d, bytes_per_char = %d, bytes_per_line = %d, num_chars = %d, char_line_bytes = %d\n",
-		//depth, count, bytes_per_char, bytes_per_line, num_chars, char_line_bytes);
-		int i;
-		
-		switch (depth)
-		{
-		case 2:
-			for (i = 0; i < count; i += inc, base += char_line_bytes, 
-				inc = char_line_bytes, char_count = num_chars)
+//SiENcE:
+	// SA-1
+
+	if (Settings.SA1)
+	{
+	    if (d->BAddress == 0x18 && SA1.in_char_dma && (d->ABank & 0xf0) == 0x40)
+	    {
+			// Perform packed bitmap to PPU character format conversion on the
+			// data before transmitting it to V-RAM via-DMA.
+			int num_chars = 1 << ((Memory.FillRAM [0x2231] >> 2) & 7);
+			int depth = (Memory.FillRAM [0x2231] & 3) == 0 ? 8 :
+			(Memory.FillRAM [0x2231] & 3) == 1 ? 4 : 2;
+			
+			int bytes_per_char = 8 * depth;
+			int bytes_per_line = depth * num_chars;
+			int char_line_bytes = bytes_per_char * num_chars;
+			uint32 addr = (d->AAddress / char_line_bytes) * char_line_bytes;
+			uint8 *base = GetBasePointer ((d->ABank << 16) + addr) + addr;
+			uint8 *buffer = &Memory.ROM [CMemory::MAX_ROM_SIZE - 0x10000];
+			uint8 *p = buffer;
+			uint32 inc = char_line_bytes - (d->AAddress % char_line_bytes);
+			uint32 char_count = inc / bytes_per_char;
+			
+			in_sa1_dma = TRUE;
+			
+			//printf ("%08x,", base); fflush (stdout);
+			//printf ("depth = %d, count = %d, bytes_per_char = %d, bytes_per_line = %d, num_chars = %d, char_line_bytes = %d\n",
+			//depth, count, bytes_per_char, bytes_per_line, num_chars, char_line_bytes);
+			int i;
+			
+			switch (depth)
 			{
-				uint8 *line = base + (num_chars - char_count) * 2;
-				for (uint32 j = 0; j < char_count && p - buffer < count; 
-				j++, line += 2)
+			case 2:
+				for (i = 0; i < count; i += inc, base += char_line_bytes, 
+					inc = char_line_bytes, char_count = num_chars)
 				{
-					uint8 *q = line;
-					for (int l = 0; l < 8; l++, q += bytes_per_line)
+					uint8 *line = base + (num_chars - char_count) * 2;
+					for (uint32 j = 0; j < char_count && p - buffer < count; 
+					j++, line += 2)
 					{
-						for (int b = 0; b < 2; b++)
+						uint8 *q = line;
+						for (int l = 0; l < 8; l++, q += bytes_per_line)
 						{
-							uint8 r = *(q + b);
-							*(p + 0) = (*(p + 0) << 1) | ((r >> 0) & 1);
-							*(p + 1) = (*(p + 1) << 1) | ((r >> 1) & 1);
-							*(p + 0) = (*(p + 0) << 1) | ((r >> 2) & 1);
-							*(p + 1) = (*(p + 1) << 1) | ((r >> 3) & 1);
-							*(p + 0) = (*(p + 0) << 1) | ((r >> 4) & 1);
-							*(p + 1) = (*(p + 1) << 1) | ((r >> 5) & 1);
-							*(p + 0) = (*(p + 0) << 1) | ((r >> 6) & 1);
-							*(p + 1) = (*(p + 1) << 1) | ((r >> 7) & 1);
+							for (int b = 0; b < 2; b++)
+							{
+								uint8 r = *(q + b);
+								*(p + 0) = (*(p + 0) << 1) | ((r >> 0) & 1);
+								*(p + 1) = (*(p + 1) << 1) | ((r >> 1) & 1);
+								*(p + 0) = (*(p + 0) << 1) | ((r >> 2) & 1);
+								*(p + 1) = (*(p + 1) << 1) | ((r >> 3) & 1);
+								*(p + 0) = (*(p + 0) << 1) | ((r >> 4) & 1);
+								*(p + 1) = (*(p + 1) << 1) | ((r >> 5) & 1);
+								*(p + 0) = (*(p + 0) << 1) | ((r >> 6) & 1);
+								*(p + 1) = (*(p + 1) << 1) | ((r >> 7) & 1);
+							}
+							p += 2;
 						}
-						p += 2;
 					}
 				}
-			}
-			break;
-		case 4:
-			for (i = 0; i < count; i += inc, base += char_line_bytes, 
-				inc = char_line_bytes, char_count = num_chars)
-			{
-				uint8 *line = base + (num_chars - char_count) * 4;
-				for (uint32 j = 0; j < char_count && p - buffer < count; 
-				j++, line += 4)
+				break;
+			case 4:
+				for (i = 0; i < count; i += inc, base += char_line_bytes, 
+					inc = char_line_bytes, char_count = num_chars)
 				{
-					uint8 *q = line;
-					for (int l = 0; l < 8; l++, q += bytes_per_line)
+					uint8 *line = base + (num_chars - char_count) * 4;
+					for (uint32 j = 0; j < char_count && p - buffer < count; 
+					j++, line += 4)
 					{
-						for (int b = 0; b < 4; b++)
+						uint8 *q = line;
+						for (int l = 0; l < 8; l++, q += bytes_per_line)
 						{
-							uint8 r = *(q + b);
-							*(p +  0) = (*(p +  0) << 1) | ((r >> 0) & 1);
-							*(p +  1) = (*(p +  1) << 1) | ((r >> 1) & 1);
-							*(p + 16) = (*(p + 16) << 1) | ((r >> 2) & 1);
-							*(p + 17) = (*(p + 17) << 1) | ((r >> 3) & 1);
-							*(p +  0) = (*(p +  0) << 1) | ((r >> 4) & 1);
-							*(p +  1) = (*(p +  1) << 1) | ((r >> 5) & 1);
-							*(p + 16) = (*(p + 16) << 1) | ((r >> 6) & 1);
-							*(p + 17) = (*(p + 17) << 1) | ((r >> 7) & 1);
+							for (int b = 0; b < 4; b++)
+							{
+								uint8 r = *(q + b);
+								*(p +  0) = (*(p +  0) << 1) | ((r >> 0) & 1);
+								*(p +  1) = (*(p +  1) << 1) | ((r >> 1) & 1);
+								*(p + 16) = (*(p + 16) << 1) | ((r >> 2) & 1);
+								*(p + 17) = (*(p + 17) << 1) | ((r >> 3) & 1);
+								*(p +  0) = (*(p +  0) << 1) | ((r >> 4) & 1);
+								*(p +  1) = (*(p +  1) << 1) | ((r >> 5) & 1);
+								*(p + 16) = (*(p + 16) << 1) | ((r >> 6) & 1);
+								*(p + 17) = (*(p + 17) << 1) | ((r >> 7) & 1);
+							}
+							p += 2;
 						}
-						p += 2;
+						p += 32 - 16;
 					}
-					p += 32 - 16;
 				}
-			}
-			break;
-		case 8:
-			for (i = 0; i < count; i += inc, base += char_line_bytes, 
-				inc = char_line_bytes, char_count = num_chars)
-			{
-				uint8 *line = base + (num_chars - char_count) * 8;
-				for (uint32 j = 0; j < char_count && p - buffer < count; 
-				j++, line += 8)
+				break;
+			case 8:
+				for (i = 0; i < count; i += inc, base += char_line_bytes, 
+					inc = char_line_bytes, char_count = num_chars)
 				{
-					uint8 *q = line;
-					for (int l = 0; l < 8; l++, q += bytes_per_line)
+					uint8 *line = base + (num_chars - char_count) * 8;
+					for (uint32 j = 0; j < char_count && p - buffer < count; 
+					j++, line += 8)
 					{
-						for (int b = 0; b < 8; b++)
+						uint8 *q = line;
+						for (int l = 0; l < 8; l++, q += bytes_per_line)
 						{
-							uint8 r = *(q + b);
-							*(p +  0) = (*(p +  0) << 1) | ((r >> 0) & 1);
-							*(p +  1) = (*(p +  1) << 1) | ((r >> 1) & 1);
-							*(p + 16) = (*(p + 16) << 1) | ((r >> 2) & 1);
-							*(p + 17) = (*(p + 17) << 1) | ((r >> 3) & 1);
-							*(p + 32) = (*(p + 32) << 1) | ((r >> 4) & 1);
-							*(p + 33) = (*(p + 33) << 1) | ((r >> 5) & 1);
-							*(p + 48) = (*(p + 48) << 1) | ((r >> 6) & 1);
-							*(p + 49) = (*(p + 49) << 1) | ((r >> 7) & 1);
+							for (int b = 0; b < 8; b++)
+							{
+								uint8 r = *(q + b);
+								*(p +  0) = (*(p +  0) << 1) | ((r >> 0) & 1);
+								*(p +  1) = (*(p +  1) << 1) | ((r >> 1) & 1);
+								*(p + 16) = (*(p + 16) << 1) | ((r >> 2) & 1);
+								*(p + 17) = (*(p + 17) << 1) | ((r >> 3) & 1);
+								*(p + 32) = (*(p + 32) << 1) | ((r >> 4) & 1);
+								*(p + 33) = (*(p + 33) << 1) | ((r >> 5) & 1);
+								*(p + 48) = (*(p + 48) << 1) | ((r >> 6) & 1);
+								*(p + 49) = (*(p + 49) << 1) | ((r >> 7) & 1);
+							}
+							p += 2;
 						}
-						p += 2;
+						p += 64 - 16;
 					}
-					p += 64 - 16;
 				}
+				break;
 			}
-			break;
-		}
-    }
-//#endif
+	    }
+	}
 #ifdef DEBUGGER
     if (Settings.TraceDMA)
     {

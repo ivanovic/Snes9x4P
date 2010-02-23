@@ -53,7 +53,7 @@ void menu_dispupdate(void){
 	strcpy(disptxt[4],"Load State           ");
 	strcpy(disptxt[5],"State Slot              No.");
 	strcpy(disptxt[6],"Display Frame Rate     ");
-	strcpy(disptxt[7],"Full Screen            ");
+	strcpy(disptxt[7],"--------------"); //strcpy(disptxt[7],"Full Screen            ");
 	strcpy(disptxt[8],"Clock Speed          ");
 	strcpy(disptxt[9],"Sound Volume           ");
 	strcpy(disptxt[10],"Credit              ");
@@ -72,13 +72,13 @@ void menu_dispupdate(void){
 	else
 		sprintf(temp,"%sFalse",disptxt[6]);
 	strcpy(disptxt[6],temp);
-
+/*
 	if(Scale_org)
 		sprintf(temp,"%s True",disptxt[7]);
 	else
 		sprintf(temp,"%sFalse",disptxt[7]);
 	strcpy(disptxt[7],temp);
-
+*/
 	sprintf(temp,"%s %dMHz",disptxt[8],CLK_FREQ);
 	strcpy(disptxt[8],temp);
 
@@ -155,50 +155,17 @@ void menu_loop(void){
 	memcpy(snapscreen_tmp,snapscreen,17120);
 
 	Scale = FALSE;
+	Settings.SupportHiRes=FALSE;
+	S9xInitDisplay(0, 0);
+
 	set_FCLK(100);
 
 	menu_dispupdate();
 	usleep(100000);
 
 	SDL_Event event;
-	//一旦キーから手を離すのを待つ
-	/*
-	while(1) {
-			SDL_PollEvent(&event);
-			if (SDL_PollEvent(&event)==1)
-			{
-				keyssnes = SDL_GetKeyState(NULL);
-				if(keyssnes[sfc_key[B_1]] == SDL_RELEASED)
-				break;
-			}
-	}
-	*/
+
 	do {
-		//せっかくなのでバッテリー節約。スリープモードもどき。
-		/*
-		if(hold_state==1 && chk_hold()==1){
-			if(backlight_to_sleep>0){
-				backlight_to_sleep--;
-				set_lcd_backlight(backlight_to_sleep);
-			}
-			else{
-				set_FCLK(16);
-				backlight_to_sleep = 0;
-				sleep(2);
-			}
-			continue;
-		}
-		else if(hold_state==0 && chk_hold()==1){
-			hold_state = 1;
-			continue;
-		}
-		else if(hold_state==1 && chk_hold()==0){
-			hold_state = 0;
-			set_FCLK(200);
-			set_lcd_backlight(backlight);
-			backlight_to_sleep = backlight;
-		}
-		*/
 		menu_dispupdate();
 		usleep(100);
 		keyssnes = SDL_GetKeyState(NULL);
@@ -259,7 +226,7 @@ void menu_loop(void){
 						Settings.DisplayFrameRate =!Settings.DisplayFrameRate;
 					break;
 					case 7:
-						Scale_org = !Scale_org;
+//						Scale_org = !Scale_org;
 					break;
 					case 8:
 						if (keyssnes[sfc_key[LEFT_1]] == SDL_PRESSED)
@@ -294,8 +261,14 @@ void menu_loop(void){
 			break;
 			}
 		}
-	}while(exit_loop!=TRUE && keyssnes[sfc_key[B_1]] != SDL_PRESSED);
+	} while(exit_loop!=TRUE && keyssnes[sfc_key[B_1]] != SDL_PRESSED);
+	
 	Scale = Scale_org;
+
+	set_FCLK(CLK_FREQ);
+
+	Settings.SupportHiRes=TRUE;
+	S9xInitDisplay(0, 0);
 }
 
 
@@ -322,11 +295,10 @@ void load_screenshot(char *fname){
 }
 
 void capt_screenshot(){ //107px*80px
-	int s=0;
-	int yoffset =0;
+	int s = 0;
+	int yoffset = 0;
 	struct InternalPPU *ippu = &IPPU;
 
-	//memsetでもいいんじゃね？
 	for(int i=0;i<17120;i++){
 		snapscreen[i] = 0x11;
 	}
@@ -412,7 +384,7 @@ void ShowCredit(){
 	"",
 	"",
 	"",
-	"Snes9x for DINGOO",
+	"Snes9x for DINGUX",
 	"                                     ",
 	"Thank you using Snes9X !          ",
 	"                                     ",
@@ -423,8 +395,8 @@ void ShowCredit(){
 	" Reset Game: START + SEL + B "
 	"",
 	"",
-	"",
-	""
+	"this Version made by",
+	"SiENcE"
 	};
 
 	do{

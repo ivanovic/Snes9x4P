@@ -1,0 +1,80 @@
+Dingoo: 320×240 Pixel, 16 Bit Farbtiefe
+
+512 (Width) x480 (Height)
+256 (Width) *224 (Height)
+
+bool8 S9xInitUpdate (void) 
+
+Called just before Snes9x begins to render an SNES screen.
+Use this function if you should prepare before drawing, otherwise let it empty. 
+
+bool8 S9xDeinitUpdate (int width, int height) 
+
+Called once a complete SNES screen has been rendered into the GFX.Screen memory buffer,
+now is your chance to copy the SNES rendered screen to the host computer's screen memory.
+The problem is that you have to cope with different sized SNES rendered screens:
+256*224, 256*239, 512*224, 512*239, 512*448 and 512*478. 
+
+Global Variables 
+
+uint16 *GFX.Screen 
+
+A uint16 array pointer to (at least) 2*512*478 bytes buffer where Snes9x puts the rendered SNES screen.
+However, if your port will not support hires mode (Settings.SupportHiRes = false),
+then a 2*256*239 bytes buffer is allowed. You should allocate the space by yourself.
+As well you can change the GFX.Screen value after S9xDeinitUpdate function is called so that double-buffering will be easy.
+
+uint32 GFX.Pitch 
+
+Bytes per line (not pixels per line) of the GFX.Screen buffer. Typically set it to 1024.
+When the SNES screen is 256 pixels width and Settings.OpenGLEnable is false,
+last half 512 bytes per line are unused. When Settings.OpenGLEnable is true, GFX.Pitch is ignored.
+
+Settings structure
+
+There are various switches in the Settings structure. See snes9x.h for details.
+At least the settings below are required for good emulation.
+
+memset(&Settings, 0, sizeof(Settings));
+Settings.MouseMaster = true;
+Settings.SuperScopeMaster = true;
+Settings.MultiPlayer5Master = true;
+Settings.JustifierMaster = true;
+Settings.ShutdownMaster = false;
+Settings.BlockInvalidVRAMAccess = true;
+Settings.HDMATimingHack = 100;
+Settings.APUEnabled = true;
+Settings.NextAPUEnabled = true;
+Settings.SoundPlaybackRate = 32000;
+Settings.Stereo = true;
+Settings.SixteenBitSound = true;
+Settings.SoundEnvelopeHeightReading = true;
+Settings.DisableSampleCaching = true;
+Settings.InterpolatedSound = true;
+Settings.Transparency = true;
+Settings.SupportHiRes = true;
+Settings.SDD1Pack = true;
+Updated most recently by: zones
+
+Normally only 256x224 or 256x239 pixels are visible on screen and backgrounds
+have a scroll setting that allows the screen to act as a window onto any
+portion of their virtual size.
+
+Two background modes are available that can display up to 512x478 pixels,
+but they're not used by many games because the flicker, caused by the
+interlace used display the image on a standard television, would give game
+players headaches.
+
+Interlace
+---------
+
+The SNES normally generates a non-interlaced picture. Interlace can turned
+on and the only thing that happens is that the screen appears to flicker
+slightly due to the way a television works.  However, in the two hi-res.
+background screen modes, if interlace is turned on the vertical resolution
+doubles from 512x224 to 512x448 (or 512x478 if the expand vertical flag is
+also set).
+
+Not many games use the feature due to the flicker introduced by the
+interlace, so its use is normally limited to title screens. However, one
+game I know of, RPM Racing, uses the effect during the game. 

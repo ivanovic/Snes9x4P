@@ -237,7 +237,7 @@ int main (int argc, char **argv)
     Settings.ControllerOption = 0;
     Settings.Transparency = TRUE;
     Settings.SixteenBit = TRUE;
-    Settings.SupportHiRes = FALSE;
+    Settings.SupportHiRes = TRUE;  //FALSE
     Settings.NetPlay = FALSE;
     Settings.ServerName [0] = 0;
     Settings.ThreadSound = TRUE;
@@ -646,44 +646,20 @@ bool8_32 S9xInitUpdate ()
 
 bool8_32 S9xDeinitUpdate (int Width, int Height)
 {
-//	int i;
-	//register uint32 lp = (xs > 256) ? 16 : 0;
+	register uint32 lp = (xs > 256) ? 16 : 0;
 
-//	if (Width > 256 || vga)
-//		lp *= 2;
+	if (Width > 256 || vga)
+		lp *= 2;
 
- //	SDL_LockSurface(screen);
-/*
-	if (vga) {
-		if (Width > 256) {
-			for (register uint32 i = 0; i < Height; i++) {
-				register uint32 *dp32 = (uint32 *)(screen->pixels) + ((i + cl) * xs) + lp;
-				register uint32 *sp32 = (uint32 *)(GFX.Screen) + (i << 8) + cs;
-				for (register uint32 j = 0; j < 256; j++)
-					*dp32++ = *sp32++;
-			}
-		} else {
-			for (register uint32 i = 0; i < Height; i++) {
-				register uint16 *dp16 = (uint16 *)(screen->pixels) + ((i + cl) * xs) * 2 + 64;
-				register uint16 *sp16 = (uint16 *)(GFX.Screen) + (i << 9) + cs;
-				for (register uint32 j = 0; j < 256; j++, dp16+=2, sp16++) {
-					*dp16 = *(dp16+1) = *sp16;
-				}
-			}
-		}
-		if (Settings.DisplayFrameRate)
-		    S9xDisplayFrameRate ((uint8 *)screen->pixels + 128, 2560);
-		if (GFX.InfoString)
-		    S9xDisplayString (GFX.InfoString, (uint8 *)screen->pixels + 128, 2560);
-//  		SDL_UnlockSurface(screen);
-		if (ffc < 5) {
-			SDL_UpdateRect(screen,0,0,0,0);
-			++ffc;
-		} else
-			SDL_UpdateRect(screen,64,0,512,480);
-	} else {
-*/
-/*
+// 	SDL_LockSurface(screen);
+
+	if (ffc < 5)
+	{
+		SDL_UpdateRect(screen,0,0,0,0);
+		++ffc;
+	}
+	else
+	{
 		if (Settings.SupportHiRes) {
 			if (Width > 256) {
 				for (register uint32 i = 0; i < Height; i++) {
@@ -703,71 +679,63 @@ bool8_32 S9xDeinitUpdate (int Width, int Height)
 				}
 			}
 		}
-*/
-//  		SDL_UnlockSurface(screen);
-		if (ffc < 5)
+		/*
+		//start stretch
+		int yoffset = 8*(Height == 224);
+		if(Scale)
 		{
-			SDL_UpdateRect(screen,0,0,0,0);
-			++ffc;
+			int x,y,s;
+			uint32 x_error;
+			static uint32 x_fraction=52428;
+		 	char temp[512];
+			register uint8 *d;
+			//x_fraction = (SNES_WIDTH * 0x10000) / 320;		
+			//x_fraction = 52428;		
+	
+			for (y = Height-1;y >= 0; y--)
+			{
+			    d = GFX.Screen + y * 640;
+			    memcpy(temp,d,512);
+			    d += yoffset*640;
+			    x_error = x_fraction;
+			    s=0;
+
+			    for (x = 0; x < 320; x++)
+			    {
+					x_error += x_fraction;
+
+					if(x_error >= 0x10000)
+					{
+					    *d++ = temp[s++];
+					    *d++ = temp[s++];
+					    x_error -= 0x10000;
+					}
+					else
+					{
+						*d++ = ((temp[s-2] ^ temp[s])>>1)&0xEF | ((temp[s-2] & temp[s]));
+						*d++ = ((temp[s-1] ^ temp[s+1])>>1)&0x7B | ((temp[s-1] & temp[s+1]));
+					}
+			    }
+			}
+		}
+		//end stretch
+		*/		
+		if (GFX.InfoString)
+		    S9xDisplayString (GFX.InfoString, (uint8 *)screen->pixels + 64, 640,0);
+		else if (Settings.DisplayFrameRate)
+		    S9xDisplayFrameRate ((uint8 *)screen->pixels + 64, 640);
+		/*
+		if(Scale)
+		{
+			SDL_UpdateRect(screen,0,yoffset,320,Height+yoffset);
 		}
 		else
-		{
-			//start stretch
-			int yoffset = 8*(Height == 224);
-			
-			if(Scale)
-			{
-				int x,y,s;
-				uint32 x_error;
-				static uint32 x_fraction=52428;
-			 	char temp[512];
-				register uint8 *d;
-				//x_fraction = (SNES_WIDTH * 0x10000) / 320;		
-				//x_fraction = 52428;		
-	
-				for (y = Height-1;y >= 0; y--)
-				{
-				    d = GFX.Screen + y * 640;
-				    memcpy(temp,d,512);
-				    d += yoffset*640;
-				    x_error = x_fraction;
-				    s=0;
-				    
-				    for (x = 0; x < 320; x++)
-				    {
-						x_error += x_fraction;
-						
-						if(x_error >= 0x10000)
-						{
-						    *d++ = temp[s++];
-						    *d++ = temp[s++];
-						    x_error -= 0x10000;
-						}
-						else
-						{
-							*d++ = ((temp[s-2] ^ temp[s])>>1)&0xEF | ((temp[s-2] & temp[s]));
-							*d++ = ((temp[s-1] ^ temp[s+1])>>1)&0x7B | ((temp[s-1] & temp[s+1]));
-						}
-				    }
-				}
-			}
+		{*/
+			SDL_UpdateRect(screen,32,0,256,Height);
+		//}
+	}
 
-			if (GFX.InfoString)
-			    S9xDisplayString (GFX.InfoString, (uint8 *)screen->pixels + 64, 640,0);
-			else if (Settings.DisplayFrameRate)
-			    S9xDisplayFrameRate ((uint8 *)screen->pixels + 64, 640);
-	
-			//end stretch
-			if(Scale)
-			{
-				SDL_UpdateRect(screen,0,yoffset,320,Height+yoffset);
-			}
-			else
-			{
-				SDL_UpdateRect(screen,32,0,256,Height);
-			}
-		}
-//	}
+//	SDL_UnlockSurface(screen);
 	return(TRUE);
 }
 
@@ -910,65 +878,65 @@ void S9xSyncSpeed ()
 	S9xProcessEvents (FALSE);
     if (!Settings.TurboMode && Settings.SkipFrames == AUTO_FRAMERATE)
     {
-	static struct timeval next1 = {0, 0};
-	struct timeval now;
-
-	while (gettimeofday (&now, NULL) < 0) ;
-	if (next1.tv_sec == 0)
-	{
-	    next1 = now;
-	    next1.tv_usec++;
-	}
-
-	if (timercmp(&next1, &now, >))
-	{
-	    if (IPPU.SkippedFrames == 0)
-	    {
-		do
+		static struct timeval next1 = {0, 0};
+		struct timeval now;
+	
+		while (gettimeofday (&now, NULL) < 0) ;
+		if (next1.tv_sec == 0)
 		{
-		    CHECK_SOUND ();
-//		    S9xProcessEvents (FALSE);
-		    while (gettimeofday (&now, NULL) < 0) ;
-		} while (timercmp(&next1, &now, >));
-	    }
-	    IPPU.RenderThisFrame = TRUE;
-	    IPPU.SkippedFrames = 0;
-	}
-	else
-	{
-	    if (IPPU.SkippedFrames < mfs)
-	    {
-		IPPU.SkippedFrames++;
-		IPPU.RenderThisFrame = FALSE;
-	    }
-	    else
-	    {
-		IPPU.RenderThisFrame = TRUE;
-		IPPU.SkippedFrames = 0;
-		next1 = now;
-	    }
-	}
-	next1.tv_usec += Settings.FrameTime;
-	if (next1.tv_usec >= 1000000)
-	{
-	    next1.tv_sec += next1.tv_usec / 1000000;
-	    next1.tv_usec %= 1000000;
-	}
+		    next1 = now;
+		    next1.tv_usec++;
+		}
+	
+		if (timercmp(&next1, &now, >))
+		{
+		    if (IPPU.SkippedFrames == 0)
+		    {
+			do
+			{
+			    CHECK_SOUND ();
+	//		    S9xProcessEvents (FALSE);
+			    while (gettimeofday (&now, NULL) < 0) ;
+			} while (timercmp(&next1, &now, >));
+		    }
+		    IPPU.RenderThisFrame = TRUE;
+		    IPPU.SkippedFrames = 0;
+		}
+		else
+		{
+		    if (IPPU.SkippedFrames < mfs)
+		    {
+			IPPU.SkippedFrames++;
+			IPPU.RenderThisFrame = FALSE;
+		    }
+		    else
+		    {
+			IPPU.RenderThisFrame = TRUE;
+			IPPU.SkippedFrames = 0;
+			next1 = now;
+		    }
+		}
+		next1.tv_usec += Settings.FrameTime;
+		if (next1.tv_usec >= 1000000)
+		{
+		    next1.tv_sec += next1.tv_usec / 1000000;
+		    next1.tv_usec %= 1000000;
+		}
     }
     else
     {
-	if (++IPPU.FrameSkip >= (Settings.TurboMode ? Settings.TurboSkipFrames
-						    : Settings.SkipFrames))
-	{
-	    IPPU.FrameSkip = 0;
-	    IPPU.SkippedFrames = 0;
-	    IPPU.RenderThisFrame = TRUE;
-	}
-	else
-	{
-	    IPPU.SkippedFrames++;
-	    IPPU.RenderThisFrame = FALSE;
-	}
+		if (++IPPU.FrameSkip >= (Settings.TurboMode ? Settings.TurboSkipFrames
+							    : Settings.SkipFrames))
+		{
+		    IPPU.FrameSkip = 0;
+		    IPPU.SkippedFrames = 0;
+		    IPPU.RenderThisFrame = TRUE;
+		}
+		else
+		{
+		    IPPU.SkippedFrames++;
+		    IPPU.RenderThisFrame = FALSE;
+		}
     }
 }
 
@@ -983,9 +951,7 @@ void S9xProcessEvents (bool8_32 block)
 		case SDL_KEYDOWN:
 			keyssnes = SDL_GetKeyState(NULL);
 
-			if /*(event.key.keysym.sym == sfc_key[QUIT])
-				S9xExit();
-			else if*/ ((keyssnes[sfc_key[SELECT_1]] == SDL_PRESSED) && (keyssnes[sfc_key[START_1]] == SDL_PRESSED) && (keyssnes[sfc_key[B_1]] == SDL_PRESSED))
+			if ((keyssnes[sfc_key[SELECT_1]] == SDL_PRESSED) && (keyssnes[sfc_key[START_1]] == SDL_PRESSED) && (keyssnes[sfc_key[B_1]] == SDL_PRESSED))
 				S9xReset();
 			else if ( (keyssnes[sfc_key[SELECT_1]] == SDL_PRESSED) &&(keyssnes[sfc_key[START_1]] == SDL_PRESSED) && (keyssnes[sfc_key[X_1]] == SDL_PRESSED) )
 				S9xExit();
@@ -1014,37 +980,8 @@ void S9xProcessEvents (bool8_32 block)
 			else if ((keyssnes[sfc_key[SELECT_1]] == SDL_PRESSED)&&(keyssnes[sfc_key[B_1]] == SDL_PRESSED) ) {
 				gp2x_sound_volume(0, 0);
 				menu_loop();
-				set_FCLK(CLK_FREQ);
-				S9xInitDisplay(0, 0);
 				gp2x_sound_volume(vol, vol);
 			}
-
-/*
-      		if (event.key.keysym.sym == SDLK_0)
-				Settings.DisplayFrameRate = !Settings.DisplayFrameRate;
-		    else if (event.key.keysym.sym == SDLK_1)	PPU.BG_Forced ^= 1;
-		    else if (event.key.keysym.sym == SDLK_2)	PPU.BG_Forced ^= 2;
-		    else if (event.key.keysym.sym == SDLK_3)	PPU.BG_Forced ^= 4;
-		    else if (event.key.keysym.sym == SDLK_4)	PPU.BG_Forced ^= 8;
-		    else if (event.key.keysym.sym == SDLK_5)	PPU.BG_Forced ^= 16;
-			else if (event.key.keysym.sym == SDLK_6)	num = 1;
-			else if (event.key.keysym.sym == SDLK_7)	num = 2;
-			else if (event.key.keysym.sym == SDLK_8)	num = 3;
-			else if (event.key.keysym.sym == SDLK_9)	num = 4;
-			else if (event.key.keysym.sym == SDLK_r) {
-			    if (event.key.keysym.mod & KMOD_SHIFT)
-					S9xReset();
-			}
-			if (num) {
-				char fname[256], ext[8];
-				sprintf(ext, ".00%d", num - 1);
-				strcpy(fname, S9xGetFilename (ext));
-			    if (event.key.keysym.mod & KMOD_SHIFT)
-				    S9xFreezeGame (fname);
-				else
-					S9xLoadSnapshot (fname);
-			}
-*/
 			break;
 		case SDL_KEYUP:
 			keyssnes = SDL_GetKeyState(NULL);
