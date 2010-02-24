@@ -3,6 +3,18 @@ changelist
 using the following codebase http://www9.atpages.jp/~drowsnug95/?p=252 source code
 (http://www9.atpages.jp/~drowsnug95/wp-content/uploads/2009/10/snes9x_src.zip)
 
+ver 20100224
+Highres Font problems with
++Secret of Mana,
++Seiken Densetsu 3 and
++Rudra of Hibou solved.
++Soul Blazer works now (i think only the german version was not working!?)
+
+Notes:
++I added ZIP support (one ROM -> one ZIPfile)
+-I deactivate Fullscreen for now, because it's not working with Font Highres mode.
+-Most DSP1 Games should work. But slow. Very slow.
+-I actived threaded Soundsystem. Maybe this improves Sound-Speed.
 
 ver 20100221
 +support for SDD1 Emu added (GraphicPack NOT needed anymore!! -> removed)

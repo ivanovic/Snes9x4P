@@ -197,7 +197,6 @@ void menu_loop(void){
 							sprintf(ext, ".s0%d", SaveSlotNum);
 							strcpy(fname, S9xGetFilename (ext));
 							save_screenshot(fname);
-
 							sprintf(ext, ".00%d", SaveSlotNum);
 							strcpy(fname, S9xGetFilename (ext));
 							S9xFreezeGame (fname);
@@ -285,7 +284,6 @@ void save_screenshot(char *fname){
 }
 
 void load_screenshot(char *fname){
-/*
 	FILE *fs = fopen (fname,"rb");
 	if(fs==NULL){
 		for(int i=0;i<17120;i++){
@@ -295,11 +293,9 @@ void load_screenshot(char *fname){
 	}
 	fread(snapscreen,17120,1,fs);
 	fclose(fs);
-*/
 }
 
 void capt_screenshot(){ //107px*80px
-/*
 	int s = 0;
 	int yoffset = 0;
 	struct InternalPPU *ippu = &IPPU;
@@ -319,11 +315,9 @@ void capt_screenshot(){ //107px*80px
 		}
 		s+=20*(Scale_disp!=TRUE);
 	}
-*/
 }
 
 void show_screenshot(){
-/*
 	int s=0;
 	for(int y=126;y<126+80;y++){
 		for(int x=248+ 64*(Scale_disp==TRUE);x<248+107*2+ 64*(Scale_disp==TRUE);x+=2){
@@ -332,7 +326,6 @@ void show_screenshot(){
 			*d++ = snapscreen[s++];
 		}
 	}
-*/
 }
 
 int batt_level(void){
@@ -403,8 +396,8 @@ void ShowCredit(){
 	" Reset Game: START + SEL + B "
 	"",
 	"",
-	"this Version made by",
-	"SiENcE"
+	"made by SiENcE",
+	""
 	};
 
 	do{
