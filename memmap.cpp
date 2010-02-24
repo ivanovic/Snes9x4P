@@ -700,7 +700,7 @@ void CMemory::InitROM (bool8_32 Interleaved)
     Settings.MultiPlayer5Master = Settings.MultiPlayer5;
     Settings.MouseMaster = Settings.Mouse;
     Settings.SuperScopeMaster = Settings.SuperScope;
-    Settings.DSP1Master = TRUE; //Settings.ForceDSP1;
+    Settings.DSP1Master = Settings.ForceDSP1;
     Settings.SuperFX = FALSE;
     Settings.SA1 = FALSE;
     Settings.C4 = FALSE;
@@ -2074,6 +2074,7 @@ void CMemory::ApplyROMFixes ()
 	strncasecmp (ROMName, "ActRaiser", 9) == 0 ||
     // Soulblazer
 	strcmp (ROMName, "SOULBLAZER - 1 USA") == 0 ||
+	strncmp (ROMName, "SOULBLAZER 1",12) == 0 ||
 	strcmp (ROMName, "SOULBLADER - 1") == 0 ||
     // Terranigma
 	strncmp (ROMId, "AQT", 3) == 0 ||

@@ -178,7 +178,7 @@ osnes9x: $(OBJECTS) unix/x11.o $(OPENGLOBJS)
 	$(NASM) -f elf $(FXDEFINES) -i . -i i386 -o $@ $*.asm
 
 clean:
-	rm -f $(OBJECTS) offsets.o unix/unix.o unix/svga.o
+	rm -f $(OBJECTS) offsets.o unix/unix.o unix/svga.o *.gcno
 #release: CCFLAGS += -DNO_DEBUGGER
 
 release: clean all

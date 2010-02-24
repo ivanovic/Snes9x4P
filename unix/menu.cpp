@@ -45,7 +45,7 @@ void menu_dispupdate(void){
 		}	
 	}
 
-	strcpy(disptxt[0],"Snes9x for DINGUX(ver.20100218)");
+	strcpy(disptxt[0],"Snes9x for DINGUX (ver.20100224)");
 	strcpy(disptxt[1],"");
 	//strcpy(disptxt[2],"Resume Game          ");
 	strcpy(disptxt[2],"Reset Game           ");
@@ -273,6 +273,7 @@ void menu_loop(void){
 
 
 void save_screenshot(char *fname){
+/*
 	FILE  *fs = fopen (fname,"wb");
 	if(fs==NULL)
 		return;
@@ -280,9 +281,11 @@ void save_screenshot(char *fname){
 	fwrite(snapscreen,17120,1,fs);
 	fclose (fs);
 	sync();
+*/
 }
 
 void load_screenshot(char *fname){
+/*
 	FILE *fs = fopen (fname,"rb");
 	if(fs==NULL){
 		for(int i=0;i<17120;i++){
@@ -292,9 +295,11 @@ void load_screenshot(char *fname){
 	}
 	fread(snapscreen,17120,1,fs);
 	fclose(fs);
+*/
 }
 
 void capt_screenshot(){ //107px*80px
+/*
 	int s = 0;
 	int yoffset = 0;
 	struct InternalPPU *ippu = &IPPU;
@@ -314,9 +319,11 @@ void capt_screenshot(){ //107px*80px
 		}
 		s+=20*(Scale_disp!=TRUE);
 	}
+*/
 }
 
 void show_screenshot(){
+/*
 	int s=0;
 	for(int y=126;y<126+80;y++){
 		for(int x=248+ 64*(Scale_disp==TRUE);x<248+107*2+ 64*(Scale_disp==TRUE);x+=2){
@@ -325,6 +332,7 @@ void show_screenshot(){
 			*d++ = snapscreen[s++];
 		}
 	}
+*/
 }
 
 int batt_level(void){

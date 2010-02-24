@@ -63,18 +63,18 @@ void C4TransfWireFrame ()
     
     // Rotate X
     tanval = -(double) C4WFX2Val * 3.14159265 * 2 / 128;
-    c4y2 = c4y * cos (tanval) - c4z * sin (tanval);
-    c4z2 = c4y * sin (tanval) + c4z * cos (tanval);
+    c4y2 = c4y * Cos (tanval) - c4z * Sin (tanval);
+    c4z2 = c4y * Sin (tanval) + c4z * Cos (tanval);
     
     // Rotate Y
     tanval = -(double)C4WFY2Val*3.14159265*2/128;
-    c4x2 = c4x * cos (tanval) + c4z2 * sin (tanval);
-    c4z = c4x * - sin (tanval) + c4z2 * cos (tanval);
+    c4x2 = c4x * Cos (tanval) + c4z2 * Sin (tanval);
+    c4z = c4x * - Sin (tanval) + c4z2 * Cos (tanval);
     
     // Rotate Z
     tanval = -(double) C4WFDist * 3.14159265*2 / 128;
-    c4x = c4x2 * cos (tanval) - c4y2 * sin (tanval);
-    c4y = c4x2 * sin (tanval) + c4y2 * cos (tanval);
+    c4x = c4x2 * Cos (tanval) - c4y2 * Sin (tanval);
+    c4y = c4x2 * Sin (tanval) + c4y2 * Cos (tanval);
     
     // Scale
     C4WFXVal = (short) (c4x*(double)C4WFScale/(0x90*(c4z+0x95))*0x95);
@@ -89,18 +89,18 @@ void C4TransfWireFrame2 ()
     
     // Rotate X
     tanval = -(double) C4WFX2Val * 3.14159265 * 2 / 128;
-    c4y2 = c4y * cos (tanval) - c4z * sin (tanval);
-    c4z2 = c4y * sin (tanval) + c4z * cos (tanval);
+    c4y2 = c4y * Cos (tanval) - c4z * Sin (tanval);
+    c4z2 = c4y * Sin (tanval) + c4z * Cos (tanval);
     
     // Rotate Y
     tanval = -(double) C4WFY2Val * 3.14159265 * 2 / 128;
-    c4x2 = c4x * cos (tanval) + c4z2 * sin (tanval);
-    c4z = c4x * -sin (tanval) + c4z2 * cos (tanval);
+    c4x2 = c4x * Cos (tanval) + c4z2 * Sin (tanval);
+    c4z = c4x * -Sin (tanval) + c4z2 * Cos (tanval);
     
     // Rotate Z
     tanval = -(double)C4WFDist * 3.14159265 * 2 / 128;
-    c4x = c4x2 * cos (tanval) - c4y2 * sin (tanval);
-    c4y = c4x2 * sin (tanval) + c4y2 * cos (tanval);
+    c4x = c4x2 * Cos (tanval) - c4y2 * Sin (tanval);
+    c4y = c4x2 * Sin (tanval) + c4y2 * Cos (tanval);
     
     // Scale
     C4WFXVal =(short)(c4x * (double)C4WFScale / 0x100);

@@ -237,7 +237,7 @@ int main (int argc, char **argv)
     Settings.ControllerOption = 0;
     Settings.Transparency = TRUE;
     Settings.SixteenBit = TRUE;
-    Settings.SupportHiRes = TRUE;  //FALSE
+    Settings.SupportHiRes = TRUE;
     Settings.NetPlay = FALSE;
     Settings.ServerName [0] = 0;
     Settings.ThreadSound = TRUE;
