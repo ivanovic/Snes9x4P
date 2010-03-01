@@ -45,7 +45,7 @@ void menu_dispupdate(void){
 		}	
 	}
 
-	strcpy(disptxt[0],"Snes9x for DINGUX (ver.20100224)");
+	strcpy(disptxt[0],"Snes9x for DINGUX (ver.20100301)");
 	strcpy(disptxt[1],"");
 	//strcpy(disptxt[2],"Resume Game          ");
 	strcpy(disptxt[2],"Reset Game           ");
@@ -53,7 +53,7 @@ void menu_dispupdate(void){
 	strcpy(disptxt[4],"Load State           ");
 	strcpy(disptxt[5],"State Slot              No.");
 	strcpy(disptxt[6],"Display Frame Rate     ");
-	strcpy(disptxt[7],"--------------"); //strcpy(disptxt[7],"Full Screen            ");
+	strcpy(disptxt[7],"Transparency           "); //strcpy(disptxt[7],"Full Screen            ");
 	strcpy(disptxt[8],"Clock Speed          ");
 	strcpy(disptxt[9],"Sound Volume           ");
 	strcpy(disptxt[10],"Credit              ");
@@ -79,15 +79,21 @@ void menu_dispupdate(void){
 		sprintf(temp,"%sFalse",disptxt[7]);
 	strcpy(disptxt[7],temp);
 */
+	if(Settings.Transparency)
+		sprintf(temp,"%s True",disptxt[7]);
+	else
+		sprintf(temp,"%sFalse",disptxt[7]);
+	strcpy(disptxt[7],temp);
+
 	sprintf(temp,"%s %dMHz",disptxt[8],CLK_FREQ);
 	strcpy(disptxt[8],temp);
 
 	sprintf(temp,"%s %3d%%",disptxt[9],vol);
 	strcpy(disptxt[9],temp);
-
-//	sprintf(temp,"%s %d",disptxt[13],batt_level());
-//	strcpy(disptxt[13],temp);
-
+/*
+	sprintf(temp,"%s %d",disptxt[13],batt_level());
+	strcpy(disptxt[13],temp);
+*/
 	if      (batt_level() >= 3739)
 		sprintf(temp,"%s  (#####)",disptxt[13]);
 	else if (batt_level() >= 3707)
@@ -222,10 +228,11 @@ void menu_loop(void){
 							SaveSlotNum=3;
 					break;
 					case 6:
-						Settings.DisplayFrameRate =!Settings.DisplayFrameRate;
+						Settings.DisplayFrameRate = !Settings.DisplayFrameRate;
 					break;
 					case 7:
 //						Scale_org = !Scale_org;
+						Settings.Transparency = !Settings.Transparency;
 					break;
 					case 8:
 						if (keyssnes[sfc_key[LEFT_1]] == SDL_PRESSED)
@@ -272,7 +279,6 @@ void menu_loop(void){
 
 
 void save_screenshot(char *fname){
-/*
 	FILE  *fs = fopen (fname,"wb");
 	if(fs==NULL)
 		return;
@@ -280,7 +286,6 @@ void save_screenshot(char *fname){
 	fwrite(snapscreen,17120,1,fs);
 	fclose (fs);
 	sync();
-*/
 }
 
 void load_screenshot(char *fname){
@@ -300,15 +305,18 @@ void capt_screenshot(){ //107px*80px
 	int yoffset = 0;
 	struct InternalPPU *ippu = &IPPU;
 
-	for(int i=0;i<17120;i++){
+	for(int i=0;i<17120;i++)
+	{
 		snapscreen[i] = 0x11;
 	}
 	if(ippu->RenderedScreenHeight == 224)
 		yoffset = 8;
 
-	for(int y=yoffset;y<240-yoffset;y+=3){
+	for(int y=yoffset;y<240-yoffset;y+=3)
+	{
 		s+=22*(Scale_disp!=TRUE);
-		for(int x=0 ;x<320*2-128*(Scale_disp!=TRUE);x+=3*2){
+		for(int x=0 ;x<320*2-128*(Scale_disp!=TRUE);x+=3*2)
+		{
 			uint8 *d = GFX.Screen + y*320 *2 + x;
 			snapscreen[s++] = *d++;
 			snapscreen[s++] = *d++;
@@ -404,11 +412,13 @@ void ShowCredit(){
 		SDL_Event event;
 		SDL_PollEvent(&event);
 		keyssnes = SDL_GetKeyState(NULL);
+		
 		for(int y=12;y<=212;y++){
 			for(int x=10;x<246*2+72*(Scale_disp==TRUE);x+=2){
 				memset(GFX.Screen + 320*y*2+x,0x11,2);
 			}	
 		}
+		
 		for(int i=0;i<=16;i++){
 			int j=i+line;
 			if(j>=20) j-=20;

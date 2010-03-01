@@ -219,7 +219,6 @@ void S9xMainLoop (void)
 	struct SRegisters *reg = &Registers;
 	struct SAPURegisters *areg = &APURegisters;
 
-
 	set_FCLK(CLK_FREQ);
 
     for (;;)

@@ -91,7 +91,7 @@ uint8 *keyssnes;
 
 // SaveSlotNumber
 
-unsigned CLK_FREQ = 400;
+unsigned CLK_FREQ = 336; //400
 bool8_32 Scale = FALSE;
 char msg[256];
 char SaveSlotNum = 0;
