@@ -309,19 +309,30 @@ void capt_screenshot(){ //107px*80px
 	{
 		snapscreen[i] = 0x11;
 	}
+/*
 	if(ippu->RenderedScreenHeight == 224)
 		yoffset = 8;
 
-	for(int y=yoffset;y<240-yoffset;y+=3)
+	for(int y=yoffset;y<240-yoffset;y+=3) // 240/3=80
 	{
 		s+=22*(Scale_disp!=TRUE);
-		for(int x=0 ;x<320*2-128*(Scale_disp!=TRUE);x+=3*2)
+		for(int x=0 ;x<320*2-128*(Scale_disp!=TRUE);x+=3*2) // 640/6=107
 		{
 			uint8 *d = GFX.Screen + y*320 *2 + x;
 			snapscreen[s++] = *d++;
 			snapscreen[s++] = *d++;
 		}
 		s+=20*(Scale_disp!=TRUE);
+	}
+*/
+	for(int y=0;y<240;y+=3)	// 240/3=80
+	{
+		for(int x=0 ;x<640;x+=3*2) // 640/6=107; 640-128 makes better screenshots but not correkt ones :(
+		{
+			uint8 *d = GFX.Screen + y*640 + x;
+			snapscreen[s++] = *d++;
+			snapscreen[s++] = *d++;
+		}
 	}
 }
 
@@ -393,18 +404,18 @@ void ShowCredit(){
 	"",
 	"",
 	"",
-	"Snes9x for DINGUX",
+	" Snes9x for DINGUX",
 	"                                     ",
-	"Thank you using Snes9X !          ",
+	" Thank you using Snes9X !          ",
 	"                                     ",
-	"Key Configurations,     ",
-	" State Save: START + R ",
-	" State Load: START + L  ",
-	" Exit      : START + SEL + X ",
-	" Reset Game: START + SEL + B "
+	" Key Configurations,     ",
+	"  State Save: START + R ",
+	"  State Load: START + L  ",
+	"  Exit      : START + SEL + X ",
+	"  Reset Game: START + SEL + B "
 	"",
 	"",
-	"made by SiENcE",
+	" enhanced by SiENcE",
 	""
 	};
 
