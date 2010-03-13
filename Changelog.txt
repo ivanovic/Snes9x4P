@@ -16,10 +16,6 @@ ver 20100221
 +support for SDD1 Emu added (GraphicPack NOT needed anymore!! -> removed)
 +Street Fighter Alpha 2 & Star Ocean (all work)
 
-ver 20100218
-+Added Star Ocean support using the Star Ocean Grpahic Set.
-You have to put "sdd1gfx.dat" & "sdd1gfx.idx" in "local\home\.snes96_snapshots\socnsdd1\" of your Dingux OS.
-
 v1.39-ff
 -base source see changes.txt
 
