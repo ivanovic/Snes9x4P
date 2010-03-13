@@ -45,7 +45,7 @@ void menu_dispupdate(void){
 		}	
 	}
 
-	strcpy(disptxt[0],"Snes9x for DINGUX (ver.20100301)");
+	strcpy(disptxt[0],"Snes9x for DINGUX (ver.20100313)");
 	strcpy(disptxt[1],"");
 	//strcpy(disptxt[2],"Resume Game          ");
 	strcpy(disptxt[2],"Reset Game           ");
@@ -312,9 +312,10 @@ void capt_screenshot() //107px*80px
 		snapscreen[i] = 0x00;
 	}
 
-	if(ippu->RenderedScreenHeight == 224)
-		yoffset = 8;
+//	if(ippu->RenderedScreenHeight == 224)
+//		yoffset = 8;
 /*
+	//original
 	for(int y=yoffset;y<240-yoffset;y+=3) // 240/3=80
 	{
 		s+=22*(Scale_disp!=TRUE);
@@ -328,6 +329,7 @@ void capt_screenshot() //107px*80px
 	}
 */
 
+	//working but in highres mode, bad screenshots
 	for(int y=yoffset;y<240-yoffset;y+=3) //80,1 //240,3
 	{
 		s+=22*(Scale_disp!=TRUE);
@@ -339,6 +341,19 @@ void capt_screenshot() //107px*80px
 		}
 		s+=20*(Scale_disp!=TRUE);
 	}
+
+/*
+	//working, but too much stretched in x
+	for(int y=yoffset;y<240-yoffset;y+=3) //80,1 //240,3
+	{
+		for(int x=42;x<428+42;x+=4) //107,1 //214,2 //428,4 +42+42
+		{
+			uint8 *d = GFX.Screen + y*1024 + x; //1024
+			snapscreen[s++] = *d++;
+			snapscreen[s++] = *d++;
+		}
+	}
+*/
 }
 
 void show_screenshot(){
@@ -407,8 +422,6 @@ void ShowCredit(){
 	"",
 	"",
 	"",
-	"",
-	"",
 	" Snes9x for DINGUX",
 	"                                     ",
 	" Thank you using Snes9X !          ",
@@ -420,7 +433,9 @@ void ShowCredit(){
 	"  Reset Game: START + SEL + B "
 	"",
 	"",
-	" enhanced by SiENcE",
+	" by SiENcE",
+	" crankgaming.blogspot.com",
+	"",
 	""
 	};
 

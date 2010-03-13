@@ -1,6 +1,9 @@
 Changlist using the following base http://www9.atpages.jp/~drowsnug95/?p=252 source code
 (http://www9.atpages.jp/~drowsnug95/wp-content/uploads/2009/10/snes9x_src.zip)
 
+ver 20100313
++screenshot feature fixed (in highres mode screenshots still are not fullscreen caps)
+
 ver 20100301
 +Soul Blazer works now (i think only the german version was not working!?)
 
