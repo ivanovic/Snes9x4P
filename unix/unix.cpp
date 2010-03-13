@@ -660,8 +660,11 @@ bool8_32 S9xDeinitUpdate (int Width, int Height)
 	}
 	else
 	{
-		if (Settings.SupportHiRes) {
-			if (Width > 256) {
+		//		uint32 xs = 320, ys = 240, cl = 0, cs = 0, mfs = 10;
+		if (Settings.SupportHiRes)
+		{
+			if (Width > 256)
+			{
 				for (register uint32 i = 0; i < Height; i++) {
 					register uint16 *dp16 = (uint16 *)(screen->pixels) + ((i + cl) * xs) + lp;
 					register uint32 *sp32 = (uint32 *)(GFX.Screen) + (i << 8) + cs;
@@ -669,7 +672,9 @@ bool8_32 S9xDeinitUpdate (int Width, int Height)
 						*dp16++ = *sp32++;
 					}
 				}
-			} else {
+			}
+			else
+			{
 				for (register uint32 i = 0; i < Height; i++) {
 					register uint32 *dp32 = (uint32 *)(screen->pixels) + ((i + cl) * xs / 2) + lp;
 					register uint32 *sp32 = (uint32 *)(GFX.Screen) + (i << 8) + cs;

@@ -288,7 +288,8 @@ void save_screenshot(char *fname){
 	sync();
 }
 
-void load_screenshot(char *fname){
+void load_screenshot(char *fname)
+{
 	FILE *fs = fopen (fname,"rb");
 	if(fs==NULL){
 		for(int i=0;i<17120;i++){
@@ -300,19 +301,20 @@ void load_screenshot(char *fname){
 	fclose(fs);
 }
 
-void capt_screenshot(){ //107px*80px
+void capt_screenshot() //107px*80px
+{
 	int s = 0;
 	int yoffset = 0;
 	struct InternalPPU *ippu = &IPPU;
 
 	for(int i=0;i<17120;i++)
 	{
-		snapscreen[i] = 0x11;
+		snapscreen[i] = 0x00;
 	}
-/*
+
 	if(ippu->RenderedScreenHeight == 224)
 		yoffset = 8;
-
+/*
 	for(int y=yoffset;y<240-yoffset;y+=3) // 240/3=80
 	{
 		s+=22*(Scale_disp!=TRUE);
@@ -325,14 +327,17 @@ void capt_screenshot(){ //107px*80px
 		s+=20*(Scale_disp!=TRUE);
 	}
 */
-	for(int y=0;y<240;y+=3)	// 240/3=80
+
+	for(int y=yoffset;y<240-yoffset;y+=3) //80,1 //240,3
 	{
-		for(int x=0 ;x<640;x+=3*2) // 640/6=107; 640-128 makes better screenshots but not correkt ones :(
+		s+=22*(Scale_disp!=TRUE);
+		for(int x=0;x<640-128*(Scale_disp!=TRUE);x+=6) //107,1 //214,2 //428,4 +42+42
 		{
-			uint8 *d = GFX.Screen + y*640 + x;
+			uint8 *d = GFX.Screen + y*1024 + x; //1024
 			snapscreen[s++] = *d++;
 			snapscreen[s++] = *d++;
 		}
+		s+=20*(Scale_disp!=TRUE);
 	}
 }
 

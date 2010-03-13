@@ -99,24 +99,32 @@ void S9xInitDisplay (int /*argc*/, char ** /*argv*/)
 	screen = SDL_SetVideoMode(xs, ys, 16, SDL_SWSURFACE);
 	//screen = SDL_CreateRGBSurface(SDL_HWSURFACE, xs, ys, 16, 0, 0, 0, 0);
 	//hwscreen = SDL_SetVideoMode(xs, ys, 16, SDL_HWSURFACE|SDL_FULLSCREEN);
+	
 	if (screen == NULL)
 	{
 		printf("Couldn't set video mode: %s\n", SDL_GetError());
 		S9xExit();
 	}
-	if (Settings.SupportHiRes) {
+	
+	if (Settings.SupportHiRes)
+	{
 		gfxscreen = SDL_CreateRGBSurface(SDL_SWSURFACE, 512, 480, 16, 0, 0, 0, 0);
 		GFX.Screen = (uint8 *)gfxscreen->pixels;
 		GFX.Pitch = 512 * 2;
-	} else {
-		if(Scale){
+	}
+	else
+	{
+		if(Scale)
+		{
 			GFX.Screen = (uint8 *)screen->pixels;
 		}
-		else{
+		else
+		{
 			GFX.Screen = (uint8 *)screen->pixels + 64;
 		}
 		GFX.Pitch = 320 * 2;
 	}
+
 	GFX.SubScreen = (uint8 *)malloc(512 * 480 * 2);
 	GFX.ZBuffer = (uint8 *)malloc(512 * 480 * 2);
 	GFX.SubZBuffer = (uint8 *)malloc(512 * 480 * 2);
