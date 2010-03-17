@@ -2521,8 +2521,8 @@ inline void CPUShutdown(struct SICPU * icpu, struct SCPUState * cpu)
 	    !(cpu->Flags & (IRQ_PENDING_FLAG | NMI_FLAG)))
 	{
 	    cpu->WaitAddress = NULL;
-//	    if (Settings.SA1)
-//		S9xSA1ExecuteDuringSleep ();
+	    if (Settings.SA1)
+		S9xSA1ExecuteDuringSleep ();
 	    cpu->Cycles = cpu->NextEvent;
 	    if (IAPU.APUExecuting)
 	    {
@@ -3428,10 +3428,10 @@ void S9xOpcode_IRQ ()
 	S9xSA1SetPCBase (Memory.FillRAM [0x2207] |
 			 (Memory.FillRAM [0x2208] << 8), &SA1);
 #else
-/*	if (Settings.SA1 && (Memory.FillRAM [0x2209] & 0x40))
+	if (Settings.SA1 && (Memory.FillRAM [0x2209] & 0x40))
 	    S9xSetPCBase (Memory.FillRAM [0x220e] | 
 			  (Memory.FillRAM [0x220f] << 8), &CPU);
-	else */
+	else
 	    S9xSetPCBase (S9xGetWord (0xFFEE, &CPU), &CPU);
 #endif
 #ifdef VAR_CYCLES
@@ -3456,10 +3456,10 @@ void S9xOpcode_IRQ ()
 	S9xSA1SetPCBase (Memory.FillRAM [0x2207] |
 			 (Memory.FillRAM [0x2208] << 8), &SA1);
 #else
-/*	if (Settings.SA1 && (Memory.FillRAM [0x2209] & 0x40))
+	if (Settings.SA1 && (Memory.FillRAM [0x2209] & 0x40))
 	    S9xSetPCBase (Memory.FillRAM [0x220e] | 
 			  (Memory.FillRAM [0x220f] << 8), &CPU);
-	else */
+	else
 	    S9xSetPCBase (S9xGetWord (0xFFFE, &CPU), &CPU);
 #endif
 #ifdef VAR_CYCLES
@@ -3496,10 +3496,10 @@ void S9xOpcode_NMI ()
 	S9xSA1SetPCBase (Memory.FillRAM [0x2205] |
 			 (Memory.FillRAM [0x2206] << 8), &SA1);
 #else
-/*	if (Settings.SA1 && (Memory.FillRAM [0x2209] & 0x20))
+	if (Settings.SA1 && (Memory.FillRAM [0x2209] & 0x20))
 	    S9xSetPCBase (Memory.FillRAM [0x220c] |
 			  (Memory.FillRAM [0x220d] << 8), &CPU);
-	else */
+	else
 	    S9xSetPCBase (S9xGetWord (0xFFEA, &CPU), &CPU);
 #endif
 #ifdef VAR_CYCLES
@@ -3524,10 +3524,10 @@ void S9xOpcode_NMI ()
 	S9xSA1SetPCBase (Memory.FillRAM [0x2205] |
 			 (Memory.FillRAM [0x2206] << 8), &SA1);
 #else
-/*	if (Settings.SA1 && (Memory.FillRAM [0x2209] & 0x20))
+	if (Settings.SA1 && (Memory.FillRAM [0x2209] & 0x20))
 	    S9xSetPCBase (Memory.FillRAM [0x220c] |
 			  (Memory.FillRAM [0x220d] << 8), &CPU);
-	else */
+	else
 	    S9xSetPCBase (S9xGetWord (0xFFFA, &CPU), &CPU);
 #endif
 #ifdef VAR_CYCLES

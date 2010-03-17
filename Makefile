@@ -27,14 +27,14 @@ ifdef ASMKREED
 KREEDOBJ=i386/2xSaImmx.o i386/bilinear.o 2xsai.o
 KREEDDEFINES=-DMMX
 else
+KREEDOBJ=2xsai.o
 KREEDDEFINES=
-#KREEDOBJ=2xsai.o
 endif
 
 OBJECTS=$(CPUOBJ) $(FXOBJ) $(C4OBJ) \
 	cpu.o tile.o gfx.o clip.o \
 	memmap.o ppu.o dma.o unix/menu.o unix/unix.o \
-	$(SOUNDOBJ) unix/svga.o sdd1.o sdd1emu.o dsp1.o \
+	$(SOUNDOBJ) unix/svga.o sdd1.o sdd1emu.o dsp1.o sa1.o sa1cpu.o \
     snes9x.o snapshot.o data.o globals.o \
 	$(KREEDOBJ)
 
@@ -208,6 +208,7 @@ ppu.o: snes9x.h memmap.h ppu.h missing.h port.h cpuexec.h \
 dsp1.o: snes9x.h port.h dsp1.h
 sdd1.o: snes9x.h sdd1.h
 sdd1emu.o: sdd1emu.h
+sa1.o: sa1.h
 snapshot.o: snapshot.h memmap.h snes9x.h 65c816.h ppu.h \
 	cpuexec.h display.h apu.h spc700.h soundux.h
 snes96.o: port.h snes9x.h memmap.h

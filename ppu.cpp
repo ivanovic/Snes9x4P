@@ -866,7 +866,7 @@ void S9xSetPPU (uint8 Byte, uint16 Address, struct SPPU *ppu, struct InternalPPU
 	}
 	else
 	{
-#ifndef _ZAURUS
+//#ifndef _ZAURUS
 		if (Settings.SA1)
 		{
 			if (Address >= 0x2200 && Address < 0x23ff)
@@ -875,6 +875,7 @@ void S9xSetPPU (uint8 Byte, uint16 Address, struct SPPU *ppu, struct InternalPPU
 				Memory.FillRAM[Address] = Byte;
 			return;
 		}
+#ifndef _ZAURUS
 		else
 			// Dai Kaijyu Monogatari II
 			if (Address == 0x2801 && Settings.SRTC)
@@ -1347,10 +1348,10 @@ uint8 S9xGetPPU(uint16 Address, struct SPPU *ppu, CMemory *mem)
 	}
 	else
 	{
-#ifndef _ZAURUS
+//#ifndef _ZAURUS
 		if (Settings.SA1)
 			return (S9xGetSA1(Address));
-#endif
+//#endif
 		if (Address <= 0x2fff || Address >= 0x3000 + 768)
 		{
 			switch (Address)

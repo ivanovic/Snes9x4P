@@ -30,7 +30,8 @@ void ShowCredit(void);
 
 int cursor = 2;
 char SaveSlotNum_old=255;
-bool8_32 Scale_org=Scale, Scale_disp=Scale;
+bool8_32 Scale_org=Scale;
+bool8_32 highres_current = false;
 char snapscreen[17120]={};
 extern clock_t start;
 
@@ -40,12 +41,12 @@ void menu_dispupdate(void){
 
 	//memset(GFX.Screen + 320*12*2,0x11,320*200*2);
 	for(int y=12;y<=212;y++){
-		for(int x=10;x<246*2+72*(Scale_disp==TRUE);x+=2){
+		for(int x=10;x<246*2;x+=2){
 			memset(GFX.Screen + 320*y*2+x,0x11,2);
 		}	
 	}
 
-	strcpy(disptxt[0],"Snes9x for DINGUX (ver.20100313)");
+	strcpy(disptxt[0],"Snes9x for DINGUX (ver.20100315)");
 	strcpy(disptxt[1],"");
 	//strcpy(disptxt[2],"Resume Game          ");
 	strcpy(disptxt[2],"Reset Game           ");
@@ -53,8 +54,8 @@ void menu_dispupdate(void){
 	strcpy(disptxt[4],"Load State           ");
 	strcpy(disptxt[5],"State Slot              No.");
 	strcpy(disptxt[6],"Display Frame Rate     ");
-	strcpy(disptxt[7],"Transparency           "); //strcpy(disptxt[7],"Full Screen            ");
-	strcpy(disptxt[8],"Clock Speed          ");
+	strcpy(disptxt[7],"Full Screen         ");
+	strcpy(disptxt[8],"Frameskip              ");	//	strcpy(disptxt[8],"Clock Speed          ");
 	strcpy(disptxt[9],"Sound Volume           ");
 	strcpy(disptxt[10],"Credit              ");
 	strcpy(disptxt[11],"Exit");
@@ -72,21 +73,31 @@ void menu_dispupdate(void){
 	else
 		sprintf(temp,"%sFalse",disptxt[6]);
 	strcpy(disptxt[6],temp);
-/*
-	if(Scale_org)
-		sprintf(temp,"%s True",disptxt[7]);
-	else
-		sprintf(temp,"%sFalse",disptxt[7]);
-	strcpy(disptxt[7],temp);
-*/
-	if(Settings.Transparency)
-		sprintf(temp,"%s True",disptxt[7]);
-	else
-		sprintf(temp,"%sFalse",disptxt[7]);
-	strcpy(disptxt[7],temp);
 
-	sprintf(temp,"%s %dMHz",disptxt[8],CLK_FREQ);
-	strcpy(disptxt[8],temp);
+	if (highres_current==false)
+	{
+		if(Scale_org)
+			sprintf(temp,"%s    True",disptxt[7]);
+		else
+			sprintf(temp,"%s   False",disptxt[7]);
+		strcpy(disptxt[7],temp);
+	}
+	else
+	{
+		sprintf(temp,"%sinactive",disptxt[7]);
+		strcpy(disptxt[7],temp);
+	}
+
+	if (Settings.SkipFrames == AUTO_FRAMERATE)
+	{
+		sprintf(temp,"%s Auto",disptxt[8]);
+		strcpy(disptxt[8],temp);
+	}
+	else
+	{
+		sprintf(temp,"%s %02d/%d",disptxt[8],(int) Memory.ROMFramesPerSecond, Settings.SkipFrames);
+		strcpy(disptxt[8],temp);
+	}
 
 	sprintf(temp,"%s %3d%%",disptxt[9],vol);
 	strcpy(disptxt[9],temp);
@@ -123,14 +134,14 @@ void menu_dispupdate(void){
 			sprintf(temp,"  %s",disptxt[i]);
 		strcpy(disptxt[i],temp);
 
-		S9xDisplayString (disptxt[i], GFX.Screen + 72*(Scale_disp==TRUE), 640,i*10+64);		
+		S9xDisplayString (disptxt[i], GFX.Screen, 640,i*10+64);		
 	}
 
 
 //show screen shot for snapshot
 	if(SaveSlotNum_old != SaveSlotNum){
 		strcpy(temp,"Loading...");
-		S9xDisplayString (temp, GFX.Screen +280+ 64*(Scale_disp==TRUE), 640,204);
+		S9xDisplayString (temp, GFX.Screen +280, 640,204);
 		S9xDeinitUpdate (320, 240);
 		char fname[256], ext[8];
 		sprintf(ext, ".s0%d", SaveSlotNum);
@@ -141,14 +152,11 @@ void menu_dispupdate(void){
 	show_screenshot();
 	
 	S9xDeinitUpdate (320, 240);
-
 }
 
 void menu_loop(void){
 	uint8 *keyssnes=0;
-	Scale_org = Scale;
-	Scale_disp = Scale;
-	bool8_32 exit_loop = FALSE;
+	bool8_32 exit_loop = false;
 	char fname[256], ext[8];
 	char snapscreen_tmp[17120];
 	//int backlight = get_lcd_backlight();
@@ -157,14 +165,16 @@ void menu_loop(void){
 
 	SaveSlotNum_old = -1;
 
+	Scale_org = Scale;
+	highres_current=Settings.SupportHiRes;
+
 	capt_screenshot();
 	memcpy(snapscreen_tmp,snapscreen,17120);
 
-	Scale = FALSE;
+	Scale = false;
 	Settings.SupportHiRes=FALSE;
+	S9xDeinitDisplay();
 	S9xInitDisplay(0, 0);
-
-	set_FCLK(100);
 
 	menu_dispupdate();
 	usleep(100000);
@@ -198,7 +208,7 @@ void menu_loop(void){
 							memcpy(snapscreen,snapscreen_tmp,16050);
 							show_screenshot();
 							strcpy(fname," Saving...");
-							S9xDisplayString (fname, GFX.Screen +280+ 64*(Scale_disp==TRUE), 640,204);
+							S9xDisplayString (fname, GFX.Screen +280, 640,204);
 							S9xDeinitUpdate (320, 240);
 							sprintf(ext, ".s0%d", SaveSlotNum);
 							strcpy(fname, S9xGetFilename (ext));
@@ -231,10 +241,10 @@ void menu_loop(void){
 						Settings.DisplayFrameRate = !Settings.DisplayFrameRate;
 					break;
 					case 7:
-//						Scale_org = !Scale_org;
-						Settings.Transparency = !Settings.Transparency;
+						Scale_org = !Scale_org;
 					break;
 					case 8:
+/*
 						if (keyssnes[sfc_key[LEFT_1]] == SDL_PRESSED)
 							CLK_FREQ -=8;
 						else CLK_FREQ +=8;
@@ -242,6 +252,19 @@ void menu_loop(void){
 							CLK_FREQ=432;
 						else if (CLK_FREQ<=200)
 							CLK_FREQ=200;
+*/
+						if (Settings.SkipFrames == AUTO_FRAMERATE)
+							Settings.SkipFrames = 10;
+
+						if (keyssnes[sfc_key[LEFT_1]] == SDL_PRESSED)
+							Settings.SkipFrames--;
+						else
+							Settings.SkipFrames++;
+
+						if(Settings.SkipFrames>=10)
+							Settings.SkipFrames = AUTO_FRAMERATE;
+						else if (Settings.SkipFrames <=1)
+							Settings.SkipFrames = 1;
 					break;
 					case 9:
 						if (keyssnes[sfc_key[LEFT_1]] == SDL_PRESSED)
@@ -268,15 +291,12 @@ void menu_loop(void){
 			}
 		}
 	} while(exit_loop!=TRUE && keyssnes[sfc_key[B_1]] != SDL_PRESSED);
-	
+
 	Scale = Scale_org;
-
-	set_FCLK(CLK_FREQ);
-
-	Settings.SupportHiRes=TRUE;
+	Settings.SupportHiRes=highres_current;
+	S9xDeinitDisplay();
 	S9xInitDisplay(0, 0);
 }
-
 
 void save_screenshot(char *fname){
 	FILE  *fs = fopen (fname,"wb");
@@ -303,6 +323,7 @@ void load_screenshot(char *fname)
 
 void capt_screenshot() //107px*80px
 {
+	bool8_32 Scale_disp=Scale;
 	int s = 0;
 	int yoffset = 0;
 	struct InternalPPU *ippu = &IPPU;
@@ -314,52 +335,43 @@ void capt_screenshot() //107px*80px
 
 //	if(ippu->RenderedScreenHeight == 224)
 //		yoffset = 8;
-/*
-	//original
-	for(int y=yoffset;y<240-yoffset;y+=3) // 240/3=80
-	{
-		s+=22*(Scale_disp!=TRUE);
-		for(int x=0 ;x<320*2-128*(Scale_disp!=TRUE);x+=3*2) // 640/6=107
-		{
-			uint8 *d = GFX.Screen + y*320 *2 + x;
-			snapscreen[s++] = *d++;
-			snapscreen[s++] = *d++;
-		}
-		s+=20*(Scale_disp!=TRUE);
-	}
-*/
 
-	//working but in highres mode, bad screenshots
-	for(int y=yoffset;y<240-yoffset;y+=3) //80,1 //240,3
+	if (highres_current==true)
 	{
-		s+=22*(Scale_disp!=TRUE);
-		for(int x=0;x<640-128*(Scale_disp!=TRUE);x+=6) //107,1 //214,2 //428,4 +42+42
+		//working but in highres mode
+		for(int y=yoffset;y<240-yoffset;y+=3) //80,1 //240,3
 		{
-			uint8 *d = GFX.Screen + y*1024 + x; //1024
-			snapscreen[s++] = *d++;
-			snapscreen[s++] = *d++;
-		}
-		s+=20*(Scale_disp!=TRUE);
-	}
-
-/*
-	//working, but too much stretched in x
-	for(int y=yoffset;y<240-yoffset;y+=3) //80,1 //240,3
-	{
-		for(int x=42;x<428+42;x+=4) //107,1 //214,2 //428,4 +42+42
-		{
-			uint8 *d = GFX.Screen + y*1024 + x; //1024
-			snapscreen[s++] = *d++;
-			snapscreen[s++] = *d++;
+			s+=22*1/*(Scale_disp!=TRUE)*/;
+			for(int x=0;x<640-128*1/*(Scale_disp!=TRUE)*/;x+=6) //107,1 //214,2 //428,4 +42+42
+			{
+				uint8 *d = GFX.Screen + y*1024 + x; //1024
+				snapscreen[s++] = *d++;
+				snapscreen[s++] = *d++;
+			}
+			s+=20*1/*(Scale_disp!=TRUE)*/;
 		}
 	}
-*/
+	else
+	{
+		//original
+		for(int y=yoffset;y<240-yoffset;y+=3) // 240/3=80
+		{
+			s+=22*(Scale_disp!=TRUE);
+			for(int x=0 ;x<320*2-128*(Scale_disp!=TRUE);x+=3*2) // 640/6=107
+			{
+				uint8 *d = GFX.Screen + y*320 *2 + x;
+				snapscreen[s++] = *d++;
+				snapscreen[s++] = *d++;
+			}
+			s+=20*(Scale_disp!=TRUE);
+		}
+	}
 }
 
 void show_screenshot(){
 	int s=0;
 	for(int y=126;y<126+80;y++){
-		for(int x=248+ 64*(Scale_disp==TRUE);x<248+107*2+ 64*(Scale_disp==TRUE);x+=2){
+		for(int x=248; x<248+107*2; x+=2){
 			uint8 *d = GFX.Screen + y*320*2 + x;
 			*d++ = snapscreen[s++];
 			*d++ = snapscreen[s++];
@@ -444,8 +456,8 @@ void ShowCredit(){
 		SDL_PollEvent(&event);
 		keyssnes = SDL_GetKeyState(NULL);
 		
-		for(int y=12;y<=212;y++){
-			for(int x=10;x<246*2+72*(Scale_disp==TRUE);x+=2){
+		for(int y=12; y<=212; y++){
+			for(int x=10; x<246*2; x+=2){
 				memset(GFX.Screen + 320*y*2+x,0x11,2);
 			}	
 		}
@@ -453,7 +465,7 @@ void ShowCredit(){
 		for(int i=0;i<=16;i++){
 			int j=i+line;
 			if(j>=20) j-=20;
-			S9xDisplayString (disptxt[j], GFX.Screen + 72*(Scale_disp==TRUE), 640,i*10+80-ypix);
+			S9xDisplayString (disptxt[j], GFX.Screen, 640,i*10+80-ypix);
 		}
 		
 		ypix+=2;

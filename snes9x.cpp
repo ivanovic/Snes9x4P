@@ -57,6 +57,7 @@ void S9xUsage ()
     S9xExit();
 }
 
+/*
 #ifdef STORM
 extern int dofps;
 extern int hicolor;
@@ -65,6 +66,7 @@ extern int minimal;
 int prelude=0;
 extern int unit;
 #endif
+*/
 
 char *S9xParseArgs (char **argv, int argc)
 {
@@ -147,7 +149,7 @@ char *S9xParseArgs (char **argv, int argc)
 		     strcasecmp (argv [i], "-frameskip") == 0)
 	    {
 		if (i + 1 < argc)
-		    Settings.SkipFrames = atoi (argv [++i]) + 1;
+		    Settings.SkipFrames = atoi (argv [++i]) /*+ 1*/;	//SiENcE
 		else
 		    S9xUsage ();
 	    }
@@ -217,6 +219,11 @@ char *S9xParseArgs (char **argv, int argc)
 		     strcasecmp (argv [i], "-hires") == 0)
 	    {
 		Settings.SupportHiRes = TRUE;
+	    }
+	    else if (strcasecmp (argv [i], "-nohi") == 0 ||   
+		     strcasecmp (argv [i], "-nohires") == 0)
+	    {
+		Settings.SupportHiRes = FALSE;
 	    }
 	    else if (strcasecmp (argv [i], "-16") == 0 ||
 		     strcasecmp (argv [i], "-sixteen") == 0)
@@ -463,31 +470,32 @@ char *S9xParseArgs (char **argv, int argc)
 	    else if (strcasecmp (argv [i], "-port") == 0 ||
 		     strcasecmp (argv [i], "-po") == 0)
 	    {
-		if (i + 1 < argc)
-		{
-		    Settings.NetPlay = TRUE;
-		    Settings.Port = -atoi (argv [++i]);
-		}
-		else
-		    S9xUsage ();
+			if (i + 1 < argc)
+			{
+			    Settings.NetPlay = TRUE;
+			    Settings.Port = -atoi (argv [++i]);
+			}
+			else
+			    S9xUsage ();
 	    }
 	    else if (strcasecmp (argv [i], "-server") == 0 ||
 		     strcasecmp (argv [i], "-srv") == 0)
 	    {
-		if (i + 1 < argc)
-		{
-		    Settings.NetPlay = TRUE;
-		    strncpy (Settings.ServerName, argv [++i], 127);
-		    Settings.ServerName [127] = 0;
-		}
-		else
-		    S9xUsage ();
+			if (i + 1 < argc)
+			{
+			    Settings.NetPlay = TRUE;
+			    strncpy (Settings.ServerName, argv [++i], 127);
+			    Settings.ServerName [127] = 0;
+			}
+			else
+			    S9xUsage ();
 	    }
 	    else if (strcasecmp (argv [i], "-net") == 0)
 	    {
-		Settings.NetPlay = TRUE;
+			Settings.NetPlay = TRUE;
 	    }
 #endif
+/*
 #ifdef STORM
             else if (strcasecmp(argv[i],"-nosecondjoy")==0){secondjoy=0;}
             else if (strcasecmp(argv[i],"-showfps")==0){dofps=1;}
@@ -502,13 +510,16 @@ char *S9xParseArgs (char **argv, int argc)
              }
             }
 #endif
+*/
+/*
 	    else if (strcasecmp (argv [i], "-fullscreen") == 0 ||
 		     strcasecmp (argv [i], "-fs") == 0)
 	    {
 			Scale = TRUE;
 	    }
+*/
 	    else
-		S9xParseArg (argv, i, argc);
+			S9xParseArg (argv, i, argc);
 	}
 	else
 	    rom_filename = argv [i];

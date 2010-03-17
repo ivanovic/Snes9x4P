@@ -98,7 +98,7 @@ char SaveSlotNum = 0;
 int vol=50;
 static int mixerdev = 0;
 clock_t start;
-extern bool8_32 Scale_disp;
+//extern bool8_32 Scale_disp;
 
 int OldSkipFrame;
 void a320_init(void);
@@ -109,8 +109,8 @@ void gp2x_sound_volume(int l, int r);
 
 extern void S9xDisplayFrameRate (uint8 *, uint32);
 extern void S9xDisplayString (const char *string, uint8 *, uint32, int);
-extern SDL_Surface *screen;
-//extern SDL_Surface *hwscreen;
+//extern SDL_Surface *screen;
+extern SDL_Surface *screen,*gfxscreen;
 
 static uint32 ffc = 0;
 bool8_32 nso = FALSE, vga = FALSE;
@@ -242,7 +242,7 @@ int main (int argc, char **argv)
     Settings.ServerName [0] = 0;
     Settings.ThreadSound = TRUE;
     Settings.AutoSaveDelay = 30;
-    Settings.ApplyCheats = TRUE;
+    Settings.ApplyCheats = FALSE;
     Settings.TurboMode = FALSE;
     Settings.TurboSkipFrames = 15;
     rom_filename = S9xParseArgs (argv, argc);
@@ -411,7 +411,7 @@ void S9xAutoSaveSRAM ()
 
 void S9xExit ()
 {
-    set_FCLK(336);
+//    set_FCLK(336);
     S9xSetSoundMute (TRUE);
     S9xDeinitDisplay ();
     Memory.SaveSRAM (S9xGetFilename (".srm"));
@@ -637,13 +637,14 @@ void S9xCloseSnapshotFile (STREAM file)
     sync();
 }
 
-#ifndef _ZAURUS
+//#ifndef _ZAURUS
 bool8_32 S9xInitUpdate ()
 {
     return (TRUE);
 }
-#endif
+//#endif
 
+//		uint32 xs = 320, ys = 240, cl = 0, cs = 0, mfs = 10;
 bool8_32 S9xDeinitUpdate (int Width, int Height)
 {
 	register uint32 lp = (xs > 256) ? 16 : 0;
@@ -651,40 +652,48 @@ bool8_32 S9xDeinitUpdate (int Width, int Height)
 	if (Width > 256 || vga)
 		lp *= 2;
 
-// 	SDL_LockSurface(screen);
-
-	if (ffc < 5)
+	// ffc, what is it for?
+//	if (ffc < 5)
+//	{
+//		SDL_UpdateRect(screen,0,0,0,0);
+//		++ffc;
+//	}
+//	else
+	if (Settings.SupportHiRes)
 	{
-		SDL_UpdateRect(screen,0,0,0,0);
-		++ffc;
-	}
-	else
-	{
-		//		uint32 xs = 320, ys = 240, cl = 0, cs = 0, mfs = 10;
-		if (Settings.SupportHiRes)
+		//put here also scaling
+		if (Width > 256)
 		{
-			if (Width > 256)
-			{
-				for (register uint32 i = 0; i < Height; i++) {
-					register uint16 *dp16 = (uint16 *)(screen->pixels) + ((i + cl) * xs) + lp;
-					register uint32 *sp32 = (uint32 *)(GFX.Screen) + (i << 8) + cs;
-					for (register uint32 j = 0; j < 256; j++) {
-						*dp16++ = *sp32++;
-					}
-				}
-			}
-			else
-			{
-				for (register uint32 i = 0; i < Height; i++) {
-					register uint32 *dp32 = (uint32 *)(screen->pixels) + ((i + cl) * xs / 2) + lp;
-					register uint32 *sp32 = (uint32 *)(GFX.Screen) + (i << 8) + cs;
-					for (register uint32 j = 0; j < 128; j++) {
-						*dp32++ = *sp32++;
-					}
+			for (register uint32 i = 0; i < Height; i++) {
+				register uint16 *dp16 = (uint16 *)(screen->pixels) + ((i + cl) * xs) + lp;
+				register uint32 *sp32 = (uint32 *)(GFX.Screen) + (i << 8) + cs;
+				for (register uint32 j = 0; j < 256; j++) {
+					*dp16++ = *sp32++;
 				}
 			}
 		}
-		/*
+		else
+		{
+			//wenn highres mode und kein highres ist
+			for (register uint32 i = 0; i < Height; i++) {
+				register uint32 *dp32 = (uint32 *)(screen->pixels) + ((i + cl) * xs / 2) + lp;
+				register uint32 *sp32 = (uint32 *)(GFX.Screen) + (i << 8) + cs;
+				for (register uint32 j = 0; j < 128; j++) {
+					*dp32++ = *sp32++;
+				}
+			}
+		}
+
+		if (GFX.InfoString)
+		    S9xDisplayString (GFX.InfoString, (uint8 *)screen->pixels + 64, 640,0);
+		else if (Settings.DisplayFrameRate)
+		    S9xDisplayFrameRate ((uint8 *)screen->pixels + 64, 640);
+		
+	    SDL_UpdateRect(screen,32,0,256,Height);
+	}
+	else
+	{
+		//put here also scaling for non highres
 		//start stretch
 		int yoffset = 8*(Height == 224);
 		if(Scale)
@@ -696,7 +705,7 @@ bool8_32 S9xDeinitUpdate (int Width, int Height)
 			register uint8 *d;
 			//x_fraction = (SNES_WIDTH * 0x10000) / 320;		
 			//x_fraction = 52428;		
-	
+		
 			for (y = Height-1;y >= 0; y--)
 			{
 			    d = GFX.Screen + y * 640;
@@ -704,11 +713,11 @@ bool8_32 S9xDeinitUpdate (int Width, int Height)
 			    d += yoffset*640;
 			    x_error = x_fraction;
 			    s=0;
-
+	
 			    for (x = 0; x < 320; x++)
 			    {
 					x_error += x_fraction;
-
+	
 					if(x_error >= 0x10000)
 					{
 					    *d++ = temp[s++];
@@ -724,23 +733,18 @@ bool8_32 S9xDeinitUpdate (int Width, int Height)
 			}
 		}
 		//end stretch
-		*/		
+
 		if (GFX.InfoString)
 		    S9xDisplayString (GFX.InfoString, (uint8 *)screen->pixels + 64, 640,0);
 		else if (Settings.DisplayFrameRate)
 		    S9xDisplayFrameRate ((uint8 *)screen->pixels + 64, 640);
-		/*
-		if(Scale)
-		{
-			SDL_UpdateRect(screen,0,yoffset,320,Height+yoffset);
-		}
-		else
-		{*/
-			SDL_UpdateRect(screen,32,0,256,Height);
-		//}
+
+	    SDL_UpdateRect(screen,0,yoffset,320,Height+yoffset);
 	}
 
-//	SDL_UnlockSurface(screen);
+//Bei Fullscreen kann man alles blitten.
+//	SDL_BlitSurface(gfxscreen,NULL,screen,NULL);
+//	SDL_Flip(screen);
 	return(TRUE);
 }
 
@@ -963,7 +967,7 @@ void S9xProcessEvents (bool8_32 block)
 			else if ( (keyssnes[sfc_key[START_1]] == SDL_PRESSED) && (keyssnes[sfc_key[R_1]] == SDL_PRESSED) ) {
 				//extern char snapscreen;
 				char fname[256], ext[20];
-				Scale_disp=Scale;
+//				Scale_disp=Scale;
 				gp2x_sound_volume(0, 0);
 				sprintf(ext, ".00%d", SaveSlotNum);
 				strcpy(fname, S9xGetFilename (ext));

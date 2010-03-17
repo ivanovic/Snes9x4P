@@ -1,6 +1,14 @@
 Changlist using the following base http://www9.atpages.jp/~drowsnug95/?p=252 source code
 (http://www9.atpages.jp/~drowsnug95/wp-content/uploads/2009/10/snes9x_src.zip)
 
+ver 20100315
++SA-1 Support added (Super Mario RPG and all other SA1 Games work now)
++"-nohi" or "-nohires" commandline option added to disable High-Resolution Mode (for Secret of Mana, ...)
++Fullscreen support added back (only available if started with commandline option -nohi or -nohires)
++transparency Option removed, doesn't affect speed
++Frameskip Option added (1-9 and Auto)
++memory leaks fixed
+
 ver 20100313
 +screenshot feature fixed (in highres mode screenshots still are not fullscreen caps)
 

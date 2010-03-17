@@ -154,8 +154,9 @@ void S9xReset (void)
     S9xResetDMA ();
     S9xResetAPU ();
     S9xResetDSP1 ();
-#ifndef _ZAURUS
+//#ifndef _ZAURUS
     S9xSA1Init ();
+#ifndef _ZAURUS
     if (Settings.C4)
         S9xInitC4 ();
     S9xInitCheatData ();

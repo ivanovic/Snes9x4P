@@ -219,7 +219,7 @@ void S9xMainLoop (void)
 	struct SRegisters *reg = &Registers;
 	struct SAPURegisters *areg = &APURegisters;
 
-	set_FCLK(CLK_FREQ);
+//	set_FCLK(CLK_FREQ);
 
     for (;;)
     {
@@ -308,10 +308,10 @@ void S9xMainLoop (void)
 		cpu->Cycles += icpu->Speed [*cpu->PC];
 #endif
 		(*icpu->S9xOpcodes [*cpu->PC++].S9xOpcode) (reg, icpu, cpu);
-#ifndef _ZAURUS
+//#ifndef _ZAURUS
 		if (SA1.Executing)
 			S9xSA1MainLoop ();
-#endif
+//#endif
 		DO_HBLANK_CHECK();
 	} // for(;;)
     Registers.PC = cpu->PC - cpu->PCBase;

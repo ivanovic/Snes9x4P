@@ -617,10 +617,10 @@ static int Unfreeze (STREAM stream)
 	if ((result = UnfreezeStruct (stream, "SAR", &SA1Registers, 
 				      SnapSA1Registers, COUNT (SnapSA1Registers))) != SUCCESS)
 	    return (result);
-#ifndef _ZAURUS
+//#ifndef _ZAURUS
 	S9xFixSA1AfterSnapshotLoad ();
 	SA1.Flags |= sa1_old_flags & (TRACE_FLAG);
-#endif
+//#endif
     }
     S9xFixSoundAfterSnapshotLoad ();
     ICPU.ShiftedPB = Registers.PB << 16;

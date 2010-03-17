@@ -181,6 +181,7 @@ struct SPPU {
     uint16 OBJNameBase;
     bool8_32  OBJAddition;
     uint8  OAMReadFlip;
+    uint16  padding;			//SiENcE
     uint8  OAMData [512 + 32];
     bool8_32  VTimerEnabled;
     bool8_32  HTimerEnabled;

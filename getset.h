@@ -379,14 +379,14 @@ INLINE void S9xSetByte (uint8 Byte, uint32 Address, struct SCPUState * cpu)
 #endif
 #ifdef CPU_SHUTDOWN
 		SetAddress += Address & 0xffff;
-#ifndef _ZAURUS
+//#ifndef _ZAURUS
 		if (SetAddress == SA1.WaitByteAddress1 ||
 			SetAddress == SA1.WaitByteAddress2)
 		{
 			SA1.Executing = SA1ICPU.S9xOpcodes != NULL;
 			SA1.WaitCounter = 0;
 		}
-#endif
+//#endif
 		*SetAddress = Byte;
 #else
 		*(SetAddress + (Address & 0xffff)) = Byte;
@@ -457,7 +457,7 @@ INLINE void S9xSetByte (uint8 Byte, uint32 Address, struct SCPUState * cpu)
 #ifdef DEBUGGER
 		printf ("W(B) %06x\n", Address);
 #endif
-#ifndef _ZAURUS
+//#ifndef _ZAURUS
     case CMemory::MAP_SA1RAM:
 #ifdef VAR_CYCLES
 		cpu->Cycles += SLOW_ONE_CYCLE;
@@ -465,7 +465,7 @@ INLINE void S9xSetByte (uint8 Byte, uint32 Address, struct SCPUState * cpu)
 		*(Memory.SRAM + (Address & 0xffff)) = Byte;
 		SA1.Executing = !SA1.Waiting;
 		break;
-		
+#ifndef _ZAURUS
     case CMemory::MAP_C4:
 		S9xSetC4 (Byte, Address & 0xffff);
 		return;
@@ -538,14 +538,14 @@ INLINE void S9xSetWord (uint16 Word, uint32 Address, struct SCPUState * cpu)
 #endif
 #ifdef CPU_SHUTDOWN
 		SetAddress += Address & 0xffff;
-#ifndef _ZAURUS
+//#ifndef _ZAURUS
 		if (SetAddress == SA1.WaitByteAddress1 ||
 			SetAddress == SA1.WaitByteAddress2)
 		{
 			SA1.Executing = SA1ICPU.S9xOpcodes != NULL;
 			SA1.WaitCounter = 0;
 		}
-#endif
+//#endif
 #ifdef FAST_LSB_WORD_ACCESS
 		*(uint16 *) SetAddress = Word;
 #else
@@ -645,7 +645,8 @@ INLINE void S9xSetWord (uint16 Word, uint32 Address, struct SCPUState * cpu)
 		cpu->Cycles += SLOW_ONE_CYCLE * 2;
 		s7r.bank50[(Address & 0xffff)]= (uint8) Word;
 		s7r.bank50[((Address + 1) & 0xffff)]= (uint8) Word;
-		break; */
+		break;
+#endif
     case CMemory::MAP_SA1RAM:
 #ifdef VAR_CYCLES
 		cpu->Cycles += SLOW_ONE_CYCLE;
@@ -654,7 +655,7 @@ INLINE void S9xSetWord (uint16 Word, uint32 Address, struct SCPUState * cpu)
 		*(Memory.SRAM + ((Address + 1) & 0xffff)) = (uint8) (Word >> 8);
 		SA1.Executing = !SA1.Waiting;
 		break;
-		
+#ifndef _ZAURUS
     case CMemory::MAP_C4:
 		cpu->Cycles += SLOW_ONE_CYCLE * 2;
 		S9xSetC4 (Word & 0xff, Address & 0xffff);

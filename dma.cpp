@@ -363,13 +363,13 @@ void S9xDoDMA (uint8 Channel)
 			base = in_sdd1_dma;
 			p = 0;
 		}
-#ifndef _ZAURUS
+//#ifndef _ZAURUS
 		if(spc7110_dma)
 		{
 			base=spc7110_dma;
 			p = 0;
 		}
-#endif
+//#endif
 		if (inc > 0)
 			d->AAddress += count;
 		else
