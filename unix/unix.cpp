@@ -138,6 +138,7 @@ Snes9X: Memory allocation failure - not enough RAM/virtual memory available.\n\
         S9xExiting...\n");
     Memory.Deinit ();
     S9xDeinitAPU ();
+    S9xDeinitDisplay();
     
     exit (1);
 }
@@ -237,7 +238,7 @@ int main (int argc, char **argv)
     Settings.ControllerOption = 0;
     Settings.Transparency = TRUE;
     Settings.SixteenBit = TRUE;
-    Settings.SupportHiRes = TRUE;
+    Settings.SupportHiRes = FALSE; //TRUE;
     Settings.NetPlay = FALSE;
     Settings.ServerName [0] = 0;
     Settings.ThreadSound = TRUE;
@@ -270,51 +271,59 @@ int main (int argc, char **argv)
 #ifdef GFX_MULTI_FORMAT
     S9xSetRenderPixelFormat (RGB565);
 #endif
-    a320_init();
-    S9xInitInputDevices ();
-    S9xInitDisplay (argc, argv);
-    if (!S9xGraphicsInit ())
-	OutOfMemory ();
-#ifndef _ZAURUS
-    S9xTextMode ();
-#endif
+//    a320_init();
+//    S9xInitInputDevices ();
+//    S9xInitDisplay (argc, argv);
+//    if (!S9xGraphicsInit ())
+//    {
+//		OutOfMemory ();
+//	}
+//#ifndef _ZAURUS
+//    S9xTextMode ();
+//#endif
     if (rom_filename)
     {
-	if (!Memory.LoadROM (rom_filename))
-	{
-	    char dir [_MAX_DIR + 1];
-	    char drive [_MAX_DRIVE + 1];
-	    char name [_MAX_FNAME + 1];
-	    char ext [_MAX_EXT + 1];
-	    char fname [_MAX_PATH + 1];
-
-	    _splitpath (rom_filename, drive, dir, name, ext);
-	    _makepath (fname, drive, dir, name, ext);
-
-	    strcpy (fname, S9xGetROMDirectory ());
-	    strcat (fname, SLASH_STR);
-	    strcat (fname, name);
-	    if (ext [0])
-	    {
-		strcat (fname, ".");
-		strcat (fname, ext);
-	    }
-	    _splitpath (fname, drive, dir, name, ext);
-	    _makepath (fname, drive, dir, name, ext);
-	    if (!Memory.LoadROM (fname))
-	    {
-		printf ("Error opening: %s\n", rom_filename);
-		exit (1);
-	    }
-	}
-	Memory.LoadSRAM (S9xGetFilename (".srm"));
-//	S9xLoadCheatFile (S9xGetFilename (".cht"));
+		if (!Memory.LoadROM (rom_filename))
+		{
+		    char dir [_MAX_DIR + 1];
+		    char drive [_MAX_DRIVE + 1];
+		    char name [_MAX_FNAME + 1];
+		    char ext [_MAX_EXT + 1];
+		    char fname [_MAX_PATH + 1];
+	
+		    _splitpath (rom_filename, drive, dir, name, ext);
+		    _makepath (fname, drive, dir, name, ext);
+	
+		    strcpy (fname, S9xGetROMDirectory ());
+		    strcat (fname, SLASH_STR);
+		    strcat (fname, name);
+		    if (ext [0])
+		    {
+			strcat (fname, ".");
+			strcat (fname, ext);
+		    }
+		    _splitpath (fname, drive, dir, name, ext);
+		    _makepath (fname, drive, dir, name, ext);
+		    if (!Memory.LoadROM (fname))
+		    {
+			printf ("Error opening: %s\n", rom_filename);
+			exit (1);
+		    }
+		}
+		Memory.LoadSRAM (S9xGetFilename (".srm"));
+		//S9xLoadCheatFile (S9xGetFilename (".cht"));
     }
     else
     {
-	S9xReset ();
-	Settings.Paused |= 2;
+		S9xReset ();
+		Settings.Paused |= 2;
     }
+
+    S9xInitDisplay (argc, argv);
+    if (!S9xGraphicsInit ())
+		OutOfMemory ();
+    S9xInitInputDevices ();
+
     CPU.Flags = saved_flags;
 
     struct sigaction sa;
@@ -688,8 +697,8 @@ bool8_32 S9xDeinitUpdate (int Width, int Height)
 		    S9xDisplayString (GFX.InfoString, (uint8 *)screen->pixels + 64, 640,0);
 		else if (Settings.DisplayFrameRate)
 		    S9xDisplayFrameRate ((uint8 *)screen->pixels + 64, 640);
-		
-	    SDL_UpdateRect(screen,32,0,256,Height);
+
+		SDL_UpdateRect(screen,32,0,256,Height);
 	}
 	else
 	{

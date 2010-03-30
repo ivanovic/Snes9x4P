@@ -1,13 +1,22 @@
-Changlist using the following base http://www9.atpages.jp/~drowsnug95/?p=252 source code
-(http://www9.atpages.jp/~drowsnug95/wp-content/uploads/2009/10/snes9x_src.zip)
+Snes9x4D (for DINGUX) ver.20100330
+==================================
+(c)^SiENcE^2010.03.30
+
+Hint: I removed a speedhack from old 1.39 source, just because it only fakes fps.
+
+ver 20100330
++Fullscreen Scaling added again for Normal Mode
++Autodetect Highres Games (Secret of Mana, Seiken 3 & Rudra no Hihou) and switch automatically to HighRes Mode
++Scaling is not available in HighRes Mode (Menu-Option inactive)
 
 ver 20100315
-+SA-1 Support added (Super Mario RPG and all other SA1 Games work now)
-+"-nohi" or "-nohires" commandline option added to disable High-Resolution Mode (for Secret of Mana, ...)
-+Fullscreen support added back (only available if started with commandline option -nohi or -nohires)
++SA-1 Support added (Super Mario RPG, and all other SA-1 Games are working!!!)
+(Savestates of SA-1 Games are untested (better only use InGames saves!)
+
++"-nohi" or "-nohires" commandline option added
++"-hi" or "-hires" commandline option added
 +transparency Option removed, doesn't affect speed
-+Frameskip Option added (1-9 and Auto)
-+memory leaks fixed
++memory leak in Menu fixed
 
 ver 20100313
 +screenshot feature fixed (in highres mode screenshots still are not fullscreen caps)
@@ -32,6 +41,10 @@ http://crankgaming.blogspot.com/
 
 Sources:
 svn://zwischenwelt.org:20684/dingoo/Snes9x-sdl-1.39ff
+
+Original port taken from:
+http://www9.atpages.jp/~drowsnug95/?p=252
+http://www9.atpages.jp/~drowsnug95/wp-content/uploads/2009/10/snes9x_src.zip
 
 Contact:
 seabeams at gmx.de

@@ -778,7 +778,7 @@ void CMemory::InitROM (bool8_32 Interleaved)
 	Settings.SDD1 = Settings.ForceSDD1;
 	if ((ROMType & 0xf0) == 0x40)
 	    Settings.SDD1 = !Settings.ForceNoSDD1;
-/* flo:
+/* SiENcE: Not needed anymore with emulator code
 	if (Settings.SDD1)
 	    S9xLoadSDD1Data ();
 */
@@ -861,6 +861,61 @@ void CMemory::InitROM (bool8_32 Interleaved)
 	else
 	    LoROMMap ();
     }
+    
+    	//SiENcE - detect ROM's with Highres
+	//---------------------------------------------------------
+	if (Settings.SupportHiRes == false)
+	{
+		//Secret of MANA
+		//SeikenDensetsu 2
+		//SD3/SOM2 (DEUTSCH)
+		if ((strncmp (ROMName, "Secret of MANA", 14) == 0) ||
+			(strncmp (ROMName, "SeikenDensetsu 2", 16) == 0) ||
+			(strncmp (ROMName, "SD3/SOM2 (DEUTSCH)", 17) == 0))
+		{
+			Settings.SupportHiRes = true;
+			printf ("SupportHiRes = %s\n", "TRUE");
+		}
+		//SeikenDensetsu3
+		//I Love Golden-3
+		//M S YXM  S-S-3
+		//NEVIN GINGER'S
+		else
+		if ((strncmp (ROMName, "SeikenDensetsu3", 15) == 0) ||
+			(strncmp (ROMName, "I Love Golden-3", 15) == 0) ||
+			(strncmp (ROMName, "M S YXM  S-S-3", 14) == 0) ||
+			(strncmp (ROMName, "NEVIN GINGER'S", 14) == 0))
+		{
+			Settings.SupportHiRes = true;
+			printf ("SupportHiRes = %s\n", "TRUE");
+		}
+		//RUDORA NO HIHOU
+		//RUDRA FR RC1 PAR TT
+		//RUDRA AGTP V2.0
+		//TREASURE OF THE RUDRAS
+		//1730 RUDORA NO HIHOU
+		//RUDORA1995.06.26
+		else
+		if ((strncmp (ROMName, "RUDORA NO HIHOU", 15) == 0) ||
+			(strncmp (ROMName, "RUDRA FR RC1 PAR TT", 19) == 0) ||
+			(strncmp (ROMName, "RUDRA AGTP V2.0", 15) == 0) ||
+			(strncmp (ROMName, "TREASURE OF THE RUDRAS", 22) == 0) ||
+			(strncmp (ROMName, "1730 RUDORA NO HIHOU", 20) == 0) ||
+			(strncmp (ROMName, "RUDORA1995.06.26", 16) == 0))
+		{
+			Settings.SupportHiRes = true;
+			printf ("SupportHiRes = %s\n", "TRUE");
+		}
+		else
+		{
+			printf ("SupportHiRes = %s\n", "FALSE");
+		}
+	}
+	else
+	{
+		printf ("SupportHiRes = %s\n", "TRUE");
+	}
+	//---------------------------------------------------------
 
     int power2 = 0;
     int size = CalculatedSize;
