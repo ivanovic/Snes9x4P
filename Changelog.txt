@@ -1,10 +1,12 @@
-Snes9x4D (for DINGUX) ver.20100330
-==================================
+Snes9x4D (for DINGUX) v20100330
+===============================
 (c)^SiENcE^2010.03.30
 
 Hint: I removed a speedhack from old 1.39 source, just because it only fakes fps.
 
 ver 20100330
++renamed from Snes9x to Snes9x4D (for Dingux)
++new Snes9x4D Icon added
 +Fullscreen Scaling added again for Normal Mode
 +Autodetect Highres Games (Secret of Mana, Seiken 3 & Rudra no Hihou) and switch automatically to HighRes Mode
 +Scaling is not available in HighRes Mode (Menu-Option inactive)

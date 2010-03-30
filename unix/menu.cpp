@@ -46,7 +46,7 @@ void menu_dispupdate(void){
 		}	
 	}
 
-	strcpy(disptxt[0],"Snes9x4D (for DINGUX) ver.20100330");
+	strcpy(disptxt[0],"Snes9x4D (for DINGUX) v20100330");
 	strcpy(disptxt[1],"");
 	//strcpy(disptxt[2],"Resume Game          ");
 	strcpy(disptxt[2],"Reset Game           ");
