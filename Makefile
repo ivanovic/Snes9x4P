@@ -83,8 +83,8 @@ NASM = nasm
 
 INCLUDES=-I/opt/mipsel-linux-uclibc/include
 
-OPTIMISE= -D_ZAURUS -O2 -ffast-math -fstrict-aliasing -fomit-frame-pointer -ftree-vectorize -funroll-all-loops -fpeel-loops -ftracer -funswitch-loops -finline-functions -G 0 -march=mips32 -mtune=r4600 -mno-mips16 -msoft-float -fprofile-use
-# -ftest-coverage -fprofile-arcs
+OPTIMISE= -D_ZAURUS -O2 -ffast-math -fstrict-aliasing -fomit-frame-pointer -ftree-vectorize -funroll-all-loops -fpeel-loops -ftracer -funswitch-loops -finline-functions -G 0 -march=mips32 -mtune=r4600 -mno-mips16 -msoft-float
+# -fprofile-use -ftest-coverage -fprofile-arcs
 CCFLAGS = $(OPTIMISE) \
 -I/opt/mipsel-linux-uclibc/usr/include \
 -I/opt/mipsel-linux-uclibc/usr/include/SDL \
