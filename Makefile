@@ -7,7 +7,7 @@ UNZIP=1
 #OPENGL=1
 THREAD_SOUND=1
 #ASMKREED=1
-
+#ZSNESC4=1
 
 ifdef SPC700ASM
 SOUNDOBJ=spctool/spc700.o spctool/dsp.o spctool.o spctool/soundmod.o spc.o
@@ -29,6 +29,18 @@ KREEDDEFINES=-DMMX
 else
 KREEDOBJ=2xsai.o
 KREEDDEFINES=
+endif
+
+ifdef ZSNESC4
+C4OBJ=i386/C4.O i386/zsnesc4.o c4.o
+C4DEFINES=-DZSNES_C4
+C4DEPENDS=zsnes_c4
+C4NO_DEPENDS=c_c4
+else
+C4OBJ=c4.o c4emu.o
+C4DEFINES=
+C4DEPENDS=c_c4
+C4NO_DEPENDS=zsnes_c4
 endif
 
 OBJECTS=$(CPUOBJ) $(FXOBJ) $(C4OBJ) \
@@ -79,6 +91,7 @@ endif
 
 CCC = mipsel-linux-g++
 CC = mipsel-linux-gcc
+STRIP = mipsel-linux-strip
 NASM = nasm
 
 INCLUDES=-I/opt/mipsel-linux-uclibc/include
@@ -148,6 +161,7 @@ $(OPENGLDEPENDS):
 
 snes9x: $(OBJECTS) 
 	$(CC) $(INCLUDES) -o $@ $(OBJECTS) $(EXTRALIBS) $(LDLIBS) -lSDL -lstdc++ -lz -lpthread -lm -lgcov
+  $(STRIP) snes9x
 
 gsnes9x: $(OBJECTS) unix/x11.o unix/glide.o
 	$(CCC) $(INCLUDES) -o $@ $(OBJECTS) unix/x11.o unix/glide.o $(LDLIBS) $(GLIDELIBS) -lXext -lX11 -lXxf86dga -lXxf86vm $(EXTRALIBS) -lz -lm

@@ -126,7 +126,7 @@ void S9xResetCPU ()
 START_EXTERN_C
 void S9xResetSuperFX ();
 bool8_32 WinterGold = 0;
-extern uint8 *C4Ram;
+//extern uint8 *C4Ram;
 END_EXTERN_C
 #endif
 
@@ -156,9 +156,10 @@ void S9xReset (void)
     S9xResetDSP1 ();
 //#ifndef _ZAURUS
     S9xSA1Init ();
-#ifndef _ZAURUS
+//#ifndef _ZAURUS
     if (Settings.C4)
         S9xInitC4 ();
+  #ifndef _ZAURUS
     S9xInitCheatData ();
 #endif
     Settings.Paused = FALSE;

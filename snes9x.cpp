@@ -511,13 +511,11 @@ char *S9xParseArgs (char **argv, int argc)
             }
 #endif
 */
-/*
 	    else if (strcasecmp (argv [i], "-fullscreen") == 0 ||
 		     strcasecmp (argv [i], "-fs") == 0)
 	    {
 			Scale = TRUE;
 	    }
-*/
 	    else
 			S9xParseArg (argv, i, argc);
 	}

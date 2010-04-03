@@ -703,7 +703,7 @@ void CMemory::InitROM (bool8_32 Interleaved)
     Settings.DSP1Master = Settings.ForceDSP1;
     Settings.SuperFX = FALSE;
     Settings.SA1 = TRUE;
-    Settings.C4 = FALSE;
+    Settings.C4 = TRUE; //FALSE;
     Settings.SDD1 = TRUE;
     Settings.SRTC = FALSE;
 
