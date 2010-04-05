@@ -870,8 +870,12 @@ void CMemory::InitROM (bool8_32 Interleaved)
 		//SeikenDensetsu 2
 		//SD3/SOM2 (DEUTSCH)
 		if ((strncmp (ROMName, "Secret of MANA", 14) == 0) ||
+			(strncmp (ROMName, "Vimm's Lair: vimm.net", 21) == 0) ||
+			(strncmp (ROMName, "SoM VMF by FuSoYa", 17) == 0) ||
+			(strncmp (ROMName, "Secret of Mana", 14) == 0) ||
+			(strncmp (ROMName, "SECRET OF MANA", 14) == 0) ||
 			(strncmp (ROMName, "SeikenDensetsu 2", 16) == 0) ||
-			(strncmp (ROMName, "SD3/SOM2 (DEUTSCH)", 17) == 0))
+			(strncmp (ROMName, "SD3/SOM2 (DEUTSCH)", 18) == 0))
 		{
 			Settings.SupportHiRes = true;
 			printf ("SupportHiRes = %s\n", "TRUE");
