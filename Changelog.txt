@@ -1,8 +1,12 @@
-Snes9x4D (for DINGUX) v20100330
+Snes9x4D (for DINGUX) v20100407
 ===============================
-(c)^SiENcE^2010.03.30
+(c)^SiENcE^2010.04.07
 
 Hint: I removed a speedhack from old 1.39 source, just because it only fakes fps.
+
+ver 20100407
++C4 support added
++fullscreen commandline option bug solved (use -fs for fullscreen)
 
 ver 20100330
 +renamed from Snes9x to Snes9x4D (for Dingux)

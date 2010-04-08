@@ -46,7 +46,7 @@ void menu_dispupdate(void){
 		}	
 	}
 
-	strcpy(disptxt[0],"Snes9x4D (for DINGUX) v20100330");
+	strcpy(disptxt[0],"Snes9x4D (for DINGUX) v20100407");
 	strcpy(disptxt[1],"");
 	//strcpy(disptxt[2],"Resume Game          ");
 	strcpy(disptxt[2],"Reset Game           ");
@@ -434,9 +434,9 @@ void ShowCredit(){
 	"",
 	"",
 	"",
-	" Snes9x for DINGUX",
+	" Snes9x4D for Dingux",
 	"                                     ",
-	" Thank you using Snes9X !          ",
+	" Thank you using Snes9x4D!          ",
 	"                                     ",
 	" Key Configurations,     ",
 	"  State Save: START + R ",
