@@ -1,43 +1,91 @@
-/*
- * Snes9x - Portable Super Nintendo Entertainment System (TM) emulator.
- *
- * (c) Copyright 1996 - 2001 Gary Henderson (gary.henderson@ntlworld.com) and
- *                           Jerremy Koot (jkoot@snes9x.com)
- *
- * Super FX C emulator code 
- * (c) Copyright 1997 - 1999 Ivar (ivar@snes9x.com) and
- *                           Gary Henderson.
- * Super FX assembler emulator code (c) Copyright 1998 zsKnight and _Demo_.
- *
- * DSP1 emulator code (c) Copyright 1998 Ivar, _Demo_ and Gary Henderson.
- * C4 asm and some C emulation code (c) Copyright 2000 zsKnight and _Demo_.
- * C4 C code (c) Copyright 2001 Gary Henderson (gary.henderson@ntlworld.com).
- *
- * DOS port code contains the works of other authors. See headers in
- * individual files.
- *
- * Snes9x homepage: http://www.snes9x.com
- *
- * Permission to use, copy, modify and distribute Snes9x in both binary and
- * source form, for non-commercial purposes, is hereby granted without fee,
- * providing that this license information and copyright notice appear with
- * all copies and any derived work.
- *
- * This software is provided 'as-is', without any express or implied
- * warranty. In no event shall the authors be held liable for any damages
- * arising from the use of this software.
- *
- * Snes9x is freeware for PERSONAL USE only. Commercial users should
- * seek permission of the copyright holders first. Commercial use includes
- * charging money for Snes9x or software derived from Snes9x.
- *
- * The copyright holders request that bug fixes and improvements to the code
- * should be forwarded to them so everyone can benefit from the modifications
- * in future versions.
- *
- * Super NES and Super Nintendo Entertainment System are trademarks of
- * Nintendo Co., Limited and its subsidiary companies.
- */
+/*******************************************************************************
+  Snes9x - Portable Super Nintendo Entertainment System (TM) emulator.
+ 
+  (c) Copyright 1996 - 2002 Gary Henderson (gary.henderson@ntlworld.com) and
+                            Jerremy Koot (jkoot@snes9x.com)
+
+  (c) Copyright 2001 - 2004 John Weidman (jweidman@slip.net)
+
+  (c) Copyright 2002 - 2004 Brad Jorsch (anomie@users.sourceforge.net),
+                            funkyass (funkyass@spam.shaw.ca),
+                            Joel Yliluoma (http://iki.fi/bisqwit/)
+                            Kris Bleakley (codeviolation@hotmail.com),
+                            Matthew Kendora,
+                            Nach (n-a-c-h@users.sourceforge.net),
+                            Peter Bortas (peter@bortas.org) and
+                            zones (kasumitokoduck@yahoo.com)
+
+  C4 x86 assembler and some C emulation code
+  (c) Copyright 2000 - 2003 zsKnight (zsknight@zsnes.com),
+                            _Demo_ (_demo_@zsnes.com), and Nach
+
+  C4 C++ code
+  (c) Copyright 2003 Brad Jorsch
+
+  DSP-1 emulator code
+  (c) Copyright 1998 - 2004 Ivar (ivar@snes9x.com), _Demo_, Gary Henderson,
+                            John Weidman, neviksti (neviksti@hotmail.com),
+                            Kris Bleakley, Andreas Naive
+
+  DSP-2 emulator code
+  (c) Copyright 2003 Kris Bleakley, John Weidman, neviksti, Matthew Kendora, and
+                     Lord Nightmare (lord_nightmare@users.sourceforge.net
+
+  OBC1 emulator code
+  (c) Copyright 2001 - 2004 zsKnight, pagefault (pagefault@zsnes.com) and
+                            Kris Bleakley
+  Ported from x86 assembler to C by sanmaiwashi
+
+  SPC7110 and RTC C++ emulator code
+  (c) Copyright 2002 Matthew Kendora with research by
+                     zsKnight, John Weidman, and Dark Force
+
+  S-DD1 C emulator code
+  (c) Copyright 2003 Brad Jorsch with research by
+                     Andreas Naive and John Weidman
+ 
+  S-RTC C emulator code
+  (c) Copyright 2001 John Weidman
+  
+  ST010 C++ emulator code
+  (c) Copyright 2003 Feather, Kris Bleakley, John Weidman and Matthew Kendora
+
+  Super FX x86 assembler emulator code 
+  (c) Copyright 1998 - 2003 zsKnight, _Demo_, and pagefault 
+
+  Super FX C emulator code 
+  (c) Copyright 1997 - 1999 Ivar, Gary Henderson and John Weidman
+
+
+  SH assembler code partly based on x86 assembler code
+  (c) Copyright 2002 - 2004 Marcus Comstedt (marcus@mc.pp.se) 
+
+ 
+  Specific ports contains the works of other authors. See headers in
+  individual files.
+ 
+  Snes9x homepage: http://www.snes9x.com
+ 
+  Permission to use, copy, modify and distribute Snes9x in both binary and
+  source form, for non-commercial purposes, is hereby granted without fee,
+  providing that this license information and copyright notice appear with
+  all copies and any derived work.
+ 
+  This software is provided 'as-is', without any express or implied
+  warranty. In no event shall the authors be held liable for any damages
+  arising from the use of this software.
+ 
+  Snes9x is freeware for PERSONAL USE only. Commercial users should
+  seek permission of the copyright holders first. Commercial use includes
+  charging money for Snes9x or software derived from Snes9x.
+ 
+  The copyright holders request that bug fixes and improvements to the code
+  should be forwarded to them so everyone can benefit from the modifications
+  in future versions.
+ 
+  Super NES and Super Nintendo Entertainment System are trademarks of
+  Nintendo Co., Limited and its subsidiary companies.
+*******************************************************************************/
 #ifndef _FXINST_H_
 #define _FXINST_H_ 1
 
@@ -217,8 +265,8 @@ struct FxRegs_s
     uint32	vScreenRealHeight;	/* 128, 160, 192 or 256 */
     uint32	vPrevScreenHeight;
     uint32	vScreenSize;
-    void	(*pfPlot)(struct FxRegs_s * gsu);
-    void	(*pfRpix)(struct FxRegs_s * gsu);
+    void	(*pfPlot)();
+    void	(*pfRpix)();
     
     uint8 *	pvRamBank;		/* Pointer to current RAM-bank */
     uint8 *	pvRomBank;		/* Pointer to current ROM-bank */
@@ -232,7 +280,16 @@ struct FxRegs_s
     uint8 	avCacheBackup[512];	/* Backup of ROM when the cache has replaced it */
     uint32	vCounter;
     uint32	vInstCount;
+    uint32	vSCBRDirty;		/* if SCBR is written, our cached screen pointers need updating */
 };
+
+#define  FxRegs_s_null { \
+   {0},    0,      0,      0,      0,   0,    0,   0,    0,    0, \
+  NULL, NULL,      0,      0,      0,   0,    0,   0,    0,    0, \
+     0,    0,      0,      0,   NULL,   0, NULL,   0, NULL,    0, \
+     0, NULL, {NULL},    {0},      0,   0,    0,   0, NULL, NULL, \
+  NULL, NULL,   NULL, {NULL}, {NULL},   0, NULL, {0},    0,    0, \
+}
 
 /* GSU registers */
 #define GSU_R0 0x000
@@ -279,12 +336,12 @@ struct FxRegs_s
 #define FLG_IRQ (1<<15)
 
 /* Test flag */
-#define TF(a) (gsu->vStatusReg & FLG_##a )
-#define CF(a) (gsu->vStatusReg &= ~FLG_##a )
-#define SF(a) (gsu->vStatusReg |= FLG_##a )
+#define TF(a) (GSU.vStatusReg & FLG_##a )
+#define CF(a) (GSU.vStatusReg &= ~FLG_##a )
+#define SF(a) (GSU.vStatusReg |= FLG_##a )
 
 /* Test and set flag if condition, clear if not */
-#define TS(a,b) gsu->vStatusReg = ( (gsu->vStatusReg & (~FLG_##a)) | ( (!!(##b)) * FLG_##a ) )
+#define TS(a,b) GSU.vStatusReg = ( (GSU.vStatusReg & (~FLG_##a)) | ( (!!(##b)) * FLG_##a ) )
 
 /* Testing ALT1 & ALT2 bits */
 #define ALT0 (!TF(ALT1)&&!TF(ALT2))
@@ -306,23 +363,23 @@ struct FxRegs_s
 #define TSZ(num) TS(S, (num & 0x8000)); TS(Z, (!USEX16(num)) )
 
 /* Clear flags */
-#define CLRFLAGS gsu->vStatusReg &= ~(FLG_ALT1|FLG_ALT2|FLG_B); gsu->pvDreg = gsu->pvSreg = &R0;
+#define CLRFLAGS GSU.vStatusReg &= ~(FLG_ALT1|FLG_ALT2|FLG_B); GSU.pvDreg = GSU.pvSreg = &R0;
 
 /* Read current RAM-Bank */
-#define RAM(adr) gsu->pvRamBank[USEX16(adr)]
+#define RAM(adr) GSU.pvRamBank[USEX16(adr)]
 
 /* Read current ROM-Bank */
-#define ROM(idx) (gsu->pvRomBank[USEX16(idx)])
+#define ROM(idx) (GSU.pvRomBank[USEX16(idx)])
 
 /* Access the current value in the pipe */
-#define PIPE gsu->vPipe
+#define PIPE GSU.vPipe
 
 /* Access data in the current program bank */
-#define PRGBANK(idx) gsu->pvPrgBank[USEX16(idx)]
+#define PRGBANK(idx) GSU.pvPrgBank[USEX16(idx)]
 
 /* Update pipe from ROM */
 #if 0
-#define FETCHPIPE { PIPE = PRGBANK(R15); gsu->vPipeAdr = (gsu->vPrgBankReg<<16) + R15; }
+#define FETCHPIPE { PIPE = PRGBANK(R15); GSU.vPipeAdr = (GSU.vPrgBankReg<<16) + R15; }
 #else
 #define FETCHPIPE { PIPE = PRGBANK(R15); }
 #endif
@@ -331,10 +388,10 @@ struct FxRegs_s
 #define ABS(x) ((x)<0?-(x):(x))
 
 /* Access source register */
-#define SREG (*gsu->pvSreg)
+#define SREG (*GSU.pvSreg)
 
 /* Access destination register */
-#define DREG (*gsu->pvDreg)
+#define DREG (*GSU.pvDreg)
 
 #ifndef FX_DO_ROMBUFFER
 
@@ -347,71 +404,72 @@ struct FxRegs_s
 #else
 
 /* Read R14 */
-#define READR14 gsu->vRomBuffer = ROM(R14)
+#define READR14 GSU.vRomBuffer = ROM(R14)
 
 /* Test and/or read R14 */
-#define TESTR14 if(gsu->pvDreg == &R14) READR14
+#define TESTR14 if(GSU.pvDreg == &R14) READR14
 
 #endif
 
 /* Access to registers */
-#define R0 gsu->avReg[0]
-#define R1 gsu->avReg[1]
-#define R2 gsu->avReg[2]
-#define R3 gsu->avReg[3]
-#define R4 gsu->avReg[4]
-#define R5 gsu->avReg[5]
-#define R6 gsu->avReg[6]
-#define R7 gsu->avReg[7]
-#define R8 gsu->avReg[8]
-#define R9 gsu->avReg[9]
-#define R10 gsu->avReg[10]
-#define R11 gsu->avReg[11]
-#define R12 gsu->avReg[12]
-#define R13 gsu->avReg[13]
-#define R14 gsu->avReg[14]
-#define R15 gsu->avReg[15]
-#define SFR gsu->vStatusReg
-#define PBR gsu->vPrgBankReg
-#define ROMBR gsu->vRomBankReg
-#define RAMBR gsu->vRamBankReg
-#define CBR gsu->vCacheBaseReg
-#define SCBR USEX8(gsu->pvRegisters[GSU_SCBR])
-#define SCMR USEX8(gsu->pvRegisters[GSU_SCMR])
-#define COLR gsu->vColorReg
-#define POR gsu->vPlotOptionReg
-#define BRAMR USEX8(gsu->pvRegisters[GSU_BRAMR])
-#define VCR USEX8(gsu->pvRegisters[GSU_VCR])
-#define CFGR USEX8(gsu->pvRegisters[GSU_CFGR])
-#define CLSR USEX8(gsu->pvRegisters[GSU_CLSR])
+#define R0 GSU.avReg[0]
+#define R1 GSU.avReg[1]
+#define R2 GSU.avReg[2]
+#define R3 GSU.avReg[3]
+#define R4 GSU.avReg[4]
+#define R5 GSU.avReg[5]
+#define R6 GSU.avReg[6]
+#define R7 GSU.avReg[7]
+#define R8 GSU.avReg[8]
+#define R9 GSU.avReg[9]
+#define R10 GSU.avReg[10]
+#define R11 GSU.avReg[11]
+#define R12 GSU.avReg[12]
+#define R13 GSU.avReg[13]
+#define R14 GSU.avReg[14]
+#define R15 GSU.avReg[15]
+#define SFR GSU.vStatusReg
+#define PBR GSU.vPrgBankReg
+#define ROMBR GSU.vRomBankReg
+#define RAMBR GSU.vRamBankReg
+#define CBR GSU.vCacheBaseReg
+#define SCBR USEX8(GSU.pvRegisters[GSU_SCBR])
+#define SCMR USEX8(GSU.pvRegisters[GSU_SCMR])
+#define COLR GSU.vColorReg
+#define POR GSU.vPlotOptionReg
+#define BRAMR USEX8(GSU.pvRegisters[GSU_BRAMR])
+#define VCR USEX8(GSU.pvRegisters[GSU_VCR])
+#define CFGR USEX8(GSU.pvRegisters[GSU_CFGR])
+#define CLSR USEX8(GSU.pvRegisters[GSU_CLSR])
 
 /* Execute instruction from the pipe, and fetch next byte to the pipe */
 #define FX_STEP { uint32 vOpcode = (uint32)PIPE; FETCHPIPE; \
-(*fx_ppfOpcodeTable[ (gsu->vStatusReg & 0x300) | vOpcode ])(gsu); } \
+(*fx_ppfOpcodeTable[ (GSU.vStatusReg & 0x300) | vOpcode ])(); } \
 
 #define FX_FUNCTION_RUN			0
 #define FX_FUNCTION_RUN_TO_BREAKPOINT	1
 #define FX_FUNCTION_STEP_OVER		2
 
-extern uint32 (**fx_ppfFunctionTable)(uint32, struct FxRegs_s * gsu);
-extern void (**fx_ppfPlotTable)(struct FxRegs_s * gsu);
-extern void (**fx_ppfOpcodeTable)(struct FxRegs_s * gsu);
+extern uint32 (**fx_ppfFunctionTable)(uint32);
+extern void (**fx_ppfPlotTable)();
+extern void (**fx_ppfOpcodeTable)();
 
-extern uint32 (*fx_apfFunctionTable[])(uint32, struct FxRegs_s * gsu);
-extern void (*fx_apfOpcodeTable[])(struct FxRegs_s * gsu);
-extern void (*fx_apfPlotTable[])(struct FxRegs_s * gsu);
+extern uint32 (*fx_apfFunctionTable[])(uint32);
+extern void (*fx_apfOpcodeTable[])();
+extern void (*fx_apfPlotTable[])();
 extern uint32 (*fx_a_apfFunctionTable[])(uint32);
-extern void (*fx_a_apfOpcodeTable[])(struct FxRegs_s * gsu);
-extern void (*fx_a_apfPlotTable[])(struct FxRegs_s * gsu);
+extern void (*fx_a_apfOpcodeTable[])();
+extern void (*fx_a_apfPlotTable[])();
 extern uint32 (*fx_r_apfFunctionTable[])(uint32);
-extern void (*fx_r_apfOpcodeTable[])(struct FxRegs_s * gsu);
-extern void (*fx_r_apfPlotTable[])(struct FxRegs_s * gsu);
+extern void (*fx_r_apfOpcodeTable[])();
+extern void (*fx_r_apfPlotTable[])();
 extern uint32 (*fx_ar_apfFunctionTable[])(uint32);
-extern void (*fx_ar_apfOpcodeTable[])(struct FxRegs_s * gsu);
-extern void (*fx_ar_apfPlotTable[])(struct FxRegs_s * gsu);
+extern void (*fx_ar_apfOpcodeTable[])();
+extern void (*fx_ar_apfPlotTable[])();
 
 /* Set this define if branches are relative to the instruction in the delay slot */
 /* (I think they are) */
 #define BRANCH_DELAY_RELATIVE
 
 #endif
+

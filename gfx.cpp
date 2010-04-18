@@ -673,7 +673,7 @@ void RenderLine (uint8 C, struct SPPU *ppu)
 	}
 	else
 	{
-#ifndef _ZAURUS
+//#ifndef _ZAURUS
 	    if (Settings.StarfoxHack && ppu->BG[2].VOffset == 0 &&
 		ppu->BG[2].HOffset == 0xe000)
 	    {
@@ -681,7 +681,7 @@ void RenderLine (uint8 C, struct SPPU *ppu)
 		ln->BG[2].HOffset = 0;
 	    }
 	    else
-#endif
+//#endif
 	    {
 		ln->BG[2].VOffset = ppu->BG[2].VOffset + 1;
 		ln->BG[2].HOffset = ppu->BG[2].HOffset;

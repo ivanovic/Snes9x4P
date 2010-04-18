@@ -501,35 +501,41 @@ again:
 	!Settings.ForceSA1 && !Settings.ForceC4 &&
 	!Settings.ForceSDD1)
     {
-	if (strncmp ((char *) &ROM [0x7fc0], "YUYU NO QUIZ DE GO!GO!", 22) == 0)
-	{
-	    LoROM = TRUE;
-	    HiROM = FALSE;
-	    Interleaved = FALSE;
-	}
-	else 
-	if (strncmp ((char *) &ROM [0x7fc0], "SP MOMOTAROU DENTETSU2", 22) == 0)
-	{
-	    LoROM = TRUE;
-	    HiROM = FALSE;
-	    Interleaved = FALSE;
-	}
-	else 
-	if (CalculatedSize == 0x100000 && 
-	    strncmp ((char *) &ROM [0xffc0], "WWF SUPER WRESTLEMANIA", 22) == 0)
-	{
-	    int cvcount;
-
-	    memmove (&ROM[0x100000] , ROM, 0x100000);
-	    for (cvcount = 0; cvcount < 16; cvcount++)
-	    {
-		memmove (&ROM[0x8000 * cvcount], &ROM[0x10000 * cvcount + 0x100000 + 0x8000], 0x8000);
-		memmove (&ROM[0x8000 * cvcount + 0x80000], &ROM[0x10000 * cvcount + 0x100000], 0x8000);
-	    }
-	    LoROM = TRUE;
-	    HiROM = FALSE;
-	    ZeroMemory (ROM + CalculatedSize, MAX_ROM_SIZE - CalculatedSize);
-	}
+	    if(strncmp((char *) &ROM [0x7fc0], "YOSHI'S ISLAND", 14) == 0&&(*(uint16*)&ROM[0x7FDE])==57611&&ROM[0x10002]==0xA9)
+		{
+			Interleaved=true;
+			Settings.ForceInterleaved2=true;
+		}
+		else
+		if (strncmp ((char *) &ROM [0x7fc0], "YUYU NO QUIZ DE GO!GO!", 22) == 0)
+		{
+		    LoROM = TRUE;
+		    HiROM = FALSE;
+		    Interleaved = FALSE;
+		}
+		else 
+		if (strncmp ((char *) &ROM [0x7fc0], "SP MOMOTAROU DENTETSU2", 22) == 0)
+		{
+		    LoROM = TRUE;
+		    HiROM = FALSE;
+		    Interleaved = FALSE;
+		}
+		else 
+		if (CalculatedSize == 0x100000 && 
+		    strncmp ((char *) &ROM [0xffc0], "WWF SUPER WRESTLEMANIA", 22) == 0)
+		{
+		    int cvcount;
+	
+		    memmove (&ROM[0x100000] , ROM, 0x100000);
+		    for (cvcount = 0; cvcount < 16; cvcount++)
+		    {
+			memmove (&ROM[0x8000 * cvcount], &ROM[0x10000 * cvcount + 0x100000 + 0x8000], 0x8000);
+			memmove (&ROM[0x8000 * cvcount + 0x80000], &ROM[0x10000 * cvcount + 0x100000], 0x8000);
+		    }
+		    LoROM = TRUE;
+		    HiROM = FALSE;
+		    ZeroMemory (ROM + CalculatedSize, MAX_ROM_SIZE - CalculatedSize);
+		}
     }
 
     if (!Settings.ForceNotInterleaved && Interleaved)
@@ -701,7 +707,7 @@ void CMemory::InitROM (bool8_32 Interleaved)
     Settings.MouseMaster = Settings.Mouse;
     Settings.SuperScopeMaster = Settings.SuperScope;
     Settings.DSP1Master = Settings.ForceDSP1;
-    Settings.SuperFX = FALSE;
+    Settings.SuperFX = TRUE;	//FALSE
     Settings.SA1 = TRUE;
     Settings.C4 = TRUE; //FALSE;
     Settings.SDD1 = TRUE;
@@ -943,14 +949,14 @@ void CMemory::InitROM (bool8_32 Interleaved)
 
     if (remainder)
     {
-#ifndef _ZAURUS
+//#ifndef _ZAURUS
 	//for Tengai makyou
 	if (CalculatedSize == 0x500000 && Memory.HiROM && 
 	    strncmp ((const char *)&ROM[0xffb0], "18AZ", 4) == 0 &&
 	    !memcmp(&ROM[0xffd5], "\x3a\xf9\x0d\x03\x00\x33\x00", 7))
 	    sum1 += sum2;
 	else
-#endif
+//#endif
 	    sum1 += sum2 * (size / remainder);
     }
 
@@ -989,14 +995,14 @@ void CMemory::InitROM (bool8_32 Interleaved)
 	*p = 0;
     }
 
-#ifndef _ZAURUS
+//#ifndef _ZAURUS
     if (Settings.SuperFX)
     {
 	SRAMMask = 0xffff;
 	Memory.SRAMSize = 16;
     }
     else
-#endif
+//#endif
     {
 	SRAMMask = Memory.SRAMSize ?
 		    ((1 << (Memory.SRAMSize + 3)) * 128) - 1 : 0;
@@ -1481,49 +1487,65 @@ void CMemory::AlphaROMMap ()
     WriteProtectROM ();
 }
 
+void DetectSuperFxRamSize()
+{
+	if(ROM[0x7FDA]==0x33)
+	{
+		Memory.SRAMSize=ROM[0x7FBD];
+	}
+	else
+	{
+		if(strncmp(Memory.ROMName, "STAR FOX 2", 10)==0)
+		{
+			Memory.SRAMSize=6;
+		}
+		else Memory.SRAMSize=5;
+	}
+}
+
 void CMemory::SuperFXROMMap ()
 {
     int c;
     int i;
     
+    DetectSuperFxRamSize();
+    
     // Banks 00->3f and 80->bf
     for (c = 0; c < 0x400; c += 16)
     {
-	Map [c + 0] = Map [c + 0x800] = RAM;
-	Map [c + 1] = Map [c + 0x801] = RAM;
-	BlockIsRAM [c + 0] = BlockIsRAM [c + 0x800] = TRUE;
-	BlockIsRAM [c + 1] = BlockIsRAM [c + 0x801] = TRUE;
+		Map [c + 0] = Map [c + 0x800] = RAM;
+		Map [c + 1] = Map [c + 0x801] = RAM;
+		BlockIsRAM [c + 0] = BlockIsRAM [c + 0x800] = TRUE;
+		BlockIsRAM [c + 1] = BlockIsRAM [c + 0x801] = TRUE;
+	
+		Map [c + 2] = Map [c + 0x802] = (uint8 *) MAP_PPU;
+		Map [c + 3] = Map [c + 0x803] = (uint8 *) MAP_PPU;
+		Map [c + 4] = Map [c + 0x804] = (uint8 *) MAP_CPU;
+		Map [c + 5] = Map [c + 0x805] = (uint8 *) MAP_CPU;
+		Map [0x006 + c] = Map [0x806 + c] = (uint8 *) ::SRAM - 0x6000;
+		Map [0x007 + c] = Map [0x807 + c] = (uint8 *) ::SRAM - 0x6000;
+		BlockIsRAM [0x006 + c] = BlockIsRAM [0x007 + c] = BlockIsRAM [0x806 + c] = BlockIsRAM [0x807 + c] = TRUE;
 
-	Map [c + 2] = Map [c + 0x802] = (uint8 *) MAP_PPU;
-	Map [c + 3] = Map [c + 0x803] = (uint8 *) MAP_PPU;
-	Map [c + 4] = Map [c + 0x804] = (uint8 *) MAP_CPU;
-	Map [c + 5] = Map [c + 0x805] = (uint8 *) MAP_CPU;
-	Map [c + 6] = Map [c + 0x806] = (uint8 *) MAP_DSP;
-	Map [c + 7] = Map [c + 0x807] = (uint8 *) MAP_DSP;
-	for (i = c + 8; i < c + 16; i++)
-	{
-	    Map [i] = Map [i + 0x800] = &ROM [c << 11] - 0x8000;
-	    BlockIsROM [i] = BlockIsROM [i + 0x800] = TRUE;
-	}
-
-	for (i = c; i < c + 8; i++)
-	{
-	    int ppu = i & 15;
-	    
-	    MemorySpeed [i] = 
-		MemorySpeed [i + 0x800] = ppu >= 2 && ppu <= 3 ? ONE_CYCLE : SLOW_ONE_CYCLE;
-	}
+		for (i = c + 8; i < c + 16; i++)
+		{
+			Map [i] = Map [i + 0x800] = &ROM [c << 11] - 0x8000;
+			BlockIsROM [i] = BlockIsROM [i + 0x800] = TRUE;
+		}
     }
     
     // Banks 40->7f and c0->ff
     for (c = 0; c < 0x400; c += 16)
     {
-	for (i = c; i < c + 16; i++)
-	{
-	    Map [i + 0x400] = Map [i + 0xc00] = &ROM [(c << 12) % CalculatedSize];
-	    MemorySpeed [i + 0x400] = MemorySpeed [i + 0xc00] = SLOW_ONE_CYCLE;
-	    BlockIsROM [i + 0x400] = BlockIsROM [i + 0xc00] = TRUE;
-	}
+		for (i = c; i < c + 16; i++)
+		{
+			Map [i + 0x400] = Map [i + 0xc00] = &ROM [(c << 12) % CalculatedSize];
+
+
+
+
+
+			BlockIsROM [i + 0x400] = BlockIsROM [i + 0xc00] = TRUE;
+		}
     }
 
     // Banks 7e->7f, RAM
@@ -1544,7 +1566,7 @@ void CMemory::SuperFXROMMap ()
 	BlockIsRAM [c + 0x700] = TRUE;
 	BlockIsROM [c + 0x700] = FALSE;
     }
-
+/*
     // Banks 00->3f and 80->bf address ranges 6000->7fff is RAM.
     for (c = 0; c < 0x40; c++)
     {
@@ -1556,7 +1578,7 @@ void CMemory::SuperFXROMMap ()
 	BlockIsRAM [0x007 + (c << 4)] = TRUE;
 	BlockIsRAM [0x806 + (c << 4)] = TRUE;
 	BlockIsRAM [0x807 + (c << 4)] = TRUE;
-    }
+    }*/
     // Replicate the first 2Mb of the ROM at ROM + 2MB such that each 32K
     // block is repeated twice in each 64K block.
     for (c = 0; c < 64; c++)

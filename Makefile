@@ -9,6 +9,18 @@ THREAD_SOUND=1
 #ASMKREED=1
 #ZSNESC4=1
 
+ifdef ZSNESFX
+FXOBJ=i386/fxemu2b.o i386/fxemu2.o i386/fxemu2c.o i386/fxtable.o i386/sfxproc.o i386/zsnes.o
+FXDEFINES=-DZSNES_FX -DEXECUTE_SUPERFX_PER_LINE
+FXDEPENDS=zsnes_fx
+FXNO_DEPENDS=c_fx
+else
+FXOBJ=fxinst.o fxemu.o fxdbg.o
+FXDEFINES=-DEXECUTE_SUPERFX_PER_LINE
+FXDEPENDS=c_fx
+FXNO_DEPENDS=zsnes_fx
+endif
+
 ifdef SPC700ASM
 SOUNDOBJ=spctool/spc700.o spctool/dsp.o spctool.o spctool/soundmod.o spc.o
 SOUNDDEFINES=-DSPCTOOL
@@ -89,18 +101,22 @@ OPENGLDEPENDS=no_opengl
 OPENGLNO_DEPENDS=use_opengl
 endif
 
-CCC = mipsel-linux-g++
-CC = mipsel-linux-gcc
-STRIP = mipsel-linux-strip
-NASM = nasm
+CCC		= g++
+CC		= gcc
+STRIP	= strip
+NASM	=
+GASM	= g++
 
-INCLUDES=-I/opt/mipsel-linux-uclibc/include
+DEFAULT_CFLAGS = `sdl-config --cflags`
+LDLIBS         = `sdl-config --libs` -lSDL
 
-OPTIMISE= -D_ZAURUS -O2 -ffast-math -fstrict-aliasing -fomit-frame-pointer -ftree-vectorize -funroll-all-loops -fpeel-loops -ftracer -funswitch-loops -finline-functions -G 0 -march=mips32 -mtune=r4600 -mno-mips16 -msoft-float
+INCLUDES=
+
+OPTIMISE= -D_ZAURUS -O2 -ffast-math -fstrict-aliasing -fomit-frame-pointer -ftree-vectorize -funroll-all-loops -fpeel-loops -ftracer -funswitch-loops -finline-functions
+#-G 0 
 # -fprofile-use -ftest-coverage -fprofile-arcs
-CCFLAGS = $(OPTIMISE) \
--I/opt/mipsel-linux-uclibc/usr/include \
--I/opt/mipsel-linux-uclibc/usr/include/SDL \
+
+CCFLAGS = $(DEFAULT_CFLAGS) $(OPTIMISE) \
 -I. \
 -Iunzip \
 -Isdl \
@@ -119,7 +135,6 @@ $(GLIDEDEFINES) \
 $(OPENGLDEFINES) \
 $(GUIDEFINES) \
 $(KREEDDEFINES) \
-$(shell /opt/mipsel-linux-uclibc/usr/bin/sdl-config --cflags)
 
 #-DDEBUGGER
 #-DJOYSTICK_SUPPORT
@@ -127,8 +142,6 @@ $(shell /opt/mipsel-linux-uclibc/usr/bin/sdl-config --cflags)
 CFLAGS=$(CCFLAGS)
 
 .SUFFIXES: .o .cpp .c .cc .h .m .i .S .asm .obj
-
-LDLIBS = -L/opt/mipsel-linux-uclibc/usr/mipsel-linux/lib $(shell /opt/mipsel-linux-uclibc/usr/bin/sdl-config --libs)
 
 ifdef GLIDE
 all: offsets gsnes9x
@@ -214,7 +227,7 @@ i386/cpuexec.o: i386/asmstruc.h i386/offsets.h
 i386/cpuops.o: i386/asmstruc.h i386/asmops.h i386/getset.S i386/asmaddr.h i386/offsets.h
 i386/spc700.o: i386/asmstruc.h i386/spcops.h i386/offsets.h
 cpuexec.o: cpuexec.h cpuops.h snes9x.h snapshot.h gfx.h \
-	memmap.h ppu.h debug.h port.h display.h apu.h spc700.h apu.h jz4740.h
+	memmap.h ppu.h debug.h port.h display.h apu.h spc700.h apu.h unix/jz4740.h
 debug.o: cpuops.h cpuexec.h snes9x.h \
 	memmap.h ppu.h debug.h missing.h port.h display.h apu.h
 ppu.o: snes9x.h memmap.h ppu.h missing.h port.h cpuexec.h \

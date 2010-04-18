@@ -423,7 +423,7 @@ char *S9xParseArgs (char **argv, int argc)
 	    {
 		Settings.FixFrequency = 1;
 	    }
-#ifndef _ZAURUS
+//#ifndef _ZAURUS
 	    else if (strcasecmp (argv [i], "-nosuperfx") == 0 ||
 		     strcasecmp (argv [i], "-nosfx") == 0)
 		Settings.ForceNoSuperFX = TRUE;
@@ -465,7 +465,7 @@ char *S9xParseArgs (char **argv, int argc)
 	    {
 		Settings.SuperScope = FALSE;
 	    }
-#endif
+//#endif
 #ifdef NETPLAY_SUPPORT
 	    else if (strcasecmp (argv [i], "-port") == 0 ||
 		     strcasecmp (argv [i], "-po") == 0)

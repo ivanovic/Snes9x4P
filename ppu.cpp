@@ -875,12 +875,14 @@ void S9xSetPPU (uint8 Byte, uint16 Address, struct SPPU *ppu, struct InternalPPU
 				Memory.FillRAM[Address] = Byte;
 			return;
 		}
-#ifndef _ZAURUS
+//#ifndef _ZAURUS
 		else
-			// Dai Kaijyu Monogatari II
+/*			// Dai Kaijyu Monogatari II
 			if (Address == 0x2801 && Settings.SRTC)
 				S9xSetSRTC(Byte, Address);
-			else if (Address < 0x3000 || Address >= 0x3000 + 768)
+			else
+*/
+			if (Address < 0x3000 || Address >= 0x3000 + 768)
 			{
 #ifdef DEBUGGER
 				missing.unknownppu_write = Address;
@@ -915,7 +917,7 @@ void S9xSetPPU (uint8 Byte, uint16 Address, struct SPPU *ppu, struct InternalPPU
 								if (Byte & FLG_G)
 									S9xSuperFXExec();
 								else
-									FxFlushCache(& GSU);
+									FxFlushCache();
 							}
 							else
 								Memory.FillRAM[Address] = Byte;
@@ -960,14 +962,14 @@ void S9xSetPPU (uint8 Byte, uint16 Address, struct SPPU *ppu, struct InternalPPU
 							Memory.FillRAM[Address] = Byte;
 							if (Address >= 0x3100)
 							{
-								FxCacheWriteAccess(Address, & GSU);
+								FxCacheWriteAccess(Address);
 							}
 							break;
 					}
 #endif
 					return;
 			}
-#endif
+//#endif
 	}
 	Memory.FillRAM[Address] = Byte;
 }
@@ -1380,11 +1382,11 @@ uint8 S9xGetPPU(uint16 Address, struct SPPU *ppu, CMemory *mem)
 					return (0); //mem->FillRAM[Address]);
 			}
 		}
-#ifndef _ZAURUS
+//#ifndef _ZAURUS
 		if (!Settings.SuperFX)
-#endif
+//#endif
 			return (0x30);
-#ifndef _ZAURUS
+//#ifndef _ZAURUS
 #ifdef ZSNES_FX
 		if (Address < 0x3040)
 			byte = S9xSuperFXReadReg(Address);
@@ -1416,7 +1418,7 @@ uint8 S9xGetPPU(uint16 Address, struct SPPU *ppu, CMemory *mem)
 		}
 		return (byte);
 #endif
-#endif
+//#endif
 	}
 
 	return (byte);
@@ -2610,7 +2612,7 @@ void S9xUpdateJoypads(struct InternalPPU *ippu)
 	}
 }
 
-#ifndef _ZAURUS
+//#ifndef _ZAURUS
 #ifndef ZSNES_FX
 void S9xSuperFXExec()
 {
@@ -2798,4 +2800,4 @@ void S9xSuperFXExec()
 	#endif
 }
 #endif
-#endif
+//#endif

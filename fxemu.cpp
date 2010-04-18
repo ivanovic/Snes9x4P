@@ -1,43 +1,91 @@
-/*
- * Snes9x - Portable Super Nintendo Entertainment System (TM) emulator.
- *
- * (c) Copyright 1996 - 2001 Gary Henderson (gary.henderson@ntlworld.com) and
- *                           Jerremy Koot (jkoot@snes9x.com)
- *
- * Super FX C emulator code 
- * (c) Copyright 1997 - 1999 Ivar (ivar@snes9x.com) and
- *                           Gary Henderson.
- * Super FX assembler emulator code (c) Copyright 1998 zsKnight and _Demo_.
- *
- * DSP1 emulator code (c) Copyright 1998 Ivar, _Demo_ and Gary Henderson.
- * C4 asm and some C emulation code (c) Copyright 2000 zsKnight and _Demo_.
- * C4 C code (c) Copyright 2001 Gary Henderson (gary.henderson@ntlworld.com).
- *
- * DOS port code contains the works of other authors. See headers in
- * individual files.
- *
- * Snes9x homepage: http://www.snes9x.com
- *
- * Permission to use, copy, modify and distribute Snes9x in both binary and
- * source form, for non-commercial purposes, is hereby granted without fee,
- * providing that this license information and copyright notice appear with
- * all copies and any derived work.
- *
- * This software is provided 'as-is', without any express or implied
- * warranty. In no event shall the authors be held liable for any damages
- * arising from the use of this software.
- *
- * Snes9x is freeware for PERSONAL USE only. Commercial users should
- * seek permission of the copyright holders first. Commercial use includes
- * charging money for Snes9x or software derived from Snes9x.
- *
- * The copyright holders request that bug fixes and improvements to the code
- * should be forwarded to them so everyone can benefit from the modifications
- * in future versions.
- *
- * Super NES and Super Nintendo Entertainment System are trademarks of
- * Nintendo Co., Limited and its subsidiary companies.
- */
+/*******************************************************************************
+  Snes9x - Portable Super Nintendo Entertainment System (TM) emulator.
+ 
+  (c) Copyright 1996 - 2002 Gary Henderson (gary.henderson@ntlworld.com) and
+                            Jerremy Koot (jkoot@snes9x.com)
+
+  (c) Copyright 2001 - 2004 John Weidman (jweidman@slip.net)
+
+  (c) Copyright 2002 - 2004 Brad Jorsch (anomie@users.sourceforge.net),
+                            funkyass (funkyass@spam.shaw.ca),
+                            Joel Yliluoma (http://iki.fi/bisqwit/)
+                            Kris Bleakley (codeviolation@hotmail.com),
+                            Matthew Kendora,
+                            Nach (n-a-c-h@users.sourceforge.net),
+                            Peter Bortas (peter@bortas.org) and
+                            zones (kasumitokoduck@yahoo.com)
+
+  C4 x86 assembler and some C emulation code
+  (c) Copyright 2000 - 2003 zsKnight (zsknight@zsnes.com),
+                            _Demo_ (_demo_@zsnes.com), and Nach
+
+  C4 C++ code
+  (c) Copyright 2003 Brad Jorsch
+
+  DSP-1 emulator code
+  (c) Copyright 1998 - 2004 Ivar (ivar@snes9x.com), _Demo_, Gary Henderson,
+                            John Weidman, neviksti (neviksti@hotmail.com),
+                            Kris Bleakley, Andreas Naive
+
+  DSP-2 emulator code
+  (c) Copyright 2003 Kris Bleakley, John Weidman, neviksti, Matthew Kendora, and
+                     Lord Nightmare (lord_nightmare@users.sourceforge.net
+
+  OBC1 emulator code
+  (c) Copyright 2001 - 2004 zsKnight, pagefault (pagefault@zsnes.com) and
+                            Kris Bleakley
+  Ported from x86 assembler to C by sanmaiwashi
+
+  SPC7110 and RTC C++ emulator code
+  (c) Copyright 2002 Matthew Kendora with research by
+                     zsKnight, John Weidman, and Dark Force
+
+  S-DD1 C emulator code
+  (c) Copyright 2003 Brad Jorsch with research by
+                     Andreas Naive and John Weidman
+ 
+  S-RTC C emulator code
+  (c) Copyright 2001 John Weidman
+  
+  ST010 C++ emulator code
+  (c) Copyright 2003 Feather, Kris Bleakley, John Weidman and Matthew Kendora
+
+  Super FX x86 assembler emulator code 
+  (c) Copyright 1998 - 2003 zsKnight, _Demo_, and pagefault 
+
+  Super FX C emulator code 
+  (c) Copyright 1997 - 1999 Ivar, Gary Henderson and John Weidman
+
+
+  SH assembler code partly based on x86 assembler code
+  (c) Copyright 2002 - 2004 Marcus Comstedt (marcus@mc.pp.se) 
+
+ 
+  Specific ports contains the works of other authors. See headers in
+  individual files.
+ 
+  Snes9x homepage: http://www.snes9x.com
+ 
+  Permission to use, copy, modify and distribute Snes9x in both binary and
+  source form, for non-commercial purposes, is hereby granted without fee,
+  providing that this license information and copyright notice appear with
+  all copies and any derived work.
+ 
+  This software is provided 'as-is', without any express or implied
+  warranty. In no event shall the authors be held liable for any damages
+  arising from the use of this software.
+ 
+  Snes9x is freeware for PERSONAL USE only. Commercial users should
+  seek permission of the copyright holders first. Commercial use includes
+  charging money for Snes9x or software derived from Snes9x.
+ 
+  The copyright holders request that bug fixes and improvements to the code
+  should be forwarded to them so everyone can benefit from the modifications
+  in future versions.
+ 
+  Super NES and Super Nintendo Entertainment System are trademarks of
+  Nintendo Co., Limited and its subsidiary companies.
+*******************************************************************************/
 #include "fxemu.h"
 #include "fxinst.h"
 #include <stdlib.h>
@@ -45,28 +93,28 @@
 #include <stdio.h>
 
 /* The FxChip Emulator's internal variables */
-struct FxRegs_s GSU = {0};
+struct FxRegs_s GSU = FxRegs_s_null;
 
-uint32 (**fx_ppfFunctionTable)(uint32, struct FxRegs_s * gsu) = 0;
-void (**fx_ppfPlotTable)(struct FxRegs_s * gsu) = 0;
-void (**fx_ppfOpcodeTable)(struct FxRegs_s * gsu) = 0;
+uint32 (**fx_ppfFunctionTable)(uint32) = 0;
+void (**fx_ppfPlotTable)() = 0;
+void (**fx_ppfOpcodeTable)() = 0;
 
 #if 0
 void fx_setCache()
 {
     uint32 c;
-    gsu->bCacheActive = TRUE;
-    gsu->pvRegisters[0x3e] &= 0xf0;
-    c = (uint32)gsu->pvRegisters[0x3e];
-    c |= ((uint32)gsu->pvRegisters[0x3f])<<8;
-    if(c == gsu->vCacheBaseReg)
+    GSU.bCacheActive = TRUE;
+    GSU.pvRegisters[0x3e] &= 0xf0;
+    c = (uint32)GSU.pvRegisters[0x3e];
+    c |= ((uint32)GSU.pvRegisters[0x3f])<<8;
+    if(c == GSU.vCacheBaseReg)
 	return;
-    gsu->vCacheBaseReg = c;
-    gsu->vCacheFlags = 0;
+    GSU.vCacheBaseReg = c;
+    GSU.vCacheFlags = 0;
     if(c < (0x10000-512))
     {
 	uint8 const* t = &ROM(c);
-	memcpy(gsu->pvCache,t,512);
+	memcpy(GSU.pvCache,t,512);
     }
     else
     {
@@ -75,40 +123,40 @@ void fx_setCache()
 	uint32 i = 0x10000 - c;
 	t1 = &ROM(c);
 	t2 = &ROM(0);
-	memcpy(gsu->pvCache,t1,i);
-	memcpy(&gsu->pvCache[i],t2,512-i);
+	memcpy(GSU.pvCache,t1,i);
+	memcpy(&GSU.pvCache[i],t2,512-i);
     }
 }
 #endif
 
-void FxCacheWriteAccess(uint16 vAddress, struct FxRegs_s * gsu)
+void FxCacheWriteAccess(uint16 vAddress)
 {
 #if 0
-    if(!gsu->bCacheActive)
+    if(!GSU.bCacheActive)
     {
-	uint8 v = gsu->pvCache[gsu->pvCache[vAddress&0x1ff];
+	uint8 v = GSU.pvCache[GSU.pvCache[vAddress&0x1ff];
 	fx_setCache();
-	gsu->pvCache[gsu->pvCache[vAddress&0x1ff] = v;
+	GSU.pvCache[GSU.pvCache[vAddress&0x1ff] = v;
     }
 #endif
     if((vAddress & 0x00f) == 0x00f)
-	gsu->vCacheFlags |= 1 << ((vAddress&0x1f0) >> 4);
+	GSU.vCacheFlags |= 1 << ((vAddress&0x1f0) >> 4);
 }
 
-void FxFlushCache(struct FxRegs_s * gsu)
+void FxFlushCache()
 {
-    gsu->vCacheFlags = 0;
-    gsu->vCacheBaseReg = 0;
-    gsu->bCacheActive = FALSE;
-//    gsu->vPipe = 0x1;
+    GSU.vCacheFlags = 0;
+    GSU.vCacheBaseReg = 0;
+    GSU.bCacheActive = FALSE;
+//    GSU.vPipe = 0x1;
 }
 
 static void fx_backupCache()
 {
 #if 0
     uint32 i;
-    uint32 v = gsu->vCacheFlags;
-    uint32 c = USEX16(gsu->vCacheBaseReg);
+    uint32 v = GSU.vCacheFlags;
+    uint32 c = USEX16(GSU.vCacheBaseReg);
     if(v)
 	for(i=0; i<32; i++)
 	{
@@ -116,21 +164,21 @@ static void fx_backupCache()
 	    {
 		if(c < (0x10000-16))
 		{
-		    uint8 * t = &gsu->pvPrgBank[c];
-		    memcpy(&gsu->avCacheBackup[i<<4],t,16);
-		    memcpy(t,&gsu->pvCache[i<<4],16);
+		    uint8 * t = &GSU.pvPrgBank[c];
+		    memcpy(&GSU.avCacheBackup[i<<4],t,16);
+		    memcpy(t,&GSU.pvCache[i<<4],16);
 		}
 		else
 		{
 		    uint8 * t1;
 		    uint8 * t2;
 		    uint32 a = 0x10000 - c;
-		    t1 = &gsu->pvPrgBank[c];
-		    t2 = &gsu->pvPrgBank[0];
-		    memcpy(&gsu->avCacheBackup[i<<4],t1,a);
-		    memcpy(t1,&gsu->pvCache[i<<4],a);
-		    memcpy(&gsu->avCacheBackup[(i<<4)+a],t2,16-a);
-		    memcpy(t2,&gsu->pvCache[(i<<4)+a],16-a);
+		    t1 = &GSU.pvPrgBank[c];
+		    t2 = &GSU.pvPrgBank[0];
+		    memcpy(&GSU.avCacheBackup[i<<4],t1,a);
+		    memcpy(t1,&GSU.pvCache[i<<4],a);
+		    memcpy(&GSU.avCacheBackup[(i<<4)+a],t2,16-a);
+		    memcpy(t2,&GSU.pvCache[(i<<4)+a],16-a);
 		}		
 	    }
 	    c = USEX16(c+16);
@@ -143,8 +191,8 @@ static void fx_restoreCache()
 {
 #if 0
     uint32 i;
-    uint32 v = gsu->vCacheFlags;
-    uint32 c = USEX16(gsu->vCacheBaseReg);
+    uint32 v = GSU.vCacheFlags;
+    uint32 c = USEX16(GSU.vCacheBaseReg);
     if(v)
 	for(i=0; i<32; i++)
 	{
@@ -152,21 +200,21 @@ static void fx_restoreCache()
 	    {
 		if(c < (0x10000-16))
 		{
-		    uint8 * t = &gsu->pvPrgBank[c];
-		    memcpy(t,&gsu->avCacheBackup[i<<4],16);
-		    memcpy(&gsu->pvCache[i<<4],t,16);
+		    uint8 * t = &GSU.pvPrgBank[c];
+		    memcpy(t,&GSU.avCacheBackup[i<<4],16);
+		    memcpy(&GSU.pvCache[i<<4],t,16);
 		}
 		else
 		{
 		    uint8 * t1;
 		    uint8 * t2;
 		    uint32 a = 0x10000 - c;
-		    t1 = &gsu->pvPrgBank[c];
-		    t2 = &gsu->pvPrgBank[0];
-		    memcpy(t1,&gsu->avCacheBackup[i<<4],a);
-		    memcpy(&gsu->pvCache[i<<4],t1,a);
-		    memcpy(t2,&gsu->avCacheBackup[(i<<4)+a],16-a);
-		    memcpy(&gsu->pvCache[(i<<4)+a],t2,16-a);
+		    t1 = &GSU.pvPrgBank[c];
+		    t2 = &GSU.pvPrgBank[0];
+		    memcpy(t1,&GSU.avCacheBackup[i<<4],a);
+		    memcpy(&GSU.pvCache[i<<4],t1,a);
+		    memcpy(t2,&GSU.avCacheBackup[(i<<4)+a],16-a);
+		    memcpy(&GSU.pvCache[(i<<4)+a],t2,16-a);
 		}		
 	    }
 	    c = USEX16(c+16);
@@ -175,247 +223,264 @@ static void fx_restoreCache()
 #endif
 }
 
-void fx_flushCache(struct FxRegs_s * gsu)
+void fx_flushCache()
 {
     fx_restoreCache();
-    gsu->vCacheFlags = 0;
-    gsu->bCacheActive = FALSE;
+    GSU.vCacheFlags = 0;
+    GSU.bCacheActive = FALSE;
 }
 
-static void fx_readRegisterSpace(struct FxRegs_s * gsu)
+
+void fx_updateRamBank(uint8 Byte)
+{
+	// Update BankReg and Bank pointer
+    GSU.vRamBankReg = (uint32)Byte & (FX_RAM_BANKS-1);
+    GSU.pvRamBank = GSU.apvRamBank[Byte & 0x3];
+}
+
+
+static void fx_readRegisterSpace()
 {
     int i;
     uint8 *p;
     static uint32 avHeight[] = { 128, 160, 192, 256 };
     static uint32 avMult[] = { 16, 32, 32, 64 };
 
-    gsu->vErrorCode = 0;
+    GSU.vErrorCode = 0;
 
     /* Update R0-R15 */
-    p = gsu->pvRegisters;
+    p = GSU.pvRegisters;
     for(i=0; i<16; i++)
     {
-	gsu->avReg[i] = *p++;
-	gsu->avReg[i] += ((uint32)(*p++)) << 8;
+	GSU.avReg[i] = *p++;
+	GSU.avReg[i] += ((uint32)(*p++)) << 8;
     }
 
     /* Update other registers */
-    p = gsu->pvRegisters;
-    gsu->vStatusReg = (uint32)p[GSU_SFR];
-    gsu->vStatusReg |= ((uint32)p[GSU_SFR+1]) << 8;
-    gsu->vPrgBankReg = (uint32)p[GSU_PBR];
-    gsu->vRomBankReg = (uint32)p[GSU_ROMBR];
-    gsu->vRamBankReg = ((uint32)p[GSU_RAMBR]) & (FX_RAM_BANKS-1);
-    gsu->vCacheBaseReg = (uint32)p[GSU_CBR];
-    gsu->vCacheBaseReg |= ((uint32)p[GSU_CBR+1]) << 8;
+    p = GSU.pvRegisters;
+    GSU.vStatusReg = (uint32)p[GSU_SFR];
+    GSU.vStatusReg |= ((uint32)p[GSU_SFR+1]) << 8;
+    GSU.vPrgBankReg = (uint32)p[GSU_PBR];
+    GSU.vRomBankReg = (uint32)p[GSU_ROMBR];
+    GSU.vRamBankReg = ((uint32)p[GSU_RAMBR]) & (FX_RAM_BANKS-1);
+    GSU.vCacheBaseReg = (uint32)p[GSU_CBR];
+    GSU.vCacheBaseReg |= ((uint32)p[GSU_CBR+1]) << 8;
 
     /* Update status register variables */
-    gsu->vZero = !(gsu->vStatusReg & FLG_Z);
-    gsu->vSign = (gsu->vStatusReg & FLG_S) << 12;
-    gsu->vOverflow = (gsu->vStatusReg & FLG_OV) << 16;
-    gsu->vCarry = (gsu->vStatusReg & FLG_CY) >> 2;
+    GSU.vZero = !(GSU.vStatusReg & FLG_Z);
+    GSU.vSign = (GSU.vStatusReg & FLG_S) << 12;
+    GSU.vOverflow = (GSU.vStatusReg & FLG_OV) << 16;
+    GSU.vCarry = (GSU.vStatusReg & FLG_CY) >> 2;
     
     /* Set bank pointers */
-    gsu->pvRamBank = gsu->apvRamBank[gsu->vRamBankReg & 0x3];
-    gsu->pvRomBank = gsu->apvRomBank[gsu->vRomBankReg];
-    gsu->pvPrgBank = gsu->apvRomBank[gsu->vPrgBankReg];
+    GSU.pvRamBank = GSU.apvRamBank[GSU.vRamBankReg & 0x3];
+    GSU.pvRomBank = GSU.apvRomBank[GSU.vRomBankReg];
+    GSU.pvPrgBank = GSU.apvRomBank[GSU.vPrgBankReg];
 
     /* Set screen pointers */
-    gsu->pvScreenBase = &gsu->pvRam[ USEX8(p[GSU_SCBR]) << 10 ];
+    GSU.pvScreenBase = &GSU.pvRam[ USEX8(p[GSU_SCBR]) << 10 ];
     i = (int)(!!(p[GSU_SCMR] & 0x04));
     i |= ((int)(!!(p[GSU_SCMR] & 0x20))) << 1;
-    gsu->vScreenHeight = gsu->vScreenRealHeight = avHeight[i];
-    gsu->vMode = p[GSU_SCMR] & 0x03;
+    GSU.vScreenHeight = GSU.vScreenRealHeight = avHeight[i];
+    GSU.vMode = p[GSU_SCMR] & 0x03;
 #if 0
-    if(gsu->vMode == 2)
-	error illegal color depth gsu->vMode;
+    if(GSU.vMode == 2)
+	error illegal color depth GSU.vMode;
 #endif
     if(i == 3)
-	gsu->vScreenSize = (256/8) * (256/8) * 32;
+	GSU.vScreenSize = (256/8) * (256/8) * 32;
     else
-	gsu->vScreenSize = (gsu->vScreenHeight/8) * (256/8) * avMult[gsu->vMode];
-    if (gsu->vPlotOptionReg & 0x10)
+	GSU.vScreenSize = (GSU.vScreenHeight/8) * (256/8) * avMult[GSU.vMode];
+    if (GSU.vPlotOptionReg & 0x10)
     {
 	/* OBJ Mode (for drawing into sprites) */
-	gsu->vScreenHeight = 256;
+	GSU.vScreenHeight = 256;
     }
 #if 0
-    if(gsu->pvScreenBase + gsu->vScreenSize > gsu->pvRam + (gsu->nRamBanks * 65536))
+    if(GSU.pvScreenBase + GSU.vScreenSize > GSU.pvRam + (GSU.nRamBanks * 65536))
 	error illegal address for screen base register
 #else
-    if(gsu->pvScreenBase + gsu->vScreenSize > gsu->pvRam + (gsu->nRamBanks * 65536))
-	gsu->pvScreenBase =  gsu->pvRam + (gsu->nRamBanks * 65536) - gsu->vScreenSize;
+    if(GSU.pvScreenBase + GSU.vScreenSize > GSU.pvRam + (GSU.nRamBanks * 65536))
+	GSU.pvScreenBase =  GSU.pvRam + (GSU.nRamBanks * 65536) - GSU.vScreenSize;
 #endif
-    gsu->pfPlot = fx_apfPlotTable[gsu->vMode];
-    gsu->pfRpix = fx_apfPlotTable[gsu->vMode + 5];
+    GSU.pfPlot = fx_apfPlotTable[GSU.vMode];
+    GSU.pfRpix = fx_apfPlotTable[GSU.vMode + 5];
 
-    fx_ppfOpcodeTable[0x04c] = gsu->pfPlot;
-    fx_ppfOpcodeTable[0x14c] = gsu->pfRpix;
-    fx_ppfOpcodeTable[0x24c] = gsu->pfPlot;
-    fx_ppfOpcodeTable[0x34c] = gsu->pfRpix;
+    fx_ppfOpcodeTable[0x04c] = GSU.pfPlot;
+    fx_ppfOpcodeTable[0x14c] = GSU.pfRpix;
+    fx_ppfOpcodeTable[0x24c] = GSU.pfPlot;
+    fx_ppfOpcodeTable[0x34c] = GSU.pfRpix;
 
-    fx_computeScreenPointers (gsu);
+    fx_computeScreenPointers ();
 
     fx_backupCache();
 }
 
-void fx_computeScreenPointers (struct FxRegs_s * gsu)
+void fx_dirtySCBR()
 {
-    if (gsu->vMode != gsu->vPrevMode || 
-	gsu->vPrevScreenHeight != gsu->vScreenHeight)
+	GSU.vSCBRDirty = TRUE;
+}
+
+void fx_computeScreenPointers ()
+{
+    if (GSU.vMode != GSU.vPrevMode || 
+	GSU.vPrevScreenHeight != GSU.vScreenHeight ||
+	GSU.vSCBRDirty)
     {
 	int i;
 
+	GSU.vSCBRDirty = FALSE;
+
 	/* Make a list of pointers to the start of each screen column */
-	switch (gsu->vScreenHeight)
+	switch (GSU.vScreenHeight)
 	{
 	    case 128:
-		switch (gsu->vMode)
+		switch (GSU.vMode)
 		{
 		    case 0:
 			for (i = 0; i < 32; i++)
 			{
-			    gsu->apvScreen[i] = gsu->pvScreenBase + (i << 4);
-			    gsu->x[i] = i << 8;
+			    GSU.apvScreen[i] = GSU.pvScreenBase + (i << 4);
+			    GSU.x[i] = i << 8;
 			}
 			break;
 		    case 1:
 			for (i = 0; i < 32; i++)
 			{
-			    gsu->apvScreen[i] = gsu->pvScreenBase + (i << 5);
-			    gsu->x[i] = i << 9;
+			    GSU.apvScreen[i] = GSU.pvScreenBase + (i << 5);
+			    GSU.x[i] = i << 9;
 			}
 			break;
 		    case 2:
 		    case 3:
 			for (i = 0; i < 32; i++)
 			{
-			    gsu->apvScreen[i] = gsu->pvScreenBase + (i << 6);
-			    gsu->x[i] = i << 10;
+			    GSU.apvScreen[i] = GSU.pvScreenBase + (i << 6);
+			    GSU.x[i] = i << 10;
 			}
 			break;
 		}
 		break;
 	    case 160:
-		switch (gsu->vMode)
+		switch (GSU.vMode)
 		{
 		    case 0:
 			for (i = 0; i < 32; i++)
 			{
-			    gsu->apvScreen[i] = gsu->pvScreenBase + (i << 4);
-			    gsu->x[i] = (i << 8) + (i << 6);
+			    GSU.apvScreen[i] = GSU.pvScreenBase + (i << 4);
+			    GSU.x[i] = (i << 8) + (i << 6);
 			}
 			break;
 		    case 1:
 			for (i = 0; i < 32; i++)
 			{
-			    gsu->apvScreen[i] = gsu->pvScreenBase + (i << 5);
-			    gsu->x[i] = (i << 9) + (i << 7);
+			    GSU.apvScreen[i] = GSU.pvScreenBase + (i << 5);
+			    GSU.x[i] = (i << 9) + (i << 7);
 			}
 			break;
 		    case 2:
 		    case 3:
 			for (i = 0; i < 32; i++)
 			{
-			    gsu->apvScreen[i] = gsu->pvScreenBase + (i << 6);
-			    gsu->x[i] = (i << 10) + (i << 8);
+			    GSU.apvScreen[i] = GSU.pvScreenBase + (i << 6);
+			    GSU.x[i] = (i << 10) + (i << 8);
 			}
 			break;
 		}
 		break;
 	    case 192:
-		switch (gsu->vMode)
+		switch (GSU.vMode)
 		{
 		    case 0:
 			for (i = 0; i < 32; i++)
 			{
-			    gsu->apvScreen[i] = gsu->pvScreenBase + (i << 4);
-			    gsu->x[i] = (i << 8) + (i << 7);
+			    GSU.apvScreen[i] = GSU.pvScreenBase + (i << 4);
+			    GSU.x[i] = (i << 8) + (i << 7);
 			}
 			break;
 		    case 1:
 			for (i = 0; i < 32; i++)
 			{
-			    gsu->apvScreen[i] = gsu->pvScreenBase + (i << 5);
-			    gsu->x[i] = (i << 9) + (i << 8);
+			    GSU.apvScreen[i] = GSU.pvScreenBase + (i << 5);
+			    GSU.x[i] = (i << 9) + (i << 8);
 			}
 			break;
 		    case 2:
 		    case 3:
 			for (i = 0; i < 32; i++)
 			{
-			    gsu->apvScreen[i] = gsu->pvScreenBase + (i << 6);
-			    gsu->x[i] = (i << 10) + (i << 9);
+			    GSU.apvScreen[i] = GSU.pvScreenBase + (i << 6);
+			    GSU.x[i] = (i << 10) + (i << 9);
 			}
 			break;
 		}
 		break;
 	    case 256:
-		switch (gsu->vMode)
+		switch (GSU.vMode)
 		{
 		    case 0:
 			for (i = 0; i < 32; i++)
 			{
-			    gsu->apvScreen[i] = gsu->pvScreenBase + 
+			    GSU.apvScreen[i] = GSU.pvScreenBase + 
 				((i & 0x10) << 9) + ((i & 0xf) << 8);
-			    gsu->x[i] = ((i & 0x10) << 8) + ((i & 0xf) << 4);
+			    GSU.x[i] = ((i & 0x10) << 8) + ((i & 0xf) << 4);
 			}
 			break;
 		    case 1:
 			for (i = 0; i < 32; i++)
 			{
-			    gsu->apvScreen[i] = gsu->pvScreenBase + 
+			    GSU.apvScreen[i] = GSU.pvScreenBase + 
 				((i & 0x10) << 10) + ((i & 0xf) << 9);
-			    gsu->x[i] = ((i & 0x10) << 9) + ((i & 0xf) << 5);
+			    GSU.x[i] = ((i & 0x10) << 9) + ((i & 0xf) << 5);
 			}
 			break;
 		    case 2:
 		    case 3:
 			for (i = 0; i < 32; i++)
 			{
-			    gsu->apvScreen[i] = gsu->pvScreenBase + 
+			    GSU.apvScreen[i] = GSU.pvScreenBase + 
 				((i & 0x10) << 11) + ((i & 0xf) << 10);
-			    gsu->x[i] = ((i & 0x10) << 10) + ((i & 0xf) << 6);
+			    GSU.x[i] = ((i & 0x10) << 10) + ((i & 0xf) << 6);
 			}
 			break;
 		}
 		break;
 	}
-	gsu->vPrevMode = gsu->vMode;
-	gsu->vPrevScreenHeight = gsu->vScreenHeight;
+	GSU.vPrevMode = GSU.vMode;
+	GSU.vPrevScreenHeight = GSU.vScreenHeight;
     }
 }
 
-static void fx_writeRegisterSpace(struct FxRegs_s * gsu)
+static void fx_writeRegisterSpace()
 {
     int i;
     uint8 *p;
     
-    p = gsu->pvRegisters;
+    p = GSU.pvRegisters;
     for(i=0; i<16; i++)
     {
-	*p++ = (uint8)gsu->avReg[i];
-	*p++ = (uint8)(gsu->avReg[i] >> 8);
+	*p++ = (uint8)GSU.avReg[i];
+	*p++ = (uint8)(GSU.avReg[i] >> 8);
     }
 
     /* Update status register */
-    if( USEX16(gsu->vZero) == 0 ) SF(Z);
+    if( USEX16(GSU.vZero) == 0 ) SF(Z);
     else CF(Z);
-    if( gsu->vSign & 0x8000 ) SF(S);
+    if( GSU.vSign & 0x8000 ) SF(S);
     else CF(S);
-    if(gsu->vOverflow >= 0x8000 || gsu->vOverflow < -0x8000) SF(OV);
+    if(GSU.vOverflow >= 0x8000 || GSU.vOverflow < -0x8000) SF(OV);
     else CF(OV);
-    if(gsu->vCarry) SF(CY);
+    if(GSU.vCarry) SF(CY);
     else CF(CY);
     
-    p = gsu->pvRegisters;
-    p[GSU_SFR] = (uint8)gsu->vStatusReg;
-    p[GSU_SFR+1] = (uint8)(gsu->vStatusReg>>8);
-    p[GSU_PBR] = (uint8)gsu->vPrgBankReg;
-    p[GSU_ROMBR] = (uint8)gsu->vRomBankReg;
-    p[GSU_RAMBR] = (uint8)gsu->vRamBankReg;
-    p[GSU_CBR] = (uint8)gsu->vCacheBaseReg;
-    p[GSU_CBR+1] = (uint8)(gsu->vCacheBaseReg>>8);
+    p = GSU.pvRegisters;
+    p[GSU_SFR] = (uint8)GSU.vStatusReg;
+    p[GSU_SFR+1] = (uint8)(GSU.vStatusReg>>8);
+    p[GSU_PBR] = (uint8)GSU.vPrgBankReg;
+    p[GSU_ROMBR] = (uint8)GSU.vRomBankReg;
+    p[GSU_RAMBR] = (uint8)GSU.vRamBankReg;
+    p[GSU_CBR] = (uint8)GSU.vCacheBaseReg;
+    p[GSU_CBR+1] = (uint8)(GSU.vCacheBaseReg>>8);
     
     fx_restoreCache();
 }
@@ -424,7 +489,7 @@ static void fx_writeRegisterSpace(struct FxRegs_s * gsu)
 void FxReset(struct FxInit_s *psFxInfo)
 {
     int i;
-    static uint32 (**appfFunction[])(uint32, struct FxRegs_s * gsu) = {
+    static uint32 (**appfFunction[])(uint32) = {
 	&fx_apfFunctionTable[0],
 #if 0
 	&fx_a_apfFunctionTable[0],
@@ -432,7 +497,7 @@ void FxReset(struct FxInit_s *psFxInfo)
 	&fx_ar_apfFunctionTable[0],
 #endif	
     };
-    static void (**appfPlot[])(struct FxRegs_s * gsu) = {
+    static void (**appfPlot[])() = {
 	&fx_apfPlotTable[0],
 #if 0
 	&fx_a_apfPlotTable[0],
@@ -440,7 +505,7 @@ void FxReset(struct FxInit_s *psFxInfo)
 	&fx_ar_apfPlotTable[0],
 #endif	
     };
-    static void (**appfOpcode[])(struct FxRegs_s * gsu) = {
+    static void (**appfOpcode[])() = {
 	&fx_apfOpcodeTable[0],
 #if 0	
 	&fx_a_apfOpcodeTable[0],
@@ -456,28 +521,28 @@ void FxReset(struct FxInit_s *psFxInfo)
     
     /* Clear all internal variables */
     memset((uint8*)&GSU,0,sizeof(struct FxRegs_s));
-	struct FxRegs_s * gsu = &GSU;
+
     /* Set default registers */
-    gsu->pvSreg = gsu->pvDreg = &R0;
+    GSU.pvSreg = GSU.pvDreg = &R0;
 
     /* Set RAM and ROM pointers */
-    gsu->pvRegisters = psFxInfo->pvRegisters;
-    gsu->nRamBanks = psFxInfo->nRamBanks;
-    gsu->pvRam = psFxInfo->pvRam;
-    gsu->nRomBanks = psFxInfo->nRomBanks;
-    gsu->pvRom = psFxInfo->pvRom;
-    gsu->vPrevScreenHeight = ~0;
-    gsu->vPrevMode = ~0;
+    GSU.pvRegisters = psFxInfo->pvRegisters;
+    GSU.nRamBanks = psFxInfo->nRamBanks;
+    GSU.pvRam = psFxInfo->pvRam;
+    GSU.nRomBanks = psFxInfo->nRomBanks;
+    GSU.pvRom = psFxInfo->pvRom;
+    GSU.vPrevScreenHeight = ~0;
+    GSU.vPrevMode = ~0;
 
     /* The GSU can't access more than 2mb (16mbits) */
-    if(gsu->nRomBanks > 0x20)
-	gsu->nRomBanks = 0x20;
+    if(GSU.nRomBanks > 0x20)
+	GSU.nRomBanks = 0x20;
     
     /* Clear FxChip register space */
-    memset(gsu->pvRegisters,0,0x300);
+    memset(GSU.pvRegisters,0,0x300);
 
     /* Set FxChip version Number */
-    gsu->pvRegisters[0x3b] = 0;
+    GSU.pvRegisters[0x3b] = 0;
 
     /* Make ROM bank table */
     for(i=0; i<256; i++)
@@ -485,52 +550,52 @@ void FxReset(struct FxInit_s *psFxInfo)
 	uint32 b = i & 0x7f;
 	if (b >= 0x40)
 	{
-	    if (gsu->nRomBanks > 1)
-		b %= gsu->nRomBanks;
+	    if (GSU.nRomBanks > 1)
+		b %= GSU.nRomBanks;
 	    else
 		b &= 1;
 
-	    gsu->apvRomBank[i] = &gsu->pvRom[ b << 16 ];
+	    GSU.apvRomBank[i] = &GSU.pvRom[ b << 16 ];
 	}
 	else
 	{
-	    b %= gsu->nRomBanks * 2;
-	    gsu->apvRomBank[i] = &gsu->pvRom[ (b << 16) + 0x200000];
+	    b %= GSU.nRomBanks * 2;
+	    GSU.apvRomBank[i] = &GSU.pvRom[ (b << 16) + 0x200000];
 	}
     }
 
     /* Make RAM bank table */
     for(i=0; i<4; i++)
     {
-	gsu->apvRamBank[i] = &gsu->pvRam[(i % gsu->nRamBanks) << 16];
-	gsu->apvRomBank[0x70 + i] = gsu->apvRamBank[i];
+	GSU.apvRamBank[i] = &GSU.pvRam[(i % GSU.nRamBanks) << 16];
+	GSU.apvRomBank[0x70 + i] = GSU.apvRamBank[i];
     }
     
     /* Start with a nop in the pipe */
-    gsu->vPipe = 0x01;
+    GSU.vPipe = 0x01;
 
     /* Set pointer to GSU cache */
-    gsu->pvCache = &gsu->pvRegisters[0x100];
+    GSU.pvCache = &GSU.pvRegisters[0x100];
 
-    fx_readRegisterSpace(gsu);
+    fx_readRegisterSpace();
 }
 
-static uint8 fx_checkStartAddress(struct FxRegs_s * gsu)
+static uint8 fx_checkStartAddress()
 {
     /* Check if we start inside the cache */
-    if(gsu->bCacheActive && R15 >= gsu->vCacheBaseReg && R15 < (gsu->vCacheBaseReg+512))
+    if(GSU.bCacheActive && R15 >= GSU.vCacheBaseReg && R15 < (GSU.vCacheBaseReg+512))
 	return TRUE;
    
     /*  Check if we're in an unused area */
-    if(gsu->vPrgBankReg < 0x40 && R15 < 0x8000)
+    if(GSU.vPrgBankReg < 0x40 && R15 < 0x8000)
 	return FALSE;
-    if(gsu->vPrgBankReg >= 0x60 && gsu->vPrgBankReg <= 0x6f)
+    if(GSU.vPrgBankReg >= 0x60 && GSU.vPrgBankReg <= 0x6f)
 	return FALSE;
-    if(gsu->vPrgBankReg >= 0x74)
+    if(GSU.vPrgBankReg >= 0x74)
 	return FALSE;
 
     /* Check if we're in RAM and the RAN flag is not set */
-    if(gsu->vPrgBankReg >= 0x70 && gsu->vPrgBankReg <= 0x73 && !(SCMR&(1<<3)) )
+    if(GSU.vPrgBankReg >= 0x70 && GSU.vPrgBankReg <= 0x73 && !(SCMR&(1<<3)) )
 	return FALSE;
 
     /* If not, we're in ROM, so check if the RON flag is set */
@@ -543,19 +608,18 @@ static uint8 fx_checkStartAddress(struct FxRegs_s * gsu)
 /* Execute until the next stop instruction */
 int FxEmulate(uint32 nInstructions)
 {
-	struct FxRegs_s * gsu = &GSU;
     uint32 vCount;
 
     /* Read registers and initialize GSU session */
-    fx_readRegisterSpace(gsu);
+    fx_readRegisterSpace();
 
     /* Check if the start address is valid */
-    if(!fx_checkStartAddress(gsu))
+    if(!fx_checkStartAddress())
     {
 	CF(G);
-	fx_writeRegisterSpace(gsu);
+	fx_writeRegisterSpace();
 #if 0
-	gsu->vIllegalAddress = (gsu->vPrgBankReg << 24) | R15;
+	GSU.vIllegalAddress = (GSU.vPrgBankReg << 24) | R15;
 	return FX_ERROR_ILLEGAL_ADDRESS;
 #else
 	return 0;
@@ -565,44 +629,44 @@ int FxEmulate(uint32 nInstructions)
     /* Execute GSU session */
     CF(IRQ);
 
-    if(gsu->bBreakPoint)
-	vCount = fx_ppfFunctionTable[FX_FUNCTION_RUN_TO_BREAKPOINT](nInstructions, gsu);
+    if(GSU.bBreakPoint)
+	vCount = fx_ppfFunctionTable[FX_FUNCTION_RUN_TO_BREAKPOINT](nInstructions);
     else
-	vCount = fx_ppfFunctionTable[FX_FUNCTION_RUN](nInstructions, gsu);
+	vCount = fx_ppfFunctionTable[FX_FUNCTION_RUN](nInstructions);
 
     /* Store GSU registers */
-    fx_writeRegisterSpace(gsu);
+    fx_writeRegisterSpace();
 
     /* Check for error code */
-    if(gsu->vErrorCode)
-	return gsu->vErrorCode;
+    if(GSU.vErrorCode)
+	return GSU.vErrorCode;
     else
 	return vCount;
 }
 
 /* Breakpoints */
-void FxBreakPointSet(uint32 vAddress, struct FxRegs_s * gsu)
+void FxBreakPointSet(uint32 vAddress)
 {
-    gsu->bBreakPoint = TRUE;
-    gsu->vBreakPoint = USEX16(vAddress);
+    GSU.bBreakPoint = TRUE;
+    GSU.vBreakPoint = USEX16(vAddress);
 }
-void FxBreakPointClear(struct FxRegs_s * gsu)
+void FxBreakPointClear()
 {
-    gsu->bBreakPoint = FALSE;
+    GSU.bBreakPoint = FALSE;
 }
 
 /* Step by step execution */
-int FxStepOver(uint32 nInstructions, struct FxRegs_s * gsu)
+int FxStepOver(uint32 nInstructions)
 {
     uint32 vCount;
-    fx_readRegisterSpace(gsu);
+    fx_readRegisterSpace();
 
     /* Check if the start address is valid */
-    if(!fx_checkStartAddress(gsu))
+    if(!fx_checkStartAddress())
     {
 	CF(G);
 #if 0
-	gsu->vIllegalAddress = (gsu->vPrgBankReg << 24) | R15;
+	GSU.vIllegalAddress = (GSU.vPrgBankReg << 24) | R15;
 	return FX_ERROR_ILLEGAL_ADDRESS;
 #else
 	return 0;
@@ -610,52 +674,53 @@ int FxStepOver(uint32 nInstructions, struct FxRegs_s * gsu)
     }
     
     if( PIPE >= 0xf0 )
-	gsu->vStepPoint = USEX16(R15+3);
+	GSU.vStepPoint = USEX16(R15+3);
     else if( (PIPE >= 0x05 && PIPE <= 0x0f) || (PIPE >= 0xa0 && PIPE <= 0xaf) )
-	gsu->vStepPoint = USEX16(R15+2);
+	GSU.vStepPoint = USEX16(R15+2);
     else
-	gsu->vStepPoint = USEX16(R15+1);
-    vCount = fx_ppfFunctionTable[FX_FUNCTION_STEP_OVER](nInstructions, gsu);
-    fx_writeRegisterSpace(gsu);
-    if(gsu->vErrorCode)
-	return gsu->vErrorCode;
+	GSU.vStepPoint = USEX16(R15+1);
+    vCount = fx_ppfFunctionTable[FX_FUNCTION_STEP_OVER](nInstructions);
+    fx_writeRegisterSpace();
+    if(GSU.vErrorCode)
+	return GSU.vErrorCode;
     else
 	return vCount;
 }
 
 /* Errors */
-int FxGetErrorCode(struct FxRegs_s * gsu)
+int FxGetErrorCode()
 {
-    return gsu->vErrorCode;
+    return GSU.vErrorCode;
 }
 
-int FxGetIllegalAddress(struct FxRegs_s * gsu)
+int FxGetIllegalAddress()
 {
-    return gsu->vIllegalAddress;
+    return GSU.vIllegalAddress;
 }
 
 /* Access to internal registers */
-uint32 FxGetColorRegister(struct FxRegs_s * gsu)
+uint32 FxGetColorRegister()
 {
-    return gsu->vColorReg & 0xff;
+    return GSU.vColorReg & 0xff;
 }
 
-uint32 FxGetPlotOptionRegister(struct FxRegs_s * gsu)
+uint32 FxGetPlotOptionRegister()
 {
-    return gsu->vPlotOptionReg & 0x1f;
+    return GSU.vPlotOptionReg & 0x1f;
 }
 
-uint32 FxGetSourceRegisterIndex(struct FxRegs_s * gsu)
+uint32 FxGetSourceRegisterIndex()
 {
-    return gsu->pvSreg - gsu->avReg;
+    return GSU.pvSreg - GSU.avReg;
 }
 
-uint32 FxGetDestinationRegisterIndex(struct FxRegs_s * gsu)
+uint32 FxGetDestinationRegisterIndex()
 {
-    return gsu->pvDreg - gsu->avReg;
+    return GSU.pvDreg - GSU.avReg;
 }
 
-uint8 FxPipe(struct FxRegs_s * gsu)
+uint8 FxPipe()
 {
-    return gsu->vPipe;
+    return GSU.vPipe;
 }
+

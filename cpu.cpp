@@ -55,7 +55,7 @@ extern "C" {
 #include "srtc.h"
 #include "sdd1.h"
 
-#ifndef _ZAURUS
+//#ifndef _ZAURUS
 #ifndef ZSNES_FX
 #include "fxemu.h"
 
@@ -67,7 +67,7 @@ void S9xResetSuperFX ()
     FxReset (&SuperFX);
 }
 #endif
-#endif
+//#endif
 
 void S9xResetCPU ()
 {
@@ -132,14 +132,14 @@ END_EXTERN_C
 
 void S9xReset (void)
 {
-#ifndef _ZAURUS
+//#ifndef _ZAURUS
     if (Settings.SuperFX)
         S9xResetSuperFX ();
 
 #ifdef ZSNES_FX
     WinterGold = Settings.WinterGold;
 #endif
-#endif
+//#endif
     ZeroMemory (Memory.FillRAM, 0x8000);
     memset (Memory.VRAM, 0x00, 0x10000);
     memset (Memory.RAM, 0x55, 0x20000);
@@ -159,7 +159,7 @@ void S9xReset (void)
 //#ifndef _ZAURUS
     if (Settings.C4)
         S9xInitC4 ();
-  #ifndef _ZAURUS
+#ifndef _ZAURUS
     S9xInitCheatData ();
 #endif
     Settings.Paused = FALSE;

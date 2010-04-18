@@ -474,12 +474,12 @@ static void Freeze (STREAM stream)
     int i;
 
     S9xSetSoundMute (TRUE);
-#ifndef _ZAURUS
+//#ifndef _ZAURUS
 #ifdef ZSNES_FX
     if (Settings.SuperFX)
 	S9xSuperFXPreSaveState ();
 #endif
-
+#ifndef _ZAURUS
     S9xSRTCPreSaveState ();
 #endif
     for (i = 0; i < 8; i++)

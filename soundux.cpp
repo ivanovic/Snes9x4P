@@ -496,7 +496,7 @@ void AltDecodeBlock (Channel *ch)
     unsigned char filter = *compressed;
     if ((ch->last_block = filter & 1))
 		ch->loop = (filter & 2) != 0;
-	
+#ifndef _ZAURUS
 #if (!defined (NOASM) && defined (__i386__) || defined (__i486__) ||\
      defined (__i586__) || defined (__WIN32__) || defined (__DJGPP))
     int16 *raw = ch->block = ch->decoded;
@@ -506,6 +506,7 @@ void AltDecodeBlock (Channel *ch)
     else
 		DecodeBlockAsm2 (compressed, raw, &ch->previous [0], &ch->previous [1]);
 #else
+#endif
     int32 out;
     unsigned char shift;
     signed char sample1, sample2;
@@ -593,8 +594,9 @@ void AltDecodeBlock (Channel *ch)
     }
     ch->previous [0] = prev0;
     ch->previous [1] = prev1;
+#ifndef _ZAURUS
 #endif
-	
+#endif
     ch->block_pointer += 9;
 }
 

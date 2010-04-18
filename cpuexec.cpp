@@ -53,7 +53,7 @@
 #include "dma.h"
 #include "fxemu.h"
 #include "sa1.h"
-#include "jz4740.h"
+#include "unix/jz4740.h"
 
 /* Define this to the CPU frequency */
 #define CPU_FREQ 336000000    /* CPU clock: 336 MHz */
@@ -326,14 +326,14 @@ void S9xMainLoop (void)
 			S9xSyncSpeed ();
 		cpu->Flags &= ~SCAN_KEYS_FLAG;
     }
-#ifndef _ZAURUS
+//#ifndef _ZAURUS
     if (cpu->BRKTriggered && Settings.SuperFX && !cpu->TriedInterleavedMode2)
     {
 		cpu->TriedInterleavedMode2 = TRUE;
 		cpu->BRKTriggered = FALSE;
 		S9xDeinterleaveMode2 ();
     }
-#endif
+//#endif
 }
 
 
@@ -373,9 +373,9 @@ void S9xDoHBlankProcessing (struct SCPUState *cpu, struct SAPU *apu, struct SIAP
 	break;
 
     case HBLANK_END_EVENT:
-#ifndef _ZAURUS
+//#ifndef _ZAURUS
 	S9xSuperFXExec ();
-#endif
+//#endif
 #ifndef STORM
 	if (Settings.SoundSync)
 	    S9xGenerateSound ();
