@@ -1219,6 +1219,11 @@ void CMemory::LoROMMap ()
 	    Map [c + 6] = Map [c + 0x806] = (uint8 *) MAP_C4;
 	    Map [c + 7] = Map [c + 0x807] = (uint8 *) MAP_C4;
 	}
+	else if(Settings.OBC1)
+	{
+		Map [c + 6] = Map [c + 0x806] = (uint8 *) MAP_OBC_RAM;
+		Map [c + 7] = Map [c + 0x807] = (uint8 *) MAP_OBC_RAM;
+	}
 	else
 	{
 	    Map [c + 6] = Map [c + 0x806] = (uint8 *) bytes0x2000 - 0x6000;
@@ -2099,6 +2104,64 @@ const char *CMemory::ROMID ()
 
 void CMemory::ApplyROMFixes ()
 {
+	// Lantus: Dirty Hack for Star Fox 2
+	if (strcmp (ROMName, "STAR FOX 2") == 0)
+	{
+		for (int c = 0; c < 0x400; c += 16)
+		{ 
+			for (int i = c; i < c + 16; i++)
+			{
+				int ppu = i & 15; 
+				MemorySpeed [i] = MemorySpeed [i + 0x800] = ppu >= 2 && ppu <= 3 ? ONE_CYCLE : SLOW_ONE_CYCLE;
+			} 
+		}
+	}
+
+	if(strncmp(ROMName, "WAR 2410", 8)==0)
+	{
+		Map [0x005] = (uint8 *) RAM;
+		BlockIsRAM [0x005] = TRUE;
+		BlockIsROM [0x005] = FALSE;
+	}
+
+
+	if(strncmp(ROMName, "XBAND",5)==0)
+	{
+		for (int c=0xE00;c<0xE10;c++)
+		{
+			Map [c] = (uint8 *) MAP_LOROM_SRAM;
+			BlockIsRAM [c] = TRUE;
+			BlockIsROM [c] = FALSE;
+		}
+		WriteProtectROM ();
+	}
+
+	//DSP switching:
+	if(strncmp(ROMName, "DUNGEON MASTER", 14)==0)
+	{
+		//Set DSP-2
+		SetDSP=&DSP2SetByte;
+		GetDSP=&DSP2GetByte;
+	}
+
+#ifdef DSP_DUMMY_LOOPS
+	if(strncmp(ROMName, "SD\x0b6\x0de\x0dd\x0c0\x0de\x0d1GX", 10)==0)
+	{
+		//Set DSP-3
+		SetDSP=&DSP3SetByte;
+		GetDSP=&DSP3GetByte;
+
+	}
+	if(strncmp(ROMName, "TOP GEAR 3000", 13)==0
+		||strncmp(ROMName, "PLANETS CHAMP TG3000", 20)==0)
+	{
+		//Set DSP-4
+		SetDSP=&DSP4SetByte;
+		GetDSP=&DSP4GetByte;
+
+	}
+#endif
+
     // Enable S-RTC (Real Time Clock) emulation for Dai Kaijyu Monogatari 2
     Settings.SRTC = ((ROMType & 0xf0) >> 4) == 5;
 
@@ -2130,7 +2193,8 @@ void CMemory::ApplyROMFixes ()
 	strcmp (ROMName, "ClayFighter 2") == 0 ||
 	strncasecmp (ROMName, "MADDEN", 6) == 0 ||
 	strncmp (ROMName, "NHL", 3) == 0 ||
-	strcmp (ROMName, "WeaponLord") == 0)
+	strcmp (ROMName, "WeaponLord") == 0 ||
+	strncmp(ROMName, "WAR 2410", 8)==0)
     {
 	Settings.Shutdown = FALSE;
     }
@@ -2257,6 +2321,7 @@ void CMemory::ApplyROMFixes ()
 	Settings.H_Max = (SNES_CYCLES_PER_SCANLINE * 101) / 100;
 
     if (strcmp (ROMName, "WILD TRAX") == 0 || 
+	strcmp (ROMName, "STAR FOX 2") == 0 || 
 	strcmp (ROMName, "YOSSY'S ISLAND") == 0 || 
 	strcmp (ROMName, "YOSHI'S ISLAND") == 0)
 	CPU.TriedInterleavedMode2 = TRUE;
@@ -2472,6 +2537,18 @@ void CMemory::ApplyROMFixes ()
 	bytes0x2000 [0xb19] = 0x4b;
 	bytes0x2000 [0xb1a] = 0xea;
     }
+
+	//not MAD-1 compliant
+	if(strcmp (ROMName, "WANDERERS FROM YS") == 0)
+	{
+		for(int c=0;c<0xE0;c++)
+		{
+			Map[c+0x700]=(uint8*)MAP_LOROM_SRAM;
+			BlockIsROM[c+0x700]=FALSE;
+			BlockIsRAM[c+0x700]=TRUE;
+		}
+		WriteProtectROM();
+	}
 
     if (strcmp (ROMName, "GOGO ACKMAN3") == 0 || 
 	strcmp (ROMName, "HOME ALONE") == 0)

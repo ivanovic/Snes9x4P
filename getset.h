@@ -81,8 +81,8 @@
 #include "cpuexec.h"
 #include "sa1.h"
 #include "spc7110.h"
-/*#include "obc1.h"
-#include "seta.h"
+#include "obc1.h"
+/*#include "seta.h"
 
 extern "C"
 {
@@ -131,7 +131,7 @@ INLINE uint8 S9xGetByte (uint32 Address, struct SCPUState * cpu)
 		printf("Get DSP Byte @ %06X\n", Address);
 #endif
 		return (S9xGetDSP (Address & 0xffff));
-//    case CMemory::MAP_SA1RAM:
+    case CMemory::MAP_SA1RAM:
     case CMemory::MAP_LOROM_SRAM:
 #ifdef VAR_CYCLES
 		cpu->Cycles += SLOW_ONE_CYCLE;
@@ -158,32 +158,36 @@ INLINE uint8 S9xGetByte (uint32 Address, struct SCPUState * cpu)
 //#ifndef _ZAURUS
     case CMemory::MAP_C4:
 		return (S9xGetC4 (Address & 0xffff));
-  #ifndef _ZAURUS
-	case CMemory::MAP_SPC7110_ROM:
-#ifdef SPC7110_DEBUG
-		printf("reading spc7110 ROM (byte) at %06X\n", Address);
-#endif
-		cpu->Cycles += SLOW_ONE_CYCLE;
-		return S9xGetSPC7110Byte(Address);
 
-	case CMemory::MAP_SPC7110_DRAM:
-#ifdef SPC7110_DEBUG
-		printf("reading Bank 50 (byte)\n");
+#ifndef _ZAURUS
+			case CMemory::MAP_SPC7110_ROM:
+		#ifdef SPC7110_DEBUG
+				printf("reading spc7110 ROM (byte) at %06X\n", Address);
+		#endif
+				cpu->Cycles += SLOW_ONE_CYCLE;
+				return S9xGetSPC7110Byte(Address);
+		
+			case CMemory::MAP_SPC7110_DRAM:
+		#ifdef SPC7110_DEBUG
+				printf("reading Bank 50 (byte)\n");
+		#endif
+				cpu->Cycles += SLOW_ONE_CYCLE;
+				return S9xGetSPC7110(0x4800);
 #endif
-		cpu->Cycles += SLOW_ONE_CYCLE;
-		return S9xGetSPC7110(0x4800);
-	case CMemory::MAP_OBC_RAM:
-		cpu->Cycles += SLOW_ONE_CYCLE;
-		return GetOBC1(Address & 0xffff);
+			case CMemory::MAP_OBC_RAM:
+				cpu->Cycles += SLOW_ONE_CYCLE;
+				return GetOBC1(Address & 0xffff);
 
-	case CMemory::MAP_SETA_DSP:
-		cpu->Cycles += SLOW_ONE_CYCLE;
-		return S9xGetSetaDSP(Address);
-	
-	case CMemory::MAP_SETA_RISC:
-		cpu->Cycles += SLOW_ONE_CYCLE;
-		return S9xGetST018(Address);
+#ifndef _ZAURUS
+			case CMemory::MAP_SETA_DSP:
+				cpu->Cycles += SLOW_ONE_CYCLE;
+				return S9xGetSetaDSP(Address);
+			
+			case CMemory::MAP_SETA_RISC:
+				cpu->Cycles += SLOW_ONE_CYCLE;
+				return S9xGetST018(Address);
 #endif
+
      case CMemory::MAP_DEBUG:
  #ifdef DEBUGGER
  		printf ("DEBUG R(B) %06x\n", Address);
@@ -267,7 +271,7 @@ INLINE uint16 S9xGetWord (uint32 Address, struct SCPUState * cpu)
 #endif
 		return (S9xGetDSP (Address & 0xffff) |
 			(S9xGetDSP ((Address + 1) & 0xffff) << 8));
-//    case CMemory::MAP_SA1RAM:
+    case CMemory::MAP_SA1RAM:
     case CMemory::MAP_LOROM_SRAM:
 #ifdef VAR_CYCLES
 		cpu->Cycles += SLOW_ONE_CYCLE * 2;
@@ -305,33 +309,37 @@ INLINE uint16 S9xGetWord (uint32 Address, struct SCPUState * cpu)
     case CMemory::MAP_C4:
 		return (S9xGetC4 (Address & 0xffff) |
 			(S9xGetC4 ((Address + 1) & 0xffff) << 8));
-  #ifndef _ZAURUS
-	case CMemory::MAP_SPC7110_ROM:
-#ifdef SPC7110_DEBUG
-		printf("reading spc7110 ROM (word) at %06X\n", Address);
-#endif
-		cpu->Cycles += SLOW_ONE_CYCLE * 2;
-	return (S9xGetSPC7110Byte(Address)|
-			(S9xGetSPC7110Byte (Address+1))<<8);	
-	case CMemory::MAP_SPC7110_DRAM:
-#ifdef SPC7110_DEBUG
-		printf("reading Bank 50 (word)\n");
-#endif
-		cpu->Cycles += SLOW_ONE_CYCLE * 2;
-		return (S9xGetSPC7110(0x4800)|
-			(S9xGetSPC7110 (0x4800) << 8));
-	case CMemory::MAP_OBC_RAM:
-		cpu->Cycles += SLOW_ONE_CYCLE * 2;
-		return GetOBC1(Address&0xFFFF)| GetOBC1((Address+1)&0xFFFF);
 
-	case CMemory::MAP_SETA_DSP:
-		cpu->Cycles += SLOW_ONE_CYCLE * 2;
-		return S9xGetSetaDSP(Address)| (S9xGetSetaDSP((Address+1))<<8);
-	
-	case CMemory::MAP_SETA_RISC:
-		cpu->Cycles += SLOW_ONE_CYCLE * 2;
-		return S9xGetST018(Address)| S9xGetST018((Address+1));
+#ifndef _ZAURUS
+			case CMemory::MAP_SPC7110_ROM:
+		#ifdef SPC7110_DEBUG
+				printf("reading spc7110 ROM (word) at %06X\n", Address);
+		#endif
+				cpu->Cycles += SLOW_ONE_CYCLE * 2;
+			return (S9xGetSPC7110Byte(Address)|
+					(S9xGetSPC7110Byte (Address+1))<<8);	
+			case CMemory::MAP_SPC7110_DRAM:
+		#ifdef SPC7110_DEBUG
+				printf("reading Bank 50 (word)\n");
+		#endif
+				cpu->Cycles += SLOW_ONE_CYCLE * 2;
+				return (S9xGetSPC7110(0x4800)|
+					(S9xGetSPC7110 (0x4800) << 8));
 #endif
+			case CMemory::MAP_OBC_RAM:
+				cpu->Cycles += SLOW_ONE_CYCLE * 2;
+				return GetOBC1(Address&0xFFFF)| GetOBC1((Address+1)&0xFFFF);
+
+#ifndef _ZAURUS
+			case CMemory::MAP_SETA_DSP:
+				cpu->Cycles += SLOW_ONE_CYCLE * 2;
+				return S9xGetSetaDSP(Address)| (S9xGetSetaDSP((Address+1))<<8);
+			
+			case CMemory::MAP_SETA_RISC:
+				cpu->Cycles += SLOW_ONE_CYCLE * 2;
+				return S9xGetST018(Address)| S9xGetST018((Address+1));
+#endif
+
      case CMemory::MAP_DEBUG:
  #ifdef DEBUGGER
  		printf ("DEBUG R(W) %06x\n", Address);
@@ -379,14 +387,14 @@ INLINE void S9xSetByte (uint8 Byte, uint32 Address, struct SCPUState * cpu)
 #endif
 #ifdef CPU_SHUTDOWN
 		SetAddress += Address & 0xffff;
-//#ifndef _ZAURUS
+
 		if (SetAddress == SA1.WaitByteAddress1 ||
 			SetAddress == SA1.WaitByteAddress2)
 		{
 			SA1.Executing = SA1ICPU.S9xOpcodes != NULL;
 			SA1.WaitCounter = 0;
 		}
-//#endif
+
 		*SetAddress = Byte;
 #else
 		*(SetAddress + (Address & 0xffff)) = Byte;
@@ -457,7 +465,7 @@ INLINE void S9xSetByte (uint8 Byte, uint32 Address, struct SCPUState * cpu)
 #ifdef DEBUGGER
 		printf ("W(B) %06x\n", Address);
 #endif
-//#ifndef _ZAURUS
+
     case CMemory::MAP_SA1RAM:
 #ifdef VAR_CYCLES
 		cpu->Cycles += SLOW_ONE_CYCLE;
@@ -465,35 +473,38 @@ INLINE void S9xSetByte (uint8 Byte, uint32 Address, struct SCPUState * cpu)
 		*(Memory.SRAM + (Address & 0xffff)) = Byte;
 		SA1.Executing = !SA1.Waiting;
 		break;
-//#ifndef _ZAURUS
+
     case CMemory::MAP_C4:
 		S9xSetC4 (Byte, Address & 0xffff);
 		return;
-  #ifndef _ZAURUS
-	
-	case CMemory::MAP_SPC7110_DRAM:
-#ifdef SPC7110_DEBUG
-		printf("Writing Byte at %06X\n", Address);
+
+#ifndef _ZAURUS
+			case CMemory::MAP_SPC7110_DRAM:
+		#ifdef SPC7110_DEBUG
+				printf("Writing Byte at %06X\n", Address);
+		#endif
+				cpu->Cycles += SLOW_ONE_CYCLE;
+				s7r.bank50[(Address & 0xffff)]= (uint8) Byte;
+				break;
 #endif
-		cpu->Cycles += SLOW_ONE_CYCLE;
-		s7r.bank50[(Address & 0xffff)]= (uint8) Byte;
-		break;
-	
-	case CMemory::MAP_OBC_RAM:
-		cpu->Cycles += SLOW_ONE_CYCLE;
-		SetOBC1(Byte, Address &0xFFFF);
-		return;
-	
-	case CMemory::MAP_SETA_DSP:
-		cpu->Cycles += SLOW_ONE_CYCLE;
-		S9xSetSetaDSP(Address, Byte);
-		return;
-	
-	case CMemory::MAP_SETA_RISC:
-		cpu->Cycles += SLOW_ONE_CYCLE;
-		S9xSetST018(Address, Byte);
-		return;
+
+			case CMemory::MAP_OBC_RAM:
+				cpu->Cycles += SLOW_ONE_CYCLE;
+				SetOBC1(Byte, Address &0xFFFF);
+				return;
+
+#ifndef _ZAURUS
+			case CMemory::MAP_SETA_DSP:
+				cpu->Cycles += SLOW_ONE_CYCLE;
+				S9xSetSetaDSP(Address, Byte);
+				return;
+			
+			case CMemory::MAP_SETA_RISC:
+				cpu->Cycles += SLOW_ONE_CYCLE;
+				S9xSetST018(Address, Byte);
+				return;
 #endif
+
     default:
     case CMemory::MAP_NONE:
 #ifdef VAR_CYCLES    
@@ -539,14 +550,14 @@ INLINE void S9xSetWord (uint16 Word, uint32 Address, struct SCPUState * cpu)
 #endif
 #ifdef CPU_SHUTDOWN
 		SetAddress += Address & 0xffff;
-//#ifndef _ZAURUS
+
 		if (SetAddress == SA1.WaitByteAddress1 ||
 			SetAddress == SA1.WaitByteAddress2)
 		{
 			SA1.Executing = SA1ICPU.S9xOpcodes != NULL;
 			SA1.WaitCounter = 0;
 		}
-//#endif
+
 #ifdef FAST_LSB_WORD_ACCESS
 		*(uint16 *) SetAddress = Word;
 #else
@@ -656,31 +667,33 @@ INLINE void S9xSetWord (uint16 Word, uint32 Address, struct SCPUState * cpu)
 		*(Memory.SRAM + ((Address + 1) & 0xffff)) = (uint8) (Word >> 8);
 		SA1.Executing = !SA1.Waiting;
 		break;
-//#ifndef _ZAURUS
+
     case CMemory::MAP_C4:
 		cpu->Cycles += SLOW_ONE_CYCLE * 2;
 		S9xSetC4 (Word & 0xff, Address & 0xffff);
 		S9xSetC4 ((uint8) (Word >> 8), (Address + 1) & 0xffff);
 		return;
-  #ifndef _ZAURUS
+
 	case CMemory::MAP_OBC_RAM:
 		cpu->Cycles += SLOW_ONE_CYCLE * 2;
 		SetOBC1(Word & 0xff, Address &0xFFFF);
 		SetOBC1 ((uint8) (Word >> 8), (Address + 1) & 0xffff);
 		return;
-	
-	case CMemory::MAP_SETA_DSP:
-		cpu->Cycles += SLOW_ONE_CYCLE * 2;
-		S9xSetSetaDSP (Address, Word & 0xff);
-		S9xSetSetaDSP ((Address + 1),(uint8) (Word >> 8));
-		return;
-	
-	case CMemory::MAP_SETA_RISC:
-		cpu->Cycles += SLOW_ONE_CYCLE * 2;
-		S9xSetST018 (Address, Word & 0xff);
-		S9xSetST018 ((Address + 1) ,(uint8) (Word >> 8));
-		return;
+
+#ifndef _ZAURUS
+			case CMemory::MAP_SETA_DSP:
+				cpu->Cycles += SLOW_ONE_CYCLE * 2;
+				S9xSetSetaDSP (Address, Word & 0xff);
+				S9xSetSetaDSP ((Address + 1),(uint8) (Word >> 8));
+				return;
+			
+			case CMemory::MAP_SETA_RISC:
+				cpu->Cycles += SLOW_ONE_CYCLE * 2;
+				S9xSetST018 (Address, Word & 0xff);
+				S9xSetST018 ((Address + 1) ,(uint8) (Word >> 8));
+				return;
 #endif
+
     default:
     case CMemory::MAP_NONE:
 #ifdef VAR_CYCLES    
@@ -737,22 +750,23 @@ INLINE uint8 *GetBasePointer (uint32 Address)
 //		return (Memory.FillRAM - 0x4000);
     case CMemory::MAP_DSP:
 		return (Memory.FillRAM - 0x6000);
-//    case CMemory::MAP_SA1RAM:
+    case CMemory::MAP_SA1RAM:
     case CMemory::MAP_LOROM_SRAM:
 		return (Memory.SRAM);
     case CMemory::MAP_HIROM_SRAM:
 		return (Memory.SRAM - 0x6000);
     case CMemory::MAP_BWRAM:
 		return (Memory.BWRAM - 0x6000);
-//#ifndef _ZAURUS
     case CMemory::MAP_C4:
 		return (Memory.C4RAM - 0x6000);
-  #ifndef _ZAURUS
 	case CMemory::MAP_OBC_RAM:
 		return GetBasePointerOBC1(Address);
-	case CMemory::MAP_SETA_DSP:
-		return Memory.SRAM;
+
+#ifndef _ZAURUS
+			case CMemory::MAP_SETA_DSP:
+				return Memory.SRAM;
 #endif
+
     case CMemory::MAP_DEBUG:
 #ifdef DEBUGGER
 		printf ("GBP %06x\n", Address);
@@ -790,22 +804,23 @@ INLINE uint8 *S9xGetMemPointer (uint32 Address)
 		return (Memory.FillRAM - 0x4000 + (Address & 0xffff));
     case CMemory::MAP_DSP:
 		return (Memory.FillRAM - 0x6000 + (Address & 0xffff));
-//    case CMemory::MAP_SA1RAM:
+    case CMemory::MAP_SA1RAM:
     case CMemory::MAP_LOROM_SRAM:
 		return (Memory.SRAM + (Address & 0xffff));
     case CMemory::MAP_HIROM_SRAM:
 		return (Memory.SRAM - 0x6000 + (Address & 0xffff));
     case CMemory::MAP_BWRAM:
 		return (Memory.BWRAM - 0x6000 + (Address & 0xffff));
-//#ifndef _ZAURUS
     case CMemory::MAP_C4:
 		return (Memory.C4RAM - 0x6000 + (Address & 0xffff));
-  #ifndef _ZAURUS
 	case CMemory::MAP_OBC_RAM:
 		return GetMemPointerOBC1(Address);
-	case CMemory::MAP_SETA_DSP:
-		return Memory.SRAM;
+
+#ifndef _ZAURUS
+			case CMemory::MAP_SETA_DSP:
+				return Memory.SRAM;
 #endif
+
     case CMemory::MAP_DEBUG:
 #ifdef DEBUGGER
 		printf ("GMP %06x\n", Address);
@@ -867,7 +882,7 @@ INLINE void S9xSetPCBase (uint32 Address, struct SCPUState * cpu)
 		cpu->PC = cpu->PCBase + (Address & 0xffff);
 		return;
 		
-//    case CMemory::MAP_SA1RAM:
+    case CMemory::MAP_SA1RAM:
     case CMemory::MAP_LOROM_SRAM:
 #ifdef VAR_CYCLES
 		cpu->MemSpeed = SLOW_ONE_CYCLE;

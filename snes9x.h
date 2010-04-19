@@ -279,6 +279,9 @@ struct SSettings{
     bool8_32  SA1;
     bool8_32  C4;
     bool8_32  SDD1;
+//	bool8_32  SPC7110;
+//	bool8_32  SPC7110RTC;
+	bool8_32  OBC1;
 
     // Sound options
     uint32 SoundPlaybackRate;
