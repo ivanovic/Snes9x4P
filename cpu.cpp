@@ -162,5 +162,7 @@ void S9xReset (void)
 #ifndef _ZAURUS
     S9xInitCheatData ();
 #endif
+	if(Settings.OBC1)
+		ResetOBC1();
     Settings.Paused = FALSE;
 }

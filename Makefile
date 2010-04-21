@@ -174,7 +174,7 @@ $(OPENGLDEPENDS):
 	$(RM) $(OPENGLNO_DEPENDS)
 
 snes9x: $(OBJECTS) 
-	$(CC) $(INCLUDES) -o $@ $(OBJECTS) $(EXTRALIBS) $(LDLIBS) -lSDL -lstdc++ -lz -lpthread -lm -lgcov
+	$(CC) $(INCLUDES) -o $@ $(OBJECTS) $(EXTRALIBS) $(LDLIBS) -lstdc++ -lz -lpthread -lm -lgcov
 	$(STRIP) snes9x
 
 gsnes9x: $(OBJECTS) unix/x11.o unix/glide.o

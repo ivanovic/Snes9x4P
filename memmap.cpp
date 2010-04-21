@@ -212,6 +212,10 @@ bool8_32 CMemory::Init ()
     SuperFX.pvRom = (uint8 *) ROM;
 #endif
 
+    ZeroMemory (IPPU.TileCache [TILE_2BIT], MAX_2BIT_TILES * 128);
+    ZeroMemory (IPPU.TileCache [TILE_4BIT], MAX_4BIT_TILES * 128);
+    ZeroMemory (IPPU.TileCache [TILE_8BIT], MAX_8BIT_TILES * 128);
+
     ZeroMemory (IPPU.TileCached [TILE_2BIT], MAX_2BIT_TILES);
     ZeroMemory (IPPU.TileCached [TILE_4BIT], MAX_4BIT_TILES);
     ZeroMemory (IPPU.TileCached [TILE_8BIT], MAX_8BIT_TILES);
@@ -780,7 +784,7 @@ void CMemory::InitROM (bool8_32 Interleaved)
 	if (!Settings.ForceNoDSP1 &&
 	    (ROMType & 0xf) >= 3 && (ROMType & 0xf0) == 0)
 	    Settings.DSP1Master = TRUE;
-//#ifndef _ZAURUS
+
 	Settings.SDD1 = Settings.ForceSDD1;
 	if ((ROMType & 0xf0) == 0x40)
 	    Settings.SDD1 = !Settings.ForceNoSDD1;
@@ -823,7 +827,7 @@ void CMemory::InitROM (bool8_32 Interleaved)
 	    SA1ROMMap ();
 	}
 	else
-//#endif
+
 	if ((ROMSpeed & ~0x10) == 0x25)
 	    TalesROMMap (Interleaved);
 	else
@@ -994,7 +998,7 @@ void CMemory::InitROM (bool8_32 Interleaved)
 	    p--;
 	*p = 0;
     }
-
+/*
 //#ifndef _ZAURUS
     if (Settings.SuperFX)
     {
@@ -1003,6 +1007,7 @@ void CMemory::InitROM (bool8_32 Interleaved)
     }
     else
 //#endif
+*/  
     {
 	SRAMMask = Memory.SRAMSize ?
 		    ((1 << (Memory.SRAMSize + 3)) * 128) - 1 : 0;
@@ -2211,6 +2216,8 @@ void CMemory::ApplyROMFixes ()
 
     // RENDERING RANGER R2
     if (strcmp (ROMId, "AVCJ") == 0 ||
+	//Mark Davis
+	strncmp(ROMName, "THE FISHING MASTER", 18)==0 || //needs >= actual APU timing. (21 is .002 Mhz slower)
     // Star Ocean
 	strncmp (ROMId, "ARF", 3) == 0 ||
     // Tales of Phantasia
@@ -2236,17 +2243,21 @@ void CMemory::ApplyROMFixes ()
     // Panic Bomber World
 	strncmp (ROMId, "APB", 3) == 0 ||
 	((strncmp (ROMName, "Parlor", 6) == 0 || 
-          strcmp (ROMName, "HEIWA Parlor!Mini8") == 0 ||
-	  strncmp (ROMName, "SANKYO Fever! Ìš°ÊÞ°!", 21) == 0) &&
-	 strcmp (CompanyId, "A0") == 0) ||
+	strcmp (ROMName, "HEIWA Parlor!Mini8") == 0 ||
+	strncmp (ROMName, "SANKYO Fever! \xCC\xA8\xB0\xCA\xDE\xB0!", 21) == 0) && //SANKYO Fever! Fever!
+	strcmp (CompanyId, "A0") == 0) ||
 	strcmp (ROMName, "DARK KINGDOM") == 0 ||
 	strcmp (ROMName, "ZAN3 SFC") == 0 ||
 	strcmp (ROMName, "HIOUDEN") == 0 ||
-	strcmp (ROMName, "ÃÝŒÉ³À") == 0 ||
+	strcmp (ROMName, "\xC3\xDD\xBC\xC9\xB3\xC0") == 0 ||  //Tenshi no Uta
 	strcmp (ROMName, "FORTUNE QUEST") == 0 ||
 	strcmp (ROMName, "FISHING TO BASSING") == 0 ||
 	strncmp (ROMName, "TokyoDome '95Battle 7", 21) == 0 ||
-	strcmp (ROMName, "OHMONO BLACKBASS") == 0)
+	strcmp (ROMName, "OHMONO BLACKBASS") == 0 ||
+	strncmp (ROMName, "SWORD WORLD SFC", 15) == 0 ||
+	strcmp (ROMName, "MASTERS") ==0 || //Augusta 2 J
+	strcmp (ROMName, "SFC \xB6\xD2\xDD\xD7\xB2\xC0\xDE\xB0") == 0 || //Kamen Rider
+	strncmp (ROMName, "LETs PACHINKO(", 14) == 0) //A set of BS games
     {
 	IAPU.OneCycle = 15;
     }
@@ -2261,7 +2272,7 @@ void CMemory::ApplyROMFixes ()
 			   strcmp (ROMName, "STAR WING") == 0;
     Settings.WinterGold = strcmp (ROMName, "FX SKIING NINTENDO 96") == 0 ||
                           strcmp (ROMName, "DIRT RACER") == 0 ||
-			  strcmp (ROMName, "Stunt Race FX") == 0 ||
+//			  strcmp (ROMName, "Stunt Race FX") == 0 ||
 			  Settings.StarfoxHack;
     Settings.ChuckRock = strcmp (ROMName, "CHUCK ROCK") == 0;
     Settings.Dezaemon = strcmp (ROMName, "DEZAEMON") == 0;
@@ -2329,7 +2340,7 @@ void CMemory::ApplyROMFixes ()
     // Start Trek: Deep Sleep 9
     if (strncmp (ROMId, "A9D", 3) == 0 && Settings.CyclesPercentage == 100)
 	Settings.H_Max = (SNES_CYCLES_PER_SCANLINE * 110) / 100;
-    
+/*
     Settings.APURAMInitialValue = 0xff;
 
     if (strcmp (ROMName, "·­³Ôž¥Ò¶ÞÐÃÝŸ²") == 0 ||
@@ -2347,12 +2358,14 @@ void CMemory::ApplyROMFixes ()
 
     Settings.DaffyDuck = strcmp (ROMName, "DAFFY DUCK: MARV MISS") == 0;
     Settings.HBlankStart = (256 * Settings.H_Max) / SNES_HCOUNTER_MAX;
+*/
+
+	//SA-1 Speedup settings
 
     SA1.WaitAddress = NULL;
     SA1.WaitByteAddress1 = NULL;
     SA1.WaitByteAddress2 = NULL;
 
-//#ifndef _ZAURUS
     /* Bass Fishing */
     if (strcmp (ROMId, "ZBPJ") == 0)
     {
@@ -2529,13 +2542,16 @@ void CMemory::ApplyROMFixes ()
 	SA1.WaitByteAddress1 = SRAM + 0x0806;
 	SA1.WaitByteAddress2 = SRAM + 0x0808;
     }
-//#endif
-    // Additional game fixes by sanmaiwashi ...
-    if (strcmp (ROMName, "SFX Å²Ä¶ÞÝÀÞÑÓÉ¶ÞÀØ 1") == 0) 
+
+	//Other
+
+	// Additional game fixes by sanmaiwashi ...
+    if (strcmp (ROMName, "SFX \xC5\xB2\xC4\xB6\xDE\xDD\xC0\xDE\xD1\xD3\xC9\xB6\xDE\xC0\xD8 1") == 0) // Gundam Knight Story
     {
-	bytes0x2000 [0xb18] = 0x4c;
-	bytes0x2000 [0xb19] = 0x4b;
-	bytes0x2000 [0xb1a] = 0xea;
+		bytes0x2000 [0xb18] = 0x4c;
+		bytes0x2000 [0xb19] = 0x4b;
+		bytes0x2000 [0xb1a] = 0xea;
+		SNESGameFixes.SRAMInitialValue = 0x6b;
     }
 
 	//not MAD-1 compliant
@@ -2613,8 +2629,11 @@ void CMemory::ApplyROMFixes ()
 			((1 << (Memory.SRAMSize + 3)) * 128) - 1 : 0;
     }
 
-    if (strcmp (ROMName, "goemon 4") == 0)
-	SNESGameFixes.SRAMInitialValue = 0x00;
+	//sram value fixes
+    if (strcmp (Memory.ROMName, "SUPER DRIFT OUT") == 0 ||
+		strcmp(Memory.ROMName, "SATAN IS OUR FATHER!") == 0 ||
+		strcmp (ROMName, "goemon 4") == 0)
+		SNESGameFixes.SRAMInitialValue = 0x00;
 
     if (strcmp (ROMName, "PACHISLO ¹Ý·­³") == 0)
 	SNESGameFixes._0x213E_ReturnValue = 1;
@@ -2707,7 +2726,8 @@ if (ROM [adr] == ov) \
 	RomPatch (0x1e5, 0xfb, 0xea);
     }
 
-    if (strncmp(ROMName, "FF MYSTIC QUEST",15) == 0)
+    if ((strncmp(ROMName, "FF MYSTIC QUEST",15) == 0) ||
+    	(strncmp(ROMName, "MYSTIC QUEST LEGEND", 19) == 0))
     {
     	if (Settings.CyclesPercentage == 100) 
     		Settings.H_Max = (SNES_CYCLES_PER_SCANLINE * 120) / 100;

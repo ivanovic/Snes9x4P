@@ -57,7 +57,7 @@
 #include "fxemu.h"
 #include "fxinst.h"
 extern struct FxInit_s SuperFX;
-extern struct FxRegs_s GSU;
+//extern struct FxRegs_s GSU;
 #else
 EXTERN_C void S9xSuperFXWriteReg (uint8, uint32);
 EXTERN_C uint8 S9xSuperFXReadReg (uint32);
@@ -900,7 +900,9 @@ void S9xSetPPU (uint8 Byte, uint16 Address, struct SPPU *ppu, struct InternalPPU
 			else
 			{
 				if (!Settings.SuperFX)
+				{
 					return;
+				}
 
 #ifdef ZSNES_FX
 				Memory.FillRAM[Address] = Byte;
@@ -948,6 +950,10 @@ void S9xSetPPU (uint8 Byte, uint16 Address, struct SPPU *ppu, struct InternalPPU
 							Memory.FillRAM[Address] = Byte;
 							break;
 						case 0x303b :
+							break;
+						case 0x303c :
+							Memory.FillRAM [Address] = Byte;
+							fx_updateRamBank(Byte);
 							break;
 						case 0x303f :
 							Memory.FillRAM[Address] = Byte;
@@ -2617,23 +2623,24 @@ void S9xUpdateJoypads(struct InternalPPU *ippu)
 void S9xSuperFXExec()
 {
 #if 1
-	if (Settings.SuperFX)
-	{
-		if ((Memory.FillRAM[0x3000 + GSU_SFR] & FLG_G)
-			&& (Memory.FillRAM[0x3000 + GSU_SCMR] & 0x18) == 0x18)
+    if (Settings.SuperFX)
+    {
+		if ((Memory.FillRAM [0x3000 + GSU_SFR] & FLG_G) &&
+		    (Memory.FillRAM [0x3000 + GSU_SCMR] & 0x18) == 0x18)
 		{
-			if (!Settings.WinterGold)
-				FxEmulate(~0);
-			else FxEmulate((Memory.FillRAM[0x3000 + GSU_CLSR] & 1) ? 700 : 350);
-			int GSUStatus = Memory.FillRAM[0x3000
-					+ GSU_SFR] | (Memory.FillRAM[0x3000 + GSU_SFR + 1] << 8);
-			if ((GSUStatus & (FLG_G | FLG_IRQ)) == FLG_IRQ)
-			{
+		    if (!Settings.WinterGold||Settings.StarfoxHack)
+			FxEmulate (~0);
+		    else
+			FxEmulate ((Memory.FillRAM [0x3000 + GSU_CLSR] & 1) ? 700 : 350);
+		    int GSUStatus = Memory.FillRAM [0x3000 + GSU_SFR] |
+				    (Memory.FillRAM [0x3000 + GSU_SFR + 1] << 8);
+		    if ((GSUStatus & (FLG_G | FLG_IRQ)) == FLG_IRQ)
+		    {
 				// Trigger a GSU IRQ.
-				S9xSetIRQ(GSU_IRQ_SOURCE, &CPU);
-			}
+				S9xSetIRQ (GSU_IRQ_SOURCE, &CPU);
+		    }
 		}
-	}
+    }
 #else
 	uint32 tmp = (Memory.FillRAM[0x3034] << 16)
 		+ * (uint16 *) & Memory.FillRAM[0x301e];
