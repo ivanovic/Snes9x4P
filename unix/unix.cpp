@@ -90,19 +90,16 @@ pthread_mutex_t mutex;
 uint8 *keyssnes;
 
 // SaveSlotNumber
+char SaveSlotNum = 0;
 
-unsigned CLK_FREQ = 336; //400
 bool8_32 Scale = FALSE;
 char msg[256];
-char SaveSlotNum = 0;
 int vol=50;
 static int mixerdev = 0;
 clock_t start;
 //extern bool8_32 Scale_disp;
 
 int OldSkipFrame;
-void a320_init(void);
-void set_FCLK(unsigned);
 void InitTimer ();
 void *S9xProcessSound (void *);
 void gp2x_sound_volume(int l, int r);
@@ -113,7 +110,6 @@ extern void S9xDisplayString (const char *string, uint8 *, uint32, int);
 extern SDL_Surface *screen,*gfxscreen;
 
 static uint32 ffc = 0;
-bool8_32 nso = FALSE, vga = FALSE;
 uint32 xs = 320, ys = 240, cl = 0, cs = 0, mfs = 10;
 
 char *rom_filename = NULL;
@@ -163,10 +159,6 @@ void S9xParseArg (char **argv, int &i, int argc)
 	else
 	    S9xUsage ();
     }
-    else if (strcmp (argv [i], "-nso") == 0)
-		nso = TRUE;
-    else if (strcmp (argv [i], "-x2") == 0)
-		vga = TRUE;
     else if (strcmp (argv [i], "-xs") == 0)
     {
 	if (i + 1 < argc)
@@ -271,7 +263,7 @@ int main (int argc, char **argv)
 #ifdef GFX_MULTI_FORMAT
     S9xSetRenderPixelFormat (RGB565);
 #endif
-//    a320_init();
+
 //    S9xInitInputDevices ();
 //    S9xInitDisplay (argc, argv);
 //    if (!S9xGraphicsInit ())
@@ -281,6 +273,7 @@ int main (int argc, char **argv)
 //#ifndef _ZAURUS
 //    S9xTextMode ();
 //#endif
+
     if (rom_filename)
     {
 		if (!Memory.LoadROM (rom_filename))
@@ -354,19 +347,10 @@ int main (int argc, char **argv)
     S9xSetTitle (String);
 #endif
 
- 	if (nso) {
-		Settings.SoundBufferSize = 8192;
-    	Settings.SoundPlaybackRate = 1;
-    	Settings.DisableSoundEcho = TRUE;
-    	Settings.DisableMasterVolume = TRUE;
-		Settings.Stereo = FALSE;
-    	S9xSetSoundMute (TRUE);
-	} else {
-	    if (!Settings.APUEnabled)
-			S9xSetSoundMute (FALSE);
-		else
-	    	InitTimer ();
-	}
+    if (!Settings.APUEnabled)
+		S9xSetSoundMute (FALSE);
+	else
+    	InitTimer ();
 
     while (1)
     {
@@ -420,7 +404,6 @@ void S9xAutoSaveSRAM ()
 
 void S9xExit ()
 {
-//    set_FCLK(336);
     S9xSetSoundMute (TRUE);
     S9xDeinitDisplay ();
     Memory.SaveSRAM (S9xGetFilename (".srm"));
@@ -658,7 +641,7 @@ bool8_32 S9xDeinitUpdate (int Width, int Height)
 {
 	register uint32 lp = (xs > 256) ? 16 : 0;
 
-	if (Width > 256 || vga)
+	if (Width > 256)
 		lp *= 2;
 
 	// ffc, what is it for?
@@ -960,11 +943,10 @@ void S9xSyncSpeed ()
 
 void S9xProcessEvents (bool8_32 block)
 {
-	//uint32 num = 0;
-	//static bool8_32 TURBO = FALSE;
-
 	SDL_Event event;
-	while(SDL_PollEvent(&event)) {
+
+	while(SDL_PollEvent(&event))
+	{
 		switch(event.type) {
 		case SDL_KEYDOWN:
 			keyssnes = SDL_GetKeyState(NULL);
@@ -1076,8 +1058,8 @@ bool8_32 S9xOpenSoundDevice (int mode, bool8_32 stereo, int buffer_size)
  //   so.playback_rate = 16000;
     if (ioctl (so.sound_fd, SNDCTL_DSP_SPEED, &so.playback_rate) < 0)
     {
-	perror ("ioctl SNDCTL_DSP_SPEED");
-	return (FALSE);
+		perror ("ioctl SNDCTL_DSP_SPEED");
+		return (FALSE);
     }
 
     S9xSetPlaybackRate (so.playback_rate);
@@ -1311,6 +1293,13 @@ void *S9xProcessSound (void *)
     return (NULL);
 }
 
+void gp2x_sound_volume(int l, int r)
+{
+ 	l=l<0?0:l; l=l>255?255:l; r=r<0?0:r; r=r>255?255:r;
+ 	l<<=8; l|=r;
+  	ioctl(mixerdev, SOUND_MIXER_WRITE_VOLUME, &l);
+}
+
 uint32 S9xReadJoypad (int which1)
 {
 	uint32 val=0x80000000;
@@ -1443,6 +1432,7 @@ void S9xParseConfigFile ()
 }
 #endif
 
+#if 0
 static int S9xCompareSDD1IndexEntries (const void *p1, const void *p2)
 {
     return (*(uint32 *) p1 - *(uint32 *) p2);
@@ -1580,11 +1570,4 @@ fprintf(out_file, "Dir not found in '%s'.\n", filename);
     
     fclose(out_file);
 }
-
-void gp2x_sound_volume(int l, int r)
-{
- 	l=l<0?0:l; l=l>255?255:l; r=r<0?0:r; r=r>255?255:r;
- 	l<<=8; l|=r;
-  	ioctl(mixerdev, SOUND_MIXER_WRITE_VOLUME, &l);
-}
-
+#endif

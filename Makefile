@@ -228,7 +228,7 @@ i386/cpuexec.o: i386/asmstruc.h i386/offsets.h
 i386/cpuops.o: i386/asmstruc.h i386/asmops.h i386/getset.S i386/asmaddr.h i386/offsets.h
 i386/spc700.o: i386/asmstruc.h i386/spcops.h i386/offsets.h
 cpuexec.o: cpuexec.h cpuops.h snes9x.h snapshot.h gfx.h \
-	memmap.h ppu.h debug.h port.h display.h apu.h spc700.h apu.h unix/jz4740.h
+	memmap.h ppu.h debug.h port.h display.h apu.h spc700.h apu.h
 debug.o: cpuops.h cpuexec.h snes9x.h \
 	memmap.h ppu.h debug.h missing.h port.h display.h apu.h
 ppu.o: snes9x.h memmap.h ppu.h missing.h port.h cpuexec.h \
