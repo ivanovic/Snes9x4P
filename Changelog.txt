@@ -1,14 +1,37 @@
-Snes9x4D (for DINGUX) v20100407
+Snes9x4D (for DINGUX) v20100426
 ===============================
-(c)^SiENcE^2010.04.07
+(c)^SiENcE^2010.04.26
 
-Hint: I removed a speedhack from old 1.39 source, just because it only fakes fps.
+
+KNOW ISSUES:
+-TheLion King, Sunset Riders dont work.
+-Super Mario All-Stars only if you start with Mario 2 and save.
+-No Fullscreen support for HighRes Games (secret of Mana, ...)
+-Non-working FX Games:
+*Stunt Race FX
+*Dirt Trax FX
+*Dirt Racer FX
+*Vortex
+
+
+ver 20100426
+------------
++FX1 support added (Star Wing/Star Fox)
++FX2 support added (Super Mario World 2 - Yoshi's Island, Winter Gold, Doom)
++OBC1 support added (Metal Combat: Falcon's Revenge)
++DSP-2 suport added (Dungeon Master)
++some bugs fixed
++autodetection of HighRes Games added
+
+For Fx Title use 400Mhz, Frameskip to 60/3 and the NoSound commandline option "-ns" !
 
 ver 20100407
+------------
 +C4 support added
 +fullscreen commandline option bug solved (use -fs for fullscreen)
 
 ver 20100330
+------------
 +renamed from Snes9x to Snes9x4D (for Dingux)
 +new Snes9x4D Icon added
 +Fullscreen Scaling added again for Normal Mode
@@ -25,28 +48,35 @@ ver 20100315
 +memory leak in Menu fixed
 
 ver 20100313
+------------
 +screenshot feature fixed (in highres mode screenshots still are not fullscreen caps)
 
 ver 20100301
+------------
 +Soul Blazer works now (i think only the german version was not working!?)
 
 ver 20100224
+------------
 +Transparency Menu Option added
 +Zipped ROMs Support
 +HighRes Support enabled (solves Secret of Mana, Seiken 3 & Rudra no Hihou font problems)
 
 ver 20100221
+------------
 +support for SDD1 Emu added (GraphicPack NOT needed anymore!! -> removed)
 +Street Fighter Alpha 2 & Star Ocean (all work)
 
 v1.39-ff
+------------
 -base source see changes.txt
 
-Blog:
+7Blog:
 http://crankgaming.blogspot.com/
 
 Sources:
 svn://zwischenwelt.org:20684/dingoo/Snes9x-sdl-1.39ff
+
+Hint: I removed a speedhack from old 1.39 source, just because it only fakes fps.
 
 Original port taken from:
 http://www9.atpages.jp/~drowsnug95/?p=252

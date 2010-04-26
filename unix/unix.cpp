@@ -629,12 +629,10 @@ void S9xCloseSnapshotFile (STREAM file)
     sync();
 }
 
-//#ifndef _ZAURUS
 bool8_32 S9xInitUpdate ()
 {
     return (TRUE);
 }
-//#endif
 
 //		uint32 xs = 320, ys = 240, cl = 0, cs = 0, mfs = 10;
 bool8_32 S9xDeinitUpdate (int Width, int Height)
@@ -653,9 +651,9 @@ bool8_32 S9xDeinitUpdate (int Width, int Height)
 //	else
 	if (Settings.SupportHiRes)
 	{
-		//put here also scaling
 		if (Width > 256)
 		{
+			//Wenn SupportHiRes activ und HighRes Frame
 			for (register uint32 i = 0; i < Height; i++) {
 				register uint16 *dp16 = (uint16 *)(screen->pixels) + ((i + cl) * xs) + lp;
 				register uint32 *sp32 = (uint32 *)(GFX.Screen) + (i << 8) + cs;
@@ -666,7 +664,7 @@ bool8_32 S9xDeinitUpdate (int Width, int Height)
 		}
 		else
 		{
-			//wenn highres mode und kein highres ist
+			//Wenn SupportHiRes activ aber kein HighRes Frame
 			for (register uint32 i = 0; i < Height; i++) {
 				register uint32 *dp32 = (uint32 *)(screen->pixels) + ((i + cl) * xs / 2) + lp;
 				register uint32 *sp32 = (uint32 *)(GFX.Screen) + (i << 8) + cs;
@@ -681,7 +679,7 @@ bool8_32 S9xDeinitUpdate (int Width, int Height)
 		else if (Settings.DisplayFrameRate)
 		    S9xDisplayFrameRate ((uint8 *)screen->pixels + 64, 640);
 
-		SDL_UpdateRect(screen,32,0,256,Height);
+//		SDL_UpdateRect(screen,32,0,256,Height);
 	}
 	else
 	{
@@ -731,12 +729,12 @@ bool8_32 S9xDeinitUpdate (int Width, int Height)
 		else if (Settings.DisplayFrameRate)
 		    S9xDisplayFrameRate ((uint8 *)screen->pixels + 64, 640);
 
-	    SDL_UpdateRect(screen,0,yoffset,320,Height+yoffset);
+//	    SDL_UpdateRect(screen,0,yoffset,320,Height+yoffset);
 	}
 
 //Bei Fullscreen kann man alles blitten.
-//	SDL_BlitSurface(gfxscreen,NULL,screen,NULL);
-//	SDL_Flip(screen);
+	SDL_BlitSurface(gfxscreen,NULL,screen,NULL);
+	SDL_Flip(screen);
 	return(TRUE);
 }
 

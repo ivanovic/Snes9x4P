@@ -96,7 +96,7 @@ void S9xInitDisplay (int /*argc*/, char ** /*argv*/)
 	SDL_ShowCursor(SDL_DISABLE);
 
 	keyssnes = SDL_GetKeyState(NULL);
-	screen = SDL_SetVideoMode(xs, ys, 16, SDL_SWSURFACE);
+	screen = SDL_SetVideoMode(xs, ys, 16, SDL_HWSURFACE);
 	//screen = SDL_CreateRGBSurface(SDL_HWSURFACE, xs, ys, 16, 0, 0, 0, 0);
 	//hwscreen = SDL_SetVideoMode(xs, ys, 16, SDL_HWSURFACE|SDL_FULLSCREEN);
 	

@@ -38,7 +38,7 @@ extern clock_t start;
 // --------------------------------------------------------------------------------------
 // Dingoo Stuff
 // --------------------------------------------------------------------------------------
-
+/*
 // Define this to the CPU frequency
 unsigned CLK_FREQ = 336; //400 // CPU clock: 336 MHz
 
@@ -52,7 +52,7 @@ unsigned CLK_FREQ = 336; //400 // CPU clock: 336 MHz
 #define SDRAM_TREF	15625	// Refresh period: 4096 refresh cycles/64ms
 //#define SDRAM_TREF      7812  // Refresh period: 8192 refresh cycles/64ms
 
-/* Clock Control Register */
+// Clock Control Register
 #define CPM_CPCCR_I2CS        (1 << 31)
 #define CPM_CPCCR_CLKOEN    (1 << 30)
 #define CPM_CPCCR_UCS        (1 << 29)
@@ -71,11 +71,11 @@ unsigned CLK_FREQ = 336; //400 // CPU clock: 336 MHz
 #define CPM_CPCCR_CDIV_BIT    0
 #define CPM_CPCCR_CDIV_MASK    (0x0f << CPM_CPCCR_CDIV_BIT)
 
-/* I2S Clock Divider Register */
+// I2S Clock Divider Register
 #define CPM_I2SCDR_I2SDIV_BIT    0
 #define CPM_I2SCDR_I2SDIV_MASK    (0x1ff << CPM_I2SCDR_I2SDIV_BIT)
 
-/* PLL Control Register */
+// PLL Control Register
 #define CPM_CPPCR_PLLM_BIT    23
 #define CPM_CPPCR_PLLM_MASK    (0x1ff << CPM_CPPCR_PLLM_BIT)
 #define CPM_CPPCR_PLLN_BIT    18
@@ -97,7 +97,7 @@ static int sdram_convert(unsigned int pllin,unsigned int *sdram_freq)
 	register unsigned int ns, tmp;
  
 	ns = 1000000000 / pllin;
-	/* Set refresh registers */
+	// Set refresh registers
 	tmp = SDRAM_TREF/ns;
 	tmp = tmp/64 + 1;
 	if (tmp > 0xff) tmp = 0xff;
@@ -115,7 +115,7 @@ static void pll_init(unsigned int clock)
 		7, 0, 0, 0, 0, 0, 0, 0, 8, 0, 0, 0, 0, 0, 0, 0,
 		9
 	};
-  	int div[5] = {1, 3, 3, 3, 3}; /* divisors of I:S:P:L:M */
+  	int div[5] = {1, 3, 3, 3, 3}; // divisors of I:S:P:L:M
 	int nf, pllout2;
 
 	cfcr = CPM_CPCCR_CLKOEN |
@@ -127,17 +127,17 @@ static void pll_init(unsigned int clock)
 
 	pllout2 = (cfcr & CPM_CPCCR_PCS) ? clock : (clock / 2);
 
-	/* Init UHC clock */
+	// Init UHC clock
     	jz_cpmregl[0x6C>>2] = pllout2 / 48000000 - 1;
 
 	nf = clock * 2 / CFG_EXTAL;
-	plcr1 = ((nf - 2) << CPM_CPPCR_PLLM_BIT) | /* FD */
-		(0 << CPM_CPPCR_PLLN_BIT) |	/* RD=0, NR=2 */
-		(0 << CPM_CPPCR_PLLOD_BIT) |    /* OD=0, NO=1 */
-		(0x20 << CPM_CPPCR_PLLST_BIT) | /* PLL stable time */
-		CPM_CPPCR_PLLEN;                /* enable PLL */          
+	plcr1 = ((nf - 2) << CPM_CPPCR_PLLM_BIT) | // FD
+		(0 << CPM_CPPCR_PLLN_BIT) |	// RD=0, NR=2
+		(0 << CPM_CPPCR_PLLOD_BIT) |    // OD=0, NO=1/
+		(0x20 << CPM_CPPCR_PLLST_BIT) | // PLL stable time
+		CPM_CPPCR_PLLEN;                // enable PLL         
 
-	/* init PLL */
+	// init PLL
       	jz_cpmregl[0] = cfcr;
     	jz_cpmregl[0x10>>2] = plcr1;
 	
@@ -187,7 +187,7 @@ unsigned int dingoo_get_clock(void)
 	
 	return 2+(nf*6);
 }
-
+*/
 // --------------------------------------------------------------------------------------
 // Dingoo Stuff END
 // --------------------------------------------------------------------------------------
@@ -204,7 +204,7 @@ void menu_dispupdate(void){
 		}	
 	}
 
-	strcpy(disptxt[0],"Snes9x4D (for DINGUX) v20100407");
+	strcpy(disptxt[0],"Snes9x4D (for DINGUX) v20100426");
 	strcpy(disptxt[1],"");
 	//strcpy(disptxt[2],"Resume Game          ");
 	strcpy(disptxt[2],"Reset Game           ");
@@ -220,8 +220,8 @@ void menu_dispupdate(void){
 	strcpy(disptxt[12],"--------------");
 	strcpy(disptxt[13],"BATT:");
 	strcpy(disptxt[14],"     ");
-	strcpy(disptxt[15],"MHZ :");	
-	strcpy(disptxt[16],"BACKLIGHT:");	
+	strcpy(disptxt[15],"MHZ :");
+	strcpy(disptxt[16],"BACKLIGHT:");
 
 	sprintf(temp,"%s%d",disptxt[5],SaveSlotNum);
 	strcpy(disptxt[5],temp);
@@ -275,15 +275,15 @@ void menu_dispupdate(void){
 
 	sprintf(temp,"%s  (%5d)",disptxt[14],(batt_level()/10)*10);
 	strcpy(disptxt[14],temp);	
-
-//sprintf(temp,"%s%3dm",disptxt[15],(int)((clock()-start)/(CLOCKS_PER_SEC*60)));
-	sprintf(temp,"%s%3d", disptxt[15], 0 /*dingoo_get_clock()*/ ); //1000000, 4707032
-	strcpy(disptxt[15],temp);		
+/*
+	sprintf(temp,"%s%3d", disptxt[15], 0 ); //1000000, 4707032
+	strcpy(disptxt[15],temp);
+*/
 /*
 	sprintf(temp,"%s %d%%",disptxt[16],get_lcd_backlight());
 	strcpy(disptxt[16],temp);	
 */
-	for(int i=0;i<=15;i++){
+	for(int i=0;i<=14;i++){ //15
 		if(i==cursor)
 			sprintf(temp," >%s",disptxt[i]);
 		else
