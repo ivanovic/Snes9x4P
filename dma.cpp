@@ -118,7 +118,7 @@ void S9xDoDMA (uint8 Channel)
 		// I'd say yes, since 'invalid' is probably just the WRAM chip
 		// not being able to read and write itself at the same time
 		CPU.Cycles+=(d->TransferBytes+1)*SLOW_ONE_CYCLE;
-//		S9xUpdateAPUTimer();
+		S9xUpdateAPUTimer();
 		goto update_address;
 	}
     switch (d->BAddress)
@@ -341,18 +341,19 @@ void S9xDoDMA (uint8 Channel)
     {
 #ifdef VAR_CYCLES
 		//reflects extra cycle used by DMA
-		cpu->Cycles += 8 * (count+1);
+		CPU.Cycles += SLOW_ONE_CYCLE * (count+1);
+		S9xUpdateAPUTimer();
 #else
 		//needs fixing for the extra DMA cycle
 		cpu->Cycles += (1+count) + ((1+count) >> 2);
+		S9xUpdateAPUTimer();
 #endif
 		uint8 *base = GetBasePointer ((d->ABank << 16) + d->AAddress);
 		uint16 p = d->AAddress;
 		
 		if (!base)
 			base = Memory.ROM;
-		
-//#ifndef _ZAURUS
+
 		if (in_sa1_dma)
 		{
 			base = &Memory.ROM [CMemory::MAX_ROM_SIZE - 0x10000];
@@ -363,13 +364,13 @@ void S9xDoDMA (uint8 Channel)
 			base = in_sdd1_dma;
 			p = 0;
 		}
-//#ifndef _ZAURUS
+
 		if(spc7110_dma)
 		{
 			base=spc7110_dma;
 			p = 0;
 		}
-//#endif
+
 		if (inc > 0)
 			d->AAddress += count;
 		else
@@ -719,16 +720,16 @@ void S9xDoDMA (uint8 Channel)
     iapu->APUExecuting = Settings.APUEnabled;
     APU_EXECUTE ();
 #endif
-#ifndef _ZAURUS
     while (cpu->Cycles > cpu->NextEvent)
 		S9xDoHBlankProcessing (cpu, apu, iapu);
-
+	S9xUpdateAPUTimer();
+/*
 	if(Settings.SPC7110&&spc7110_dma)
 	{
 		if(spc7110_dma&&s7_wrap)
 			delete [] spc7110_dma;
 	}
-#endif
+*/
 update_address:
     // Super Punch-Out requires that the A-BUS address be updated after the
     // DMA transfer.
@@ -754,25 +755,40 @@ void S9xStartHDMA ()
 
     if (Settings.DisableHDMA)
 		ippu->HDMA = 0;
-    else {
-		ippu->HDMA = Memory.FillRAM [0x420c];
-#ifdef DEBUGGER
-		missing.hdma_this_frame = IPPU.HDMA;
-#endif
-	}
-    ippu->HDMAStarted = TRUE;
+    else
+		missing.hdma_this_frame = ippu->HDMA = Memory.FillRAM [0x420c];
 	
-    for (register uint32 i = 0; i < 8; i++)
+	//per anomie timing post
+	if(IPPU.HDMA!=0)
+	{
+		CPU.Cycles+=ONE_CYCLE*3;
+		S9xUpdateAPUTimer();
+	}
+    
+	ippu->HDMAStarted = TRUE;
+
+    for (uint8 i = 0; i < 8; i++)
     {
 		if (ippu->HDMA & (1 << i))
 		{
+			CPU.Cycles+=SLOW_ONE_CYCLE ;
+			S9xUpdateAPUTimer();
 			DMA [i].LineCount = 0;
 			DMA [i].FirstLine = TRUE;
 			DMA [i].Address = DMA [i].AAddress;
+			if(DMA[i].HDMAIndirectAddressing)
+			{
+				CPU.Cycles+=(SLOW_ONE_CYCLE <<2);
+				S9xUpdateAPUTimer();
+			}
 		}
 		HDMAMemPointers [i] = NULL;
+#ifdef SETA010_HDMA_FROM_CART
+		HDMARawPointers [i] = 0;
+#endif
     }
 }
+
 
 #ifdef DEBUGGER
 void S9xTraceSoundDSP (const char *s, int i1 = 0, int i2 = 0, int i3 = 0,
@@ -786,13 +802,20 @@ uint8 S9xDoHDMA (struct InternalPPU *ippu, struct SPPU *ppu, struct SCPUState *c
 	struct SDMA *p = &DMA [0];
     
     int d = 0;
-	
+
+    CPU.InDMA = TRUE;
+	CPU.Cycles+=ONE_CYCLE*3;
+	S9xUpdateAPUTimer();
     for (uint8 mask = 1; mask; mask <<= 1, p++, d++)
     {
 		if (byte & mask)
 		{
 			if (!p->LineCount)
 			{
+				//remember, InDMA is set.
+				//Get/Set incur no charges!
+				CPU.Cycles+=SLOW_ONE_CYCLE;
+				S9xUpdateAPUTimer();
 				uint8 line = S9xGetByte ((p->ABank << 16) + p->Address, cpu);
 				if (line == 0x80)
 				{
@@ -820,6 +843,9 @@ uint8 S9xDoHDMA (struct InternalPPU *ippu, struct SPPU *ppu, struct SCPUState *c
 				if (p->HDMAIndirectAddressing)
 				{
 					p->IndirectBank = Memory.FillRAM [0x4307 + (d << 4)];
+					//again, no cycle charges while InDMA is set!
+					CPU.Cycles+=SLOW_ONE_CYCLE<<2;
+					S9xUpdateAPUTimer();
 					p->IndirectAddress = S9xGetWord ((p->ABank << 16) + p->Address, cpu);
 					p->Address += 2;
 				}
@@ -833,6 +859,9 @@ uint8 S9xDoHDMA (struct InternalPPU *ippu, struct SPPU *ppu, struct SCPUState *c
 			}
 			else
 			{
+				CPU.Cycles += SLOW_ONE_CYCLE;
+				S9xUpdateAPUTimer();
+			}
 
 			if (!HDMAMemPointers [d])
 			{
@@ -852,13 +881,20 @@ uint8 S9xDoHDMA (struct InternalPPU *ippu, struct SPPU *ppu, struct SCPUState *c
 				// H-DMA during the frame.
 				//p->FirstLine = TRUE;
 			}
-			}
+
 			if (p->Repeat && !p->FirstLine)
 			{
 				p->LineCount--;
 				continue;
 			}
-			
+
+			if (p->BAddress == 0x04){
+				if(SNESGameFixes.Uniracers){
+					PPU.OAMAddr = 0x10c;
+					PPU.OAMFlip=0;
+				}
+			}
+
 #ifdef DEBUGGER
 			if (Settings.TraceSoundDSP && p->FirstLine && 
 				p->BAddress >= 0x40 && p->BAddress <= 0x43)
@@ -882,8 +918,10 @@ uint8 S9xDoHDMA (struct InternalPPU *ippu, struct SPPU *ppu, struct SCPUState *c
 			case 0:
 #ifndef VAR_CYCLES
 				cpu->Cycles += 1;
+				S9xUpdateAPUTimer();
 #else
 				cpu->Cycles += 8;
+				S9xUpdateAPUTimer();
 #endif
 				S9xSetPPU (*HDMAMemPointers [d]++, 0x2100 + p->BAddress, ppu, ippu);
 				break;
@@ -891,8 +929,10 @@ uint8 S9xDoHDMA (struct InternalPPU *ippu, struct SPPU *ppu, struct SCPUState *c
 			case 5:
 #ifndef VAR_CYCLES
 				cpu->Cycles += 3;
+				S9xUpdateAPUTimer();
 #else
 				cpu->Cycles += 16;
+				S9xUpdateAPUTimer();
 #endif
 				S9xSetPPU (*(HDMAMemPointers [d] + 0), 0x2100 + p->BAddress, ppu, ippu);
 				S9xSetPPU (*(HDMAMemPointers [d] + 1), 0x2101 + p->BAddress, ppu, ippu);
@@ -902,8 +942,10 @@ uint8 S9xDoHDMA (struct InternalPPU *ippu, struct SPPU *ppu, struct SCPUState *c
 			case 6:
 #ifndef VAR_CYCLES
 				cpu->Cycles += 3;
+				S9xUpdateAPUTimer();
 #else
 				cpu->Cycles += 16;
+				S9xUpdateAPUTimer();
 #endif
 				S9xSetPPU (*(HDMAMemPointers [d] + 0), 0x2100 + p->BAddress, ppu, ippu);
 				S9xSetPPU (*(HDMAMemPointers [d] + 1), 0x2100 + p->BAddress, ppu, ippu);
@@ -913,8 +955,10 @@ uint8 S9xDoHDMA (struct InternalPPU *ippu, struct SPPU *ppu, struct SCPUState *c
 			case 7:
 #ifndef VAR_CYCLES
 				cpu->Cycles += 6;
+				S9xUpdateAPUTimer();
 #else
 				cpu->Cycles += 32;
+				S9xUpdateAPUTimer();
 #endif
 				S9xSetPPU (*(HDMAMemPointers [d] + 0), 0x2100 + p->BAddress, ppu, ippu);
 				S9xSetPPU (*(HDMAMemPointers [d] + 1), 0x2100 + p->BAddress, ppu, ippu);
@@ -925,8 +969,10 @@ uint8 S9xDoHDMA (struct InternalPPU *ippu, struct SPPU *ppu, struct SCPUState *c
 			case 4:
 #ifndef VAR_CYCLES
 				cpu->Cycles += 6;
+				S9xUpdateAPUTimer();
 #else
 				cpu->Cycles += 32;
+				S9xUpdateAPUTimer();
 #endif
 				S9xSetPPU (*(HDMAMemPointers [d] + 0), 0x2100 + p->BAddress, ppu, ippu);
 				S9xSetPPU (*(HDMAMemPointers [d] + 1), 0x2101 + p->BAddress, ppu, ippu);
@@ -937,10 +983,15 @@ uint8 S9xDoHDMA (struct InternalPPU *ippu, struct SPPU *ppu, struct SCPUState *c
 			}
 			if (!p->HDMAIndirectAddressing)
 				p->Address += HDMA_ModeByteCounts [p->TransferMode];
+			p->IndirectAddress += HDMA_ModeByteCounts [p->TransferMode];
+			/* XXX: Check for p->IndirectAddress crossing a mapping boundry,
+			 * XXX: and invalidate HDMAMemPointers[d]
+			 */
 			p->FirstLine = FALSE;
 			p->LineCount--;
 	}
     }
+	CPU.InDMA=FALSE;
     return (byte);
 }
 

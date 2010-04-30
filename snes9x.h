@@ -110,6 +110,8 @@
 #define SNES_CYCLES_PER_SCANLINE ((uint32) (SNES_SCANLINE_TIME / SNES_CLOCK_LEN + 0.5))
 #endif
 
+#define SNES_APUTIMER2_CYCLEx10000 ((uint32) ((SNES_CYCLES_PER_SCANLINE * 10000L) * (1.0 / 64000.0) / SNES_SCANLINE_TIME + 0.5))
+
 #define SNES_TR_MASK	    (1 << 4)
 #define SNES_TL_MASK	    (1 << 5)
 #define SNES_X_MASK	    (1 << 6)
@@ -357,6 +359,7 @@ struct SSNESGameFixes
     uint8 TouhaidenControllerFix;
     uint8 SoundEnvelopeHeightReading2;
     uint8 SRAMInitialValue;
+	uint8 Uniracers;
 };
 
 START_EXTERN_C

@@ -204,7 +204,7 @@ void menu_dispupdate(void){
 		}	
 	}
 
-	strcpy(disptxt[0],"Snes9x4D (for DINGUX) v20100426");
+	strcpy(disptxt[0],"Snes9x4D (for DINGUX) v20100429");
 	strcpy(disptxt[1],"");
 	//strcpy(disptxt[2],"Resume Game          ");
 	strcpy(disptxt[2],"Reset Game           ");
@@ -432,7 +432,8 @@ void menu_loop(void){
 							vol = 0;
 					break;
 					case 10:
-						ShowCredit();
+						if (keyssnes[sfc_key[A_1]] == SDL_PRESSED)
+							ShowCredit();
 					break;
 					case 11:
 						if (keyssnes[sfc_key[A_1]] == SDL_PRESSED)
@@ -441,9 +442,11 @@ void menu_loop(void){
 					}
 				}
 
-				if(cursor==1) cursor=11;
-				else if(cursor==12) cursor=2;
-			break;
+				if(cursor==1)
+					cursor=11;
+				else if(cursor==12)
+					cursor=2;
+				break;
 			}
 		}
 	} while(exit_loop!=TRUE && keyssnes[sfc_key[B_1]] != SDL_PRESSED);

@@ -4,24 +4,40 @@ Snes9x4D (for DINGUX) v20100426
 
 
 KNOW ISSUES:
--TheLion King, Sunset Riders dont work.
 -Super Mario All-Stars only if you start with Mario 2 and save.
 -No Fullscreen support for HighRes Games (secret of Mana, ...)
 -Non-working FX Games:
+FX1
 *Stunt Race FX
-*Dirt Trax FX
-*Dirt Racer FX
 *Vortex
+FX2
+*Dirt Racer FX
 
 
 ver 20100426
 ------------
-+FX1 support added (Star Wing/Star Fox)
-+FX2 support added (Super Mario World 2 - Yoshi's Island, Winter Gold, Doom)
-+OBC1 support added (Metal Combat: Falcon's Revenge)
-+DSP-2 suport added (Dungeon Master)
-+some bugs fixed
+FX1 support added
+-Star Wing/Star Fox
+-Dirt Trax FX
+FX2 support added
+-Super Mario World 2 - Yoshi's Island
+-Winter Gold
+-Doom
+OBC1 support added
+-Metal Combat: Falcon's Revenge
+DSP-2 suport added
+-Dungeon Master
+DSP-3
+-SD Gundam GX --bugged?
+DSP-4
+-Top Gear 3000
+other that work now:
+-Super Mario All-Stars
+-The Lion King
+-Sunset Riders
+
 +autodetection of HighRes Games added
++some other Bugs fixed
 
 For Fx Title use 400Mhz, Frameskip to 60/3 and the NoSound commandline option "-ns" !
 

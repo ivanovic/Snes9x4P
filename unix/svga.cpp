@@ -92,11 +92,11 @@ void S9xInitDisplay (int /*argc*/, char ** /*argv*/)
 	}
 	atexit(SDL_Quit);
 
-// No more MOUSE-CURSOR
+	// No more MOUSE-CURSOR
 	SDL_ShowCursor(SDL_DISABLE);
 
 	keyssnes = SDL_GetKeyState(NULL);
-	screen = SDL_SetVideoMode(xs, ys, 16, SDL_HWSURFACE);
+	screen = SDL_SetVideoMode(xs, ys, 16, SDL_SWSURFACE);	//SDL_HWSURFACE
 	//screen = SDL_CreateRGBSurface(SDL_HWSURFACE, xs, ys, 16, 0, 0, 0, 0);
 	//hwscreen = SDL_SetVideoMode(xs, ys, 16, SDL_HWSURFACE|SDL_FULLSCREEN);
 	

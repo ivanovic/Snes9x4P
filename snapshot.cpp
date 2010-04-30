@@ -584,43 +584,45 @@ static int Unfreeze (STREAM stream)
 	return (result);
     if ((result = UnfreezeBlock (stream, "FIL", Memory.FillRAM, 0x8000)) != SUCCESS)
 	return (result);
+
     if (UnfreezeStruct (stream, "APU", &APU, SnapAPU, COUNT (SnapAPU)) == SUCCESS)
     {
-	if ((result = UnfreezeStruct (stream, "ARE", &APURegisters, SnapAPURegisters,
-				      COUNT (SnapAPURegisters))) != SUCCESS)
-	    return (result);
-	if ((result = UnfreezeBlock (stream, "ARA", IAPU.RAM, 0x10000)) != SUCCESS)
-	    return (result);
-	if ((result = UnfreezeStruct (stream, "SOU", &SoundData, SnapSoundData,
-				      COUNT (SnapSoundData))) != SUCCESS)
-	    return (result);
-
-	S9xSetSoundMute (FALSE);
-	IAPU.PC = IAPU.RAM + APURegisters.PC;
-	S9xAPUUnpackStatus ();
-	if (APUCheckDirectPage ())
-	    IAPU.DirectPage = IAPU.RAM + 0x100;
-	else
-	    IAPU.DirectPage = IAPU.RAM;
-	Settings.APUEnabled = TRUE;
-	IAPU.APUExecuting = TRUE;
+		if ((result = UnfreezeStruct (stream, "ARE", &APURegisters, SnapAPURegisters, COUNT (SnapAPURegisters))) != SUCCESS)
+		    return (result);
+	
+		if ((result = UnfreezeBlock (stream, "ARA", IAPU.RAM, 0x10000)) != SUCCESS)
+		    return (result);
+	
+		if ((result = UnfreezeStruct (stream, "SOU", &SoundData, SnapSoundData, COUNT (SnapSoundData))) != SUCCESS)
+		    return (result);
+	
+		S9xSetSoundMute (FALSE);
+		IAPU.PC = IAPU.RAM + APURegisters.PC;
+		S9xAPUUnpackStatus ();
+		
+		if (APUCheckDirectPage ())
+		    IAPU.DirectPage = IAPU.RAM + 0x100;
+		else
+		    IAPU.DirectPage = IAPU.RAM;
+	
+		Settings.APUEnabled = TRUE;
+		IAPU.APUExecuting = TRUE;
     }
     else
     {
-	Settings.APUEnabled = FALSE;
-	IAPU.APUExecuting = FALSE;
-	S9xSetSoundMute (TRUE);
+		Settings.APUEnabled = FALSE;
+		IAPU.APUExecuting = FALSE;
+		S9xSetSoundMute (TRUE);
     }
-    if ((result = UnfreezeStruct (stream, "SA1", &SA1, SnapSA1, 
-				  COUNT(SnapSA1))) == SUCCESS)
+
+    if ((result = UnfreezeStruct (stream, "SA1", &SA1, SnapSA1, COUNT(SnapSA1))) == SUCCESS)
     {
-	if ((result = UnfreezeStruct (stream, "SAR", &SA1Registers, 
-				      SnapSA1Registers, COUNT (SnapSA1Registers))) != SUCCESS)
-	    return (result);
-//#ifndef _ZAURUS
-	S9xFixSA1AfterSnapshotLoad ();
-	SA1.Flags |= sa1_old_flags & (TRACE_FLAG);
-//#endif
+		if ((result = UnfreezeStruct (stream, "SAR", &SA1Registers, 
+					      SnapSA1Registers, COUNT (SnapSA1Registers))) != SUCCESS)
+		    return (result);
+	
+		S9xFixSA1AfterSnapshotLoad ();
+		SA1.Flags |= sa1_old_flags & (TRACE_FLAG);
     }
     S9xFixSoundAfterSnapshotLoad ();
     ICPU.ShiftedPB = Registers.PB << 16;
@@ -629,7 +631,7 @@ static int Unfreeze (STREAM stream)
     S9xUnpackStatus ();
     S9xFixCycles (&Registers, &ICPU);
     S9xReschedule ();
-//#ifndef _ZAURUS
+
 #ifdef ZSNES_FX
     if (Settings.SuperFX)
 	S9xSuperFXPostLoadState ();
@@ -638,8 +640,8 @@ static int Unfreeze (STREAM stream)
 //    S9xSRTCPostLoadState ();
     if (Settings.SDD1)
 	S9xSDD1PostLoadState ();
-//#endif
-    return (SUCCESS);
+
+	return (SUCCESS);
 }
 
 int FreezeSize (int size, int type)

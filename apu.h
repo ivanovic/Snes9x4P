@@ -61,6 +61,8 @@ struct SIAPU
     uint8_32	_Zero;
     uint8_32	_Overflow;
     uint32		TimerErrorCounter;
+    int32  NextAPUTimerPos;
+    int32  APUTimerCounter;
     uint32		Scanline;
     int32		OneCycle;
     int32		TwoCycles;
@@ -136,6 +138,7 @@ void S9xSetAPUControl (uint8 byte);
 void S9xSetAPUDSP (uint8 byte, struct SAPU *, struct SIAPU *);
 uint8 S9xGetAPUDSP ();
 void S9xSetAPUTimer (uint16 Address, uint8 byte);
+void S9xUpdateAPUTimer (void);
 bool8_32 S9xInitSound (int quality, bool8_32 stereo, int buffer_size);
 void S9xOpenCloseSoundTracingFile (bool8_32);
 void S9xPrintAPUState ();

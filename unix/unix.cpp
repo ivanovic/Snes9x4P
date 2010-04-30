@@ -679,7 +679,7 @@ bool8_32 S9xDeinitUpdate (int Width, int Height)
 		else if (Settings.DisplayFrameRate)
 		    S9xDisplayFrameRate ((uint8 *)screen->pixels + 64, 640);
 
-//		SDL_UpdateRect(screen,32,0,256,Height);
+		SDL_UpdateRect(screen,32,0,256,Height);
 	}
 	else
 	{
@@ -729,12 +729,12 @@ bool8_32 S9xDeinitUpdate (int Width, int Height)
 		else if (Settings.DisplayFrameRate)
 		    S9xDisplayFrameRate ((uint8 *)screen->pixels + 64, 640);
 
-//	    SDL_UpdateRect(screen,0,yoffset,320,Height+yoffset);
+	    SDL_UpdateRect(screen,0,yoffset,320,Height+yoffset);
 	}
 
-//Bei Fullscreen kann man alles blitten.
-	SDL_BlitSurface(gfxscreen,NULL,screen,NULL);
-	SDL_Flip(screen);
+//Bei Fullscreen kann man alles blitten	-- HighRes Sachn müssen aber angepasst werden!
+//	SDL_BlitSurface(gfxscreen,NULL,screen,NULL);
+//	SDL_Flip(screen);
 	return(TRUE);
 }
 

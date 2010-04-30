@@ -150,12 +150,14 @@ void S9xMainLoop (void)
 		cpu->Cycles += icpu->Speed [*cpu->PC];
 #endif
 		(*icpu->S9xOpcodes [*cpu->PC++].S9xOpcode) (reg, icpu, cpu);
-//#ifndef _ZAURUS
+
+		S9xUpdateAPUTimer();
+
 		if (SA1.Executing)
 			S9xSA1MainLoop ();
-//#endif
+
 		DO_HBLANK_CHECK();
-	} // for(;;)
+	}
     Registers.PC = cpu->PC - cpu->PCBase;
     S9xPackStatus ();
     areg->PC = iapu->PC - iapu->RAM;
@@ -168,14 +170,14 @@ void S9xMainLoop (void)
 			S9xSyncSpeed ();
 		cpu->Flags &= ~SCAN_KEYS_FLAG;
     }
-//#ifndef _ZAURUS
+#ifdef DETECT_NASTY_FX_INTERLEAVE
     if (cpu->BRKTriggered && Settings.SuperFX && !cpu->TriedInterleavedMode2)
     {
 		cpu->TriedInterleavedMode2 = TRUE;
 		cpu->BRKTriggered = FALSE;
 		S9xDeinterleaveMode2 ();
     }
-//#endif
+#endif
 }
 
 
@@ -215,15 +217,16 @@ void S9xDoHBlankProcessing (struct SCPUState *cpu, struct SAPU *apu, struct SIAP
 	break;
 
     case HBLANK_END_EVENT:
-//#ifndef _ZAURUS
+
 	S9xSuperFXExec ();
-//#endif
+
 #ifndef STORM
 	if (Settings.SoundSync)
 	    S9xGenerateSound ();
 #endif
 
 	cpu->Cycles -= Settings.H_Max;
+	IAPU.NextAPUTimerPos -= (Settings.H_Max * 10000L);
 	if (iapu->APUExecuting)
 	    apu->Cycles -= Settings.H_Max;
 	else
@@ -261,7 +264,22 @@ void S9xDoHBlankProcessing (struct SCPUState *cpu, struct SAPU *apu, struct SIAP
 	    ippu->MaxBrightness = ppu->Brightness;
 	    ppu->ForcedBlanking = (Memory.FillRAM [0x2100] >> 7) & 1;
 
+		if(!PPU.ForcedBlanking){
+			PPU.OAMAddr = PPU.SavedOAMAddr;
+			{
+				uint8 tmp = 0;
+				if(PPU.OAMPriorityRotation)
+					tmp = (PPU.OAMAddr&0xFE)>>1;
+				if((PPU.OAMFlip&1) || PPU.FirstSprite!=tmp){
+					PPU.FirstSprite=tmp;
+					IPPU.OBJChanged=TRUE;
+				}
+			}
+			PPU.OAMFlip = 0;
+		}
+
 	    Memory.FillRAM[0x4210] = 0x80;
+
 	    if (Memory.FillRAM[0x4200] & 0x80)
 	    {
 			cpu->NMIActive = TRUE;

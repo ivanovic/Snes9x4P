@@ -1,50 +1,64 @@
 /*******************************************************************************
   Snes9x - Portable Super Nintendo Entertainment System (TM) emulator.
  
-  (c) Copyright 1996 - 2003 Gary Henderson (gary.henderson@ntlworld.com) and
+  (c) Copyright 1996 - 2002 Gary Henderson (gary.henderson@ntlworld.com) and
                             Jerremy Koot (jkoot@snes9x.com)
 
-  (c) Copyright 2002 - 2003 Matthew Kendora and
-                            Brad Jorsch (anomie@users.sourceforge.net)
- 
+  (c) Copyright 2001 - 2004 John Weidman (jweidman@slip.net)
 
-                      
+  (c) Copyright 2002 - 2004 Brad Jorsch (anomie@users.sourceforge.net),
+                            funkyass (funkyass@spam.shaw.ca),
+                            Joel Yliluoma (http://iki.fi/bisqwit/)
+                            Kris Bleakley (codeviolation@hotmail.com),
+                            Matthew Kendora,
+                            Nach (n-a-c-h@users.sourceforge.net),
+                            Peter Bortas (peter@bortas.org) and
+                            zones (kasumitokoduck@yahoo.com)
+
   C4 x86 assembler and some C emulation code
   (c) Copyright 2000 - 2003 zsKnight (zsknight@zsnes.com),
-                            _Demo_ (_demo_@zsnes.com), and
-                            Nach (n-a-c-h@users.sourceforge.net)
-                                          
+                            _Demo_ (_demo_@zsnes.com), and Nach
+
   C4 C++ code
   (c) Copyright 2003 Brad Jorsch
 
   DSP-1 emulator code
-  (c) Copyright 1998 - 2003 Ivar (ivar@snes9x.com), _Demo_, Gary Henderson,
-                            John Weidman (jweidman@slip.net),
-                            neviksti (neviksti@hotmail.com), and
-                            Kris Bleakley (stinkfish@bigpond.com)
- 
+  (c) Copyright 1998 - 2004 Ivar (ivar@snes9x.com), _Demo_, Gary Henderson,
+                            John Weidman, neviksti (neviksti@hotmail.com),
+                            Kris Bleakley, Andreas Naive
+
   DSP-2 emulator code
   (c) Copyright 2003 Kris Bleakley, John Weidman, neviksti, Matthew Kendora, and
                      Lord Nightmare (lord_nightmare@users.sourceforge.net
 
   OBC1 emulator code
-  (c) Copyright 2001 - 2003 zsKnight, pagefault (pagefault@zsnes.com)
+  (c) Copyright 2001 - 2004 zsKnight, pagefault (pagefault@zsnes.com) and
+                            Kris Bleakley
   Ported from x86 assembler to C by sanmaiwashi
 
   SPC7110 and RTC C++ emulator code
   (c) Copyright 2002 Matthew Kendora with research by
                      zsKnight, John Weidman, and Dark Force
 
+  S-DD1 C emulator code
+  (c) Copyright 2003 Brad Jorsch with research by
+                     Andreas Naive and John Weidman
+ 
   S-RTC C emulator code
   (c) Copyright 2001 John Weidman
   
+  ST010 C++ emulator code
+  (c) Copyright 2003 Feather, Kris Bleakley, John Weidman and Matthew Kendora
+
   Super FX x86 assembler emulator code 
   (c) Copyright 1998 - 2003 zsKnight, _Demo_, and pagefault 
 
   Super FX C emulator code 
-  (c) Copyright 1997 - 1999 Ivar and Gary Henderson.
+  (c) Copyright 1997 - 1999 Ivar, Gary Henderson and John Weidman
 
 
+  SH assembler code partly based on x86 assembler code
+  (c) Copyright 2002 - 2004 Marcus Comstedt (marcus@mc.pp.se) 
 
  
   Specific ports contains the works of other authors. See headers in
@@ -72,15 +86,15 @@
   Super NES and Super Nintendo Entertainment System are trademarks of
   Nintendo Co., Limited and its subsidiary companies.
 *******************************************************************************/
-
 #include "snes9x.h"
 #include "dsp1.h"
 #include "missing.h"
-#include "MEMMAP.H"
+#include "memmap.h"
 #include <math.h>
 
-#include "DSP1EMU.C"
+#include "dsp1emu.c"
 #include "dsp2emu.c"
+#include "dsp3emu.cpp"
 
 void (*SetDSP)(uint8, uint16)=&DSP1SetByte;
 uint8 (*GetDSP)(uint16)=&DSP1GetByte;
@@ -138,7 +152,6 @@ void S9xSetDSP (uint8 byte, uint16 address)
 	(*SetDSP)(byte, address);
 	//DSP1SetByte(byte, address);
 }
-
 
 void DSP1SetByte(uint8 byte, uint16 address)
 {
@@ -659,7 +672,7 @@ void DSP1SetByte(uint8 byte, uint16 address)
 						Op2BY = (int16) (DSP1.parameters [2]|(DSP1.parameters[3]<<8));
 						Op2BZ = (int16) (DSP1.parameters [4]|(DSP1.parameters[5]<<8));
 						
-						DSPOp0B ();
+						DSPOp2B ();
 						
 						DSP1.out_count = 2;
 						DSP1.output [0] = (uint8) (Op2BS&0xFF);
@@ -685,8 +698,7 @@ void DSP1SetByte(uint8 byte, uint16 address)
 						DSP1.output [4] = (uint8) (Op14Yrr&0xFF);
 						DSP1.output [5] = (uint8) ((Op14Yrr>>8)&0xFF);
 						break;
-
-												
+					
 					case 0x27:
 					case 0x2F:
 						Op2FUnknown = (int16) (DSP1.parameters [0]|(DSP1.parameters[1]<<8));
@@ -698,6 +710,7 @@ void DSP1SetByte(uint8 byte, uint16 address)
 						DSP1.output [1] = (uint8)((Op2FSize>>8)&0xFF);
 						break;
 						
+	
 					case 0x07:
 					case 0x0F:
 						Op0FRamsize = (int16) (DSP1.parameters [0]|(DSP1.parameters[1]<<8));
@@ -859,12 +872,12 @@ void DSP2SetByte(uint8 byte, uint16 address)
 				DSP2_Op01();
 				break;
 			case 0x09:
-                                // Multiply - don't yet know if this is signed or unsigned
-                                DSP2Op09Word1 = DSP1.parameters[0] | (DSP1.parameters[1]<<8);
-                                DSP2Op09Word2 = DSP1.parameters[2] | (DSP1.parameters[3]<<8);
+				// Multiply - don't yet know if this is signed or unsigned
+				DSP2Op09Word1 = DSP1.parameters[0] | (DSP1.parameters[1]<<8);
+                DSP2Op09Word2 = DSP1.parameters[2] | (DSP1.parameters[3]<<8);
 				DSP1.out_count=4;
 #ifdef FAST_LSB_WORD_ACCESS
-                                *(uint32 *)DSP1.output = DSP2Op09Word1 * DSP2Op09Word2;
+                *(uint32 *)DSP1.output = DSP2Op09Word1 * DSP2Op09Word2;
 #else
 				uint32 temp;
 				temp=DSP2Op09Word1 * DSP2Op09Word2;
@@ -927,337 +940,230 @@ uint8 DSP2GetByte(uint16 address)
 	return t;
 }
 
-//Disable non-working chips?
-#ifdef DSP_DUMMY_LOOPS
-
-uint16 Dsp3Rom[1024] = {
-	0x8000, 0x4000, 0x2000, 0x1000, 0x0800, 0x0400, 0x0200, 0x0100,
-	0x0080, 0x0040, 0x0020, 0x0010, 0x0008, 0x0004, 0x0002, 0x0001,
-	0x0002, 0x0004, 0x0008, 0x0010, 0x0020, 0x0040, 0x0080, 0x0100,
-	0x0000, 0x000f, 0x0400, 0x0200, 0x0140, 0x0400, 0x0200, 0x0040,
-	0x007d, 0x007e, 0x007e, 0x007b, 0x007c, 0x007d, 0x007b, 0x007c,
-	0x0002, 0x0020, 0x0030, 0x0000, 0x000d, 0x0019, 0x0026, 0x0032,
-	0x003e, 0x004a, 0x0056, 0x0062, 0x006d, 0x0079, 0x0084, 0x008e,
-	0x0098, 0x00a2, 0x00ac, 0x00b5, 0x00be, 0x00c6, 0x00ce, 0x00d5,
-	0x00dc, 0x00e2, 0x00e7, 0x00ec, 0x00f1, 0x00f5, 0x00f8, 0x00fb,
-	0x00fd, 0x00ff, 0x0100, 0x0100, 0x0100, 0x00ff, 0x00fd, 0x00fb,
-	0x00f8, 0x00f5, 0x00f1, 0x00ed, 0x00e7, 0x00e2, 0x00dc, 0x00d5,
-	0x00ce, 0x00c6, 0x00be, 0x00b5, 0x00ac, 0x00a2, 0x0099, 0x008e,
-	0x0084, 0x0079, 0x006e, 0x0062, 0x0056, 0x004a, 0x003e, 0x0032,
-	0x0026, 0x0019, 0x000d, 0x0000, 0xfff3, 0xffe7, 0xffdb, 0xffce,
-	0xffc2, 0xffb6, 0xffaa, 0xff9e, 0xff93, 0xff87, 0xff7d, 0xff72,
-	0xff68, 0xff5e, 0xff54, 0xff4b, 0xff42, 0xff3a, 0xff32, 0xff2b,
-	0xff25, 0xff1e, 0xff19, 0xff14, 0xff0f, 0xff0b, 0xff08, 0xff05,
-	0xff03, 0xff01, 0xff00, 0xff00, 0xff00, 0xff01, 0xff03, 0xff05,
-	0xff08, 0xff0b, 0xff0f, 0xff13, 0xff18, 0xff1e, 0xff24, 0xff2b,
-	0xff32, 0xff3a, 0xff42, 0xff4b, 0xff54, 0xff5d, 0xff67, 0xff72,
-	0xff7c, 0xff87, 0xff92, 0xff9e, 0xffa9, 0xffb5, 0xffc2, 0xffce,
-	0xffda, 0xffe7, 0xfff3, 0x002b, 0x007f, 0x0020, 0x00ff, 0xff00,
-	0xffbe, 0x0000, 0x0044, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
-	0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
-	0x0000, 0x0000, 0x0000, 0x0000, 0xffc1, 0x0001, 0x0002, 0x0045,
-	0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
-	0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
-	0xffc5, 0x0003, 0x0004, 0x0005, 0x0047, 0x0000, 0x0000, 0x0000,
-	0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
-	0x0000, 0x0000, 0x0000, 0x0000, 0xffca, 0x0006, 0x0007, 0x0008,
-	0x0009, 0x004a, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
-	0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
-	0xffd0, 0x000a, 0x000b, 0x000c, 0x000d, 0x000e, 0x004e, 0x0000,
-	0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
-	0x0000, 0x0000, 0x0000, 0x0000, 0xffd7, 0x000f, 0x0010, 0x0011,
-	0x0012, 0x0013, 0x0014, 0x0053, 0x0000, 0x0000, 0x0000, 0x0000,
-	0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
-	0xffdf, 0x0015, 0x0016, 0x0017, 0x0018, 0x0019, 0x001a, 0x001b,
-	0x0059, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
-	0x0000, 0x0000, 0x0000, 0x0000, 0xffe8, 0x001c, 0x001d, 0x001e,
-	0x001f, 0x0020, 0x0021, 0x0022, 0x0023, 0x0060, 0x0000, 0x0000,
-	0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
-	0xfff2, 0x0024, 0x0025, 0x0026, 0x0027, 0x0028, 0x0029, 0x002a,
-	0x002b, 0x002c, 0x0068, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
-	0x0000, 0x0000, 0x0000, 0x0000, 0xfffd, 0x002d, 0x002e, 0x002f,
-	0x0030, 0x0031, 0x0032, 0x0033, 0x0034, 0x0035, 0x0036, 0x0071,
-	0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
-	0xffc7, 0x0037, 0x0038, 0x0039, 0x003a, 0x003b, 0x003c, 0x003d,
-	0x003e, 0x003f, 0x0040, 0x0041, 0x007b, 0x0000, 0x0000, 0x0000,
-	0x0000, 0x0000, 0x0000, 0x0000, 0xffd4, 0x0000, 0x0001, 0x0002,
-	0x0003, 0x0004, 0x0005, 0x0006, 0x0007, 0x0008, 0x0009, 0x000a,
-	0x000b, 0x0044, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
-	0xffe2, 0x000c, 0x000d, 0x000e, 0x000f, 0x0010, 0x0011, 0x0012,
-	0x0013, 0x0014, 0x0015, 0x0016, 0x0017, 0x0018, 0x0050, 0x0000,
-	0x0000, 0x0000, 0x0000, 0x0000, 0xfff1, 0x0019, 0x001a, 0x001b,
-	0x001c, 0x001d, 0x001e, 0x001f, 0x0020, 0x0021, 0x0022, 0x0023,
-	0x0024, 0x0025, 0x0026, 0x005d, 0x0000, 0x0000, 0x0000, 0x0000,
-	0xffcb, 0x0027, 0x0028, 0x0029, 0x002a, 0x002b, 0x002c, 0x002d,
-	0x002e, 0x002f, 0x0030, 0x0031, 0x0032, 0x0033, 0x0034, 0x0035,
-	0x006b, 0x0000, 0x0000, 0x0000, 0xffdc, 0x0000, 0x0001, 0x0002,
-	0x0003, 0x0004, 0x0005, 0x0006, 0x0007, 0x0008, 0x0009, 0x000a,
-	0x000b, 0x000c, 0x000d, 0x000e, 0x000f, 0x0044, 0x0000, 0x0000,
-	0xffee, 0x0010, 0x0011, 0x0012, 0x0013, 0x0014, 0x0015, 0x0016,
-	0x0017, 0x0018, 0x0019, 0x001a, 0x001b, 0x001c, 0x001d, 0x001e,
-	0x001f, 0x0020, 0x0054, 0x0000, 0xffee, 0x0021, 0x0022, 0x0023,
-	0x0024, 0x0025, 0x0026, 0x0027, 0x0028, 0x0029, 0x002a, 0x002b,
-	0x002c, 0x002d, 0x002e, 0x002f, 0x0030, 0x0031, 0x0032, 0x0065,
-	0xffbe, 0x0000, 0xfeac, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
-	0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
-	0x0000, 0x0000, 0x0000, 0x0000, 0xffc1, 0x0001, 0x0002, 0xfead,
-	0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
-	0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
-	0xffc5, 0x0003, 0x0004, 0x0005, 0xfeaf, 0x0000, 0x0000, 0x0000,
-	0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
-	0x0000, 0x0000, 0x0000, 0x0000, 0xffca, 0x0006, 0x0007, 0x0008,
-	0x0009, 0xfeb2, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
-	0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
-	0xffd0, 0x000a, 0x000b, 0x000c, 0x000d, 0x000e, 0xfeb6, 0x0000,
-	0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
-	0x0000, 0x0000, 0x0000, 0x0000, 0xffd7, 0x000f, 0x0010, 0x0011,
-	0x0012, 0x0013, 0x0014, 0xfebb, 0x0000, 0x0000, 0x0000, 0x0000,
-	0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
-	0xffdf, 0x0015, 0x0016, 0x0017, 0x0018, 0x0019, 0x001a, 0x001b,
-	0xfec1, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
-	0x0000, 0x0000, 0x0000, 0x0000, 0xffe8, 0x001c, 0x001d, 0x001e,
-	0x001f, 0x0020, 0x0021, 0x0022, 0x0023, 0xfec8, 0x0000, 0x0000,
-	0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
-	0xfff2, 0x0024, 0x0025, 0x0026, 0x0027, 0x0028, 0x0029, 0x002a,
-	0x002b, 0x002c, 0xfed0, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
-	0x0000, 0x0000, 0x0000, 0x0000, 0xfffd, 0x002d, 0x002e, 0x002f,
-	0x0030, 0x0031, 0x0032, 0x0033, 0x0034, 0x0035, 0x0036, 0xfed9,
-	0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
-	0xffc7, 0x0037, 0x0038, 0x0039, 0x003a, 0x003b, 0x003c, 0x003d,
-	0x003e, 0x003f, 0x0040, 0x0041, 0xfee3, 0x0000, 0x0000, 0x0000,
-	0x0000, 0x0000, 0x0000, 0x0000, 0xffd4, 0x0000, 0x0001, 0x0002,
-	0x0003, 0x0004, 0x0005, 0x0006, 0x0007, 0x0008, 0x0009, 0x000a,
-	0x000b, 0xfeac, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
-	0xffe2, 0x000c, 0x000d, 0x000e, 0x000f, 0x0010, 0x0011, 0x0012,
-	0x0013, 0x0014, 0x0015, 0x0016, 0x0017, 0x0018, 0xfeb8, 0x0000,
-	0x0000, 0x0000, 0x0000, 0x0000, 0xfff1, 0x0019, 0x001a, 0x001b,
-	0x001c, 0x001d, 0x001e, 0x001f, 0x0020, 0x0021, 0x0022, 0x0023,
-	0x0024, 0x0025, 0x0026, 0xfec5, 0x0000, 0x0000, 0x0000, 0x0000,
-	0xffcb, 0x0027, 0x0028, 0x0029, 0x002a, 0x002b, 0x002c, 0x002d,
-	0x002e, 0x002f, 0x0030, 0x0031, 0x0032, 0x0033, 0x0034, 0x0035,
-	0xfed3, 0x0000, 0x0000, 0x0000, 0xffdc, 0x0000, 0x0001, 0x0002,
-	0x0003, 0x0004, 0x0005, 0x0006, 0x0007, 0x0008, 0x0009, 0x000a,
-	0x000b, 0x000c, 0x000d, 0x000e, 0x000f, 0xfeac, 0x0000, 0x0000,
-	0xffee, 0x0010, 0x0011, 0x0012, 0x0013, 0x0014, 0x0015, 0x0016,
-	0x0017, 0x0018, 0x0019, 0x001a, 0x001b, 0x001c, 0x001d, 0x001e,
-	0x001f, 0x0020, 0xfebc, 0x0000, 0xffee, 0x0021, 0x0022, 0x0023,
-	0x0024, 0x0025, 0x0026, 0x0027, 0x0028, 0x0029, 0x002a, 0x002b,
-	0x002c, 0x002d, 0x002e, 0x002f, 0x0030, 0x0031, 0x0032, 0xfecd,
-	0x0154, 0x0218, 0x0110, 0x00b0, 0x00cc, 0x00b0, 0x0088, 0x00b0,
-	0x0044, 0x00b0, 0x0000, 0x00b0, 0x00fe, 0xff07, 0x0002, 0x00ff,
-	0x00f8, 0x0007, 0x00fe, 0x00ee, 0x07ff, 0x0200, 0x00ef, 0xf800,
-	0x0700, 0x00ee, 0xffff, 0xffff, 0xffff, 0x0000, 0x0000, 0x0001,
-	0x0001, 0x0001, 0x0001, 0x0000, 0x0000, 0xffff, 0xffff, 0xffff,
-	0xffff, 0x0000, 0x0000, 0x0001, 0x0001, 0x0001, 0x0001, 0x0000,
-	0x0000, 0xffff, 0xffff, 0x0000, 0xffff, 0x0001, 0x0000, 0x0001,
-	0x0001, 0x0000, 0x0000, 0xffff, 0xffff, 0xffff, 0xffff, 0x0000,
-	0xffff, 0x0001, 0x0000, 0x0001, 0x0001, 0x0000, 0x0000, 0xffff,
-	0xffff, 0xffff, 0x0000, 0x0000, 0x0000, 0x0044, 0x0088, 0x00cc,
-	0x0110, 0x0154, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff,
-	0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff,
-	0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff,
-	0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff,
-	0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff,
-	0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff
+struct SDSP4 {
+    bool8 waiting4command;
+    bool8 half_command;
+    uint16 command;
+    uint32 in_count;
+    uint32 in_index;
+    uint32 out_count;
+    uint32 out_index;
+    uint8 parameters [512];
+    uint8 output [512];
 };
 
-void DSP3SetByte(uint8 byte, uint16 address)
-{
-	if ((address & 0xf000) == 0x6000 ||
-		(address >= 0x8000 && address < 0xc000))
-    {
-		if (DSP1.waiting4command)
-		{
-			DSP1.command = byte;
-			DSP1.in_index = 0;
-			DSP1.waiting4command = FALSE;
-//			DSP1.first_parameter = TRUE;
-//			printf("Op%02X\n",byte);
-			switch (byte)
-			{
-			case 0x2F:DSP1.in_count=2;break;
-			case 0x1F:DSP1.in_count=2;break;
-			case 0x0F:DSP1.in_count=2;break;
-			case 0x38:DSP1.in_count=4;break;
-			default:
-//				printf("Op%02X\n",byte);
-				break;
-			}
-		}
-		else
-		{
-			DSP1.parameters [DSP1.in_index] = byte;
-//			DSP1.first_parameter = FALSE;
-			DSP1.in_index++;
-		}
-		
-		if (DSP1.in_count==DSP1.in_index)
-		{
-			//DSP1.parameters [DSP1.in_index] |= (byte << 8);
-			// Actually execute the command
-			DSP1.waiting4command = TRUE;
-			DSP1.out_index = 0;
-			switch (DSP1.command)
-			{
-			case 0x2F:DSP1.out_count=2;break;
-			case 0x1F:DSP1.out_count=2048;break;
-			case 0x0F:DSP1.out_count=2;
-					DSP1.output[0]=0;
-					DSP1.output[1]=0;
-					break;
-			case 0x38:
-				{
-					DSP1.out_count=2;
-					// 176B
-					DSP1.output[0]=0;
-					DSP1.output[1]=0x80;
+SDSP4 DSP4;
 
-					break;
-				}
-				default:
-					break;
-			}
-		}
-	}
-}
+#include "dsp4emu.cpp"
 
-uint8 DSP3GetByte(uint16 address)
-{
-	uint8 t;
-    if ((address & 0xf000) == 0x6000 ||
-		(address >= 0x8000 && address < 0xc000))
-    {
-		if(DSP1.command==0x38&&DSP1.out_index==1)
-		{
-			t=4;
-		}
-
-		if (DSP1.out_count)
-		{
-			if(DSP1.command==0x1f)
-			{
-				if((DSP1.out_index%2)!=0)
-				{
-					t=(uint8)Dsp3Rom[DSP1.out_index>>1];
-				}
-				else
-				{
-					t=Dsp3Rom[DSP1.out_index>>1]>>8;
-				}
-//				t=Dsp3Rom[DSP1.out_index];
-				DSP1.out_index++;
-			}
-			else
-			{
-				t = (uint8) DSP1.output [DSP1.out_index];
-				DSP1.out_index++;
-				DSP1.out_index%=512;
-				if(DSP1.out_count==DSP1.out_index)
-					DSP1.out_count=0;
-			}
-		}
-		else
-		{
-			t = 0xff;
-		}
-    }
-    else
-	{
-		t = 0x80;
-/*		if(DSP1.command=0x38&&DSP1.out_count==0)
-		{
-			t=0xC0;
-			static int Op38c;
-			if(Op38c==14)
-			{
-				Op38c=0;
-				t=0x80;
-				DSP1.in_count=4;
-			}
-			Op38c++;
-		}*/
-	}
-	return t;
-}
+bool DSP4_init=FALSE;
 
 void DSP4SetByte(uint8 byte, uint16 address)
 {
+	if(!DSP4_init)
+	{
+		// bootup
+		DSP4.waiting4command=1;
+		DSP4_init=TRUE;
+	}
+
 	if ((address & 0xf000) == 0x6000 ||
-		(address >= 0x8000 && address < 0xc000))
-    {
-		if(DSP1.out_index<DSP1.out_count)
+			(address >= 0x8000 && address < 0xc000))
+	{
+		if(DSP4.out_index<DSP4.out_count)
 		{
-			DSP1.out_index++;
-			if(DSP1.out_count==DSP1.out_index)
-				DSP1.waiting4command=true;
+			DSP4.out_index++;
 			return;
 		}
-		if (DSP1.waiting4command)
+
+		if (DSP4.waiting4command)
 		{
-			DSP1.command = byte;
-			DSP1.in_index = 0;
-			DSP1.waiting4command = FALSE;
-//			DSP1.first_parameter = TRUE;
-//			printf("Op%02X\n",byte);
-			switch (byte)
+			if(DSP4.half_command)
 			{
-			case 0x00:DSP1.in_count=5;break;
-			case 0x11:DSP1.in_count=9;break;
-			default:
-				printf("Op%02X\n",byte);
-				break;
+				DSP4.command |= (byte<<8);
+				DSP4.in_index = 0;
+				DSP4.waiting4command = FALSE;
+	//			DSP4.first_parameter = TRUE;
+				DSP4.half_command=0;
+				DSP4.out_count=0;
+				DSP4.out_index=0;
+				DSP4_Logic=0;
+
+				switch (DSP4.command)
+				{
+				case 0x0000:DSP4.in_count=4;break;
+				case 0x0001:DSP4.in_count=36;break;
+				case 0x0003:DSP4.in_count=0;break;
+				case 0x0005:DSP4.in_count=0;break;
+				case 0x0006:DSP4.in_count=0;break;
+				case 0x0007:DSP4.in_count=22;break;
+				case 0x0008:DSP4.in_count=72;break;
+				case 0x0009:DSP4.in_count=14;break;
+				case 0x000A:DSP4.in_count=6;break;
+				case 0x000B:DSP4.in_count=6;break;
+				case 0x000D:DSP4.in_count=34;break;
+				case 0x000E:DSP4.in_count=0;break;
+				case 0x0011:DSP4.in_count=8;break;
+				default:
+					DSP4.waiting4command=TRUE;
+					//printf("(line %d) Unknown Op%02X\n",line,DSP4.command);
+					break;
+				}
+			}
+			else
+			{
+				DSP4.command=byte;
+				DSP4.half_command=1;
 			}
 		}
 		else
 		{
-			DSP1.parameters [DSP1.in_index] = byte;
-//			DSP1.first_parameter = FALSE;
-			DSP1.in_index++;
+			DSP4.parameters [DSP4.in_index] = byte;
+//			DSP4.first_parameter = FALSE;
+			DSP4.in_index++;
 		}
 		
-		if (DSP1.in_count==DSP1.in_index)
+		if (!DSP4.waiting4command && DSP4.in_count==DSP4.in_index)
 		{
-			//DSP1.parameters [DSP1.in_index] |= (byte << 8);
+			//DSP4.parameters [DSP4.in_index] |= (byte << 8);
 			// Actually execute the command
-			DSP1.waiting4command = TRUE;
-			DSP1.out_index = 0;
-			switch (DSP1.command)
+			DSP4.waiting4command = TRUE;
+			DSP4.out_index = 0;
+			DSP4.in_index=0;
+			switch (DSP4.command)
 			{
-			case 0x00:
+			// 16-bit multiplication
+			case 0x0000:
 				{
-					int temp=((int16)(DSP1.parameters[1]|(DSP1.parameters[2]<<8))*(int16)(DSP1.parameters[3]|(DSP1.parameters[4]<<8)));
-					DSP1.output[0]=temp&0xFF;
-					DSP1.output[1]=(temp>>8)&0xFF;
-					DSP1.output[2]=(temp>>16)&0xFF;
-					DSP1.output[3]=(temp>>24)&0xFF;
-					DSP1.out_index=0;
-					DSP1.out_count=4;
+					int16 multiplier, multiplicand;
+					int product;
+					
+					multiplier = DSP4_READ_WORD(0);
+					multiplicand = DSP4_READ_WORD(2);
+
+					DSP4_Multiply(multiplicand,multiplier,product);
+
+					DSP4.out_count = 4;
+					DSP4_WRITE_WORD(0,product);
+					DSP4_WRITE_WORD(2,product>>16);
 				}
 				break;
-			case 0x11:
+
+			// unknown: horizontal mapping command
+			case 0x0011:
 				{
-				DSP1.out_count=2;
-				DSP1.out_index=0;
-				int temp=(DSP1.parameters[5]|(DSP1.parameters[6]<<8));
-				if(temp&0x8000)
-					temp|=0xFFFF0000;
-				DSP1.output[0]=((((temp*0x0554)>>16)&0x0F)<<4);
-				temp=(DSP1.parameters[7]|(DSP1.parameters[8]<<8));
-				if(temp&0x8000)
-					temp|=0xFFFF0000;
-				DSP1.output[0]|=((((temp*0x0554)>>16)&0x0F));
-				temp=(DSP1.parameters[1]|(DSP1.parameters[2]<<8));
-				if(temp&0x8000)
-					temp|=0xFFFF0000;
-				DSP1.output[1]=(((temp*0x0554)>>16&0x0F)<<4);
-				temp=(DSP1.parameters[3]|(DSP1.parameters[4]<<8));
-				if(temp&0x8000)
-					temp|=0xFFFF0000;
-				DSP1.output[1]|=(((temp*0x0554)>>16&0x0F));
-				break;
-				}
-				default:
+					int16 a,b,c,d,m;
+
+					a = DSP4_READ_WORD(6);
+					b = DSP4_READ_WORD(4);
+					c = DSP4_READ_WORD(2);
+					d = DSP4_READ_WORD(0);
+
+					DSP4_UnknownOP11(a,b,c,d,m);
+
+					DSP4.out_count = 2;
+					DSP4_WRITE_WORD(0,m);
 					break;
+				}
+
+			// track projection
+			case 0x0001: DSP4_Op01(); break;
+
+			// track projection (pass 2)
+			case 0x0007: DSP4_Op07(); break;
+
+			// zone projections (fuel/repair/lap/teleport/...)
+			case 0x0008: DSP4_Op08(); break;
+
+			// sprite transformation
+			case 0x0009: DSP4_Op09(); break;
+
+			// fast track projection
+			case 0x000D: DSP4_Op0D(); break;
+
+			// single-player selection
+			case 0x0003: DSP4_Op03(); break;
+
+			// clear OAM
+			case 0x0005:
+				{
+					op06_index = 0;
+					op06_offset = 0;
+					for( int lcv=0; lcv<32; lcv++ )
+						op06_OAM[lcv] = 0;
+					break;
+				}
+
+			// multi-player selection
+			case 0x000E: DSP4_Op0E(); break;
+
+#undef PRINT
+
+			// transfer OAM
+			case 0x0006:
+				{
+					DSP4.out_count = 32;
+					for( int lcv=0; lcv<32; lcv++ )
+						DSP4.output[lcv] = op06_OAM[lcv];
+				}
+				break;
+
+			// unknown
+			case 0x000A:
+				{
+					int16 in1a = DSP4_READ_WORD(0);
+					int16 in2a = DSP4_READ_WORD(2);
+					int16 in3a = DSP4_READ_WORD(4);
+					int16 out1a,out2a,out3a,out4a;
+
+					// NOTE: Snes9x only!
+					// For some odd reason, the input nybbles are reversed
+
+					DSP4_Op0A(in2a,out1a,out2a,out3a,out4a);
+
+					DSP4.out_count=8;
+
+					// Hack: Reverse the outputs for now to compensate
+					//       Otherwise the AI gets really flaky
+					DSP4_WRITE_WORD(0,out2a);
+					DSP4_WRITE_WORD(2,out1a);
+					DSP4_WRITE_WORD(4,out4a);
+					DSP4_WRITE_WORD(6,out3a);
+				}
+				break;
+
+			// set OAM
+			case 0x000B:
+				{
+					int16 sp_x = DSP4_READ_WORD(0);
+					int16 sp_y = DSP4_READ_WORD(2);
+					int16 oam = DSP4_READ_WORD(4);
+
+					if ((sp_y < 0) || ((sp_y & 0x01ff) < 0x00eb))
+					{
+						short Row = (sp_y >> 3) & 0x1f;
+
+						if (RowCount[Row] < MaxTilesPerRow)
+						{
+							RowCount[Row]++;
+
+							// yield OAM output
+							DSP4.out_count = 6;
+							DSP4_WRITE_WORD(0,1);
+
+							// pack OAM data: x,y,name,attr
+							DSP4.output[2] = sp_x & 0xff;
+							DSP4.output[3] = sp_y & 0xff;
+							DSP4_WRITE_WORD(4,oam);
+
+							// OAM: size,msb data
+							DSP4_Op06(0,0);
+						}
+					}
+				}
+				break;
+			
+			default: break;
 			}
 		}
 	}
@@ -1266,23 +1172,23 @@ void DSP4SetByte(uint8 byte, uint16 address)
 uint8 DSP4GetByte(uint16 address)
 {
 	uint8 t;
-    if ((address & 0xf000) == 0x6000 ||
-		(address >= 0x8000 && address < 0xc000))
-    {
-		if (DSP1.out_count)
+	if ((address & 0xf000) == 0x6000 ||
+			(address >= 0x8000 && address < 0xc000))
+	{
+		if (DSP4.out_count)
 		{
-			t = (uint8) DSP1.output [DSP1.out_index];
-			DSP1.out_index++;
-			if(DSP1.out_count==DSP1.out_index)
-				DSP1.out_count=0;
+			t = (uint8) DSP4.output [DSP4.out_index];
+			DSP4.out_index++;
+			if(DSP4.out_count==DSP4.out_index)
+				DSP4.out_count=0;
 		}
 		else
-		{
 			t = 0xff;
-		}
-    }
-    else t = 0x80;
+	}
+	else
+	{
+		t = 0x80;
+	}
+
 	return t;
 }
-
-#endif

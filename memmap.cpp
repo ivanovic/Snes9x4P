@@ -711,10 +711,10 @@ void CMemory::InitROM (bool8_32 Interleaved)
     Settings.MouseMaster = Settings.Mouse;
     Settings.SuperScopeMaster = Settings.SuperScope;
     Settings.DSP1Master = Settings.ForceDSP1;
-    Settings.SuperFX = TRUE;	//FALSE
-    Settings.SA1 = TRUE;
-    Settings.C4 = TRUE; //FALSE;
-    Settings.SDD1 = TRUE;
+    Settings.SuperFX = FALSE;
+    Settings.SA1 = FALSE;
+    Settings.C4 = FALSE;
+    Settings.SDD1 = FALSE;
     Settings.SRTC = FALSE;
 
     ZeroMemory (BlockIsRAM, MEMMAP_NUM_BLOCKS);
@@ -2077,21 +2077,54 @@ const char *CMemory::KartContents ()
 {
     static char tmp [30];
     static const char *CoPro [16] = {
-	"DSP1", "SuperFX", "OBC1", "SA-1", "S-DD1", "S-RTC", "CoPro#6",
-	"CoPro#7", "CoPro#8", "CoPro#9", "CoPro#10", "CoPro#11", "CoPro#12",
-	"CoPro#13", "CoPro#14", "CoPro-Custom"
+		"DSP", "SuperFX", "OBC1", "SA-1", "S-DD1", "S-RTC", "CoPro#6",
+			"CoPro#7", "CoPro#8", "CoPro#9", "CoPro#10", "CoPro#11", "CoPro#12",
+			"CoPro#13", "CoPro#14", "CoPro-Custom"
     };
     static const char *Contents [3] = {
-	"ROM", "ROM+RAM", "ROM+RAM+BAT"
+		"ROM", "ROM+RAM", "ROM+RAM+BAT"
     };
-    if (ROMType == 0)
-	return ("ROM only");
-
+	static const char *DSPSel [4] = {
+		"DSP1", "DSP2", "DSP3", "DSP4"
+	};
+    if (ROMType == 0&&!Settings.BS)
+		return ("ROM only");
+	
     sprintf (tmp, "%s", Contents [(ROMType & 0xf) % 3]);
+	
+	if(Settings.BS)
+		sprintf (tmp, "%s+%s", tmp, "BSX");
+/*	else if(Settings.SPC7110&&Settings.SPC7110RTC)
+		sprintf (tmp, "%s+%s", tmp, "SPC7110+RTC");
+	else if(Settings.SPC7110)
+		sprintf (tmp, "%s+%s", tmp, "SPC7110");
+	else if(Settings.C4)
+		sprintf (tmp, "%s+%s", tmp, "C4");
+	else if(Settings.SETA!=0)
+	{
+		switch(Settings.SETA)
+		{
+		case ST_010:
+			sprintf (tmp, "%s+%s", tmp, "ST-010");
+			break;
+		case ST_011:
+			sprintf (tmp, "%s+%s", tmp, "ST-011");
+			break;
 
-    if ((ROMType & 0xf) >= 3)
-	sprintf (tmp, "%s+%s", tmp, CoPro [(ROMType & 0xf0) >> 4]);
+		case ST_018:
+			sprintf (tmp, "%s+%s", tmp, "ST-018");
+			break;
 
+		}
+	}
+*/    else if ((ROMType & 0xf) >= 3)
+	{
+		if (ROMType & 0xf0) 
+			sprintf (tmp, "%s+%s", tmp, CoPro [(ROMType & 0xf0) >> 4]);
+		else
+			sprintf (tmp, "%s+%s", tmp, DSPSel [DSP1.version]);
+	}
+	
     return (tmp);
 }
 
@@ -2141,31 +2174,37 @@ void CMemory::ApplyROMFixes ()
 		WriteProtectROM ();
 	}
 
+	//Ambiguous chip function pointer assignments
+	DSP1.version=0;
+
 	//DSP switching:
 	if(strncmp(ROMName, "DUNGEON MASTER", 14)==0)
 	{
 		//Set DSP-2
+		DSP1.version=1;
 		SetDSP=&DSP2SetByte;
 		GetDSP=&DSP2GetByte;
 	}
 
-#ifdef DSP_DUMMY_LOOPS
+
 	if(strncmp(ROMName, "SD\x0b6\x0de\x0dd\x0c0\x0de\x0d1GX", 10)==0)
 	{
 		//Set DSP-3
-		SetDSP=&DSP3SetByte;
-		GetDSP=&DSP3GetByte;
-
+		DSP1.version=2;
+		strncpy(ROMName, "SD Gundam GX", 13);
+		SetDSP = &DSP3SetByte;
+		GetDSP = &DSP3GetByte;
+		DSP3_Reset();
 	}
+
 	if(strncmp(ROMName, "TOP GEAR 3000", 13)==0
 		||strncmp(ROMName, "PLANETS CHAMP TG3000", 20)==0)
 	{
 		//Set DSP-4
+		DSP1.version=3;
 		SetDSP=&DSP4SetByte;
 		GetDSP=&DSP4GetByte;
-
 	}
-#endif
 
     // Enable S-RTC (Real Time Clock) emulation for Dai Kaijyu Monogatari 2
     Settings.SRTC = ((ROMType & 0xf0) >> 4) == 5;
@@ -2271,9 +2310,8 @@ void CMemory::ApplyROMFixes ()
     Settings.StarfoxHack = strcmp (ROMName, "STAR FOX") == 0 ||
 			   strcmp (ROMName, "STAR WING") == 0;
     Settings.WinterGold = strcmp (ROMName, "FX SKIING NINTENDO 96") == 0 ||
-                          strcmp (ROMName, "DIRT RACER") == 0 ||
-//			  strcmp (ROMName, "Stunt Race FX") == 0 ||
-			  Settings.StarfoxHack;
+                          strcmp (ROMName, "DIRT RACER") == 0 || Settings.StarfoxHack;
+
     Settings.ChuckRock = strcmp (ROMName, "CHUCK ROCK") == 0;
     Settings.Dezaemon = strcmp (ROMName, "DEZAEMON") == 0;
     
@@ -2295,6 +2333,12 @@ void CMemory::ApplyROMFixes ()
 	}
 	WriteProtectROM ();
     }
+
+	//Totally wacky display...
+	//seems to need a disproven behavior, so
+	//we're definitely overlooking some other bug?
+	if(strncmp(ROMName, "UNIRACERS", 9)==0)
+		SNESGameFixes.Uniracers=true;
 
     Settings.H_Max = (SNES_CYCLES_PER_SCANLINE * 
 		      Settings.CyclesPercentage) / 100;
@@ -2331,34 +2375,19 @@ void CMemory::ApplyROMFixes ()
 	Settings.CyclesPercentage == 100)
 	Settings.H_Max = (SNES_CYCLES_PER_SCANLINE * 101) / 100;
 
+#ifdef DETECT_NASTY_FX_INTERLEAVE
+//XXX: Test without these. Win32 port indicates they aren't needed?	
+//Apparently are needed!
     if (strcmp (ROMName, "WILD TRAX") == 0 || 
-	strcmp (ROMName, "STAR FOX 2") == 0 || 
-	strcmp (ROMName, "YOSSY'S ISLAND") == 0 || 
-	strcmp (ROMName, "YOSHI'S ISLAND") == 0)
-	CPU.TriedInterleavedMode2 = TRUE;
+		strcmp (ROMName, "STAR FOX 2") == 0 || 
+		strcmp (ROMName, "YOSSY'S ISLAND") == 0 || 
+		strcmp (ROMName, "YOSHI'S ISLAND") == 0)
+		CPU.TriedInterleavedMode2 = TRUE;
+#endif
 
     // Start Trek: Deep Sleep 9
     if (strncmp (ROMId, "A9D", 3) == 0 && Settings.CyclesPercentage == 100)
 	Settings.H_Max = (SNES_CYCLES_PER_SCANLINE * 110) / 100;
-/*
-    Settings.APURAMInitialValue = 0xff;
-
-    if (strcmp (ROMName, "·­³Ôž¥Ò¶ÞÐÃÝŸ²") == 0 ||
-    	strcmp (ROMName, "KENTOUOU WORLDCHAMPIO") == 0 ||
-    	strcmp (ROMName, "TKO SUPERCHAMPIONSHIP") == 0 ||
-    	strcmp (ROMName, "TKO SUPER CHAMPIONSHI") == 0 ||
-    	strcmp (ROMName, "IHATOVO STORY") == 0 ||
-    	strcmp (ROMName, "WANDERERS FROM YS") == 0 ||
-    	strcmp (ROMName, "SUPER GENTYOUHISHI") == 0 ||
-    // Panic Bomber World
-	strncmp (ROMId, "APB", 3) == 0)
-    {
-        Settings.APURAMInitialValue = 0;
-    }
-
-    Settings.DaffyDuck = strcmp (ROMName, "DAFFY DUCK: MARV MISS") == 0;
-    Settings.HBlankStart = (256 * Settings.H_Max) / SNES_HCOUNTER_MAX;
-*/
 
 	//SA-1 Speedup settings
 
