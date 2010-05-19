@@ -139,7 +139,7 @@ LDLIBS	= -L/dingux/mipsel-linux-uclibc/lib
 
 # SDL
 CFLAGS  += $(shell $(BINPATH)/sdl-config --cflags) -I/dingux/mipsel-linux-uclibc/include/SDL
-LDLIBS += $(shell $(BINPATH)/sdl-config --libs) -lSDL
+LDLIBS  += $(shell $(BINPATH)/sdl-config --libs) -lSDL
 
 #-------------------------------------------------------------------------------------------
 
