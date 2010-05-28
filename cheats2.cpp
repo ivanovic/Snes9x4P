@@ -167,6 +167,8 @@ bool8 S9xLoadCheatFile (const char *filename)
 
     if (!fs)
 	return (FALSE);
+	
+	printf ("Loading Cheatfile: %s\n", filename);
 
     while (fread ((void *) data, 1, 28, fs) == 28)
     {

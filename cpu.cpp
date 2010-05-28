@@ -48,14 +48,13 @@
 #include "dma.h"
 #include "sa1.h"
 
-extern "C" {
+#ifdef CHEATS
 #include "cheats.h"
-}
+#endif
 
 #include "srtc.h"
 #include "sdd1.h"
 
-//#ifndef _ZAURUS
 #ifndef ZSNES_FX
 #include "fxemu.h"
 
@@ -67,7 +66,6 @@ void S9xResetSuperFX ()
     FxReset (&SuperFX);
 }
 #endif
-//#endif
 
 void S9xResetCPU ()
 {
@@ -132,36 +130,40 @@ END_EXTERN_C
 
 void S9xReset (void)
 {
-//#ifndef _ZAURUS
+
     if (Settings.SuperFX)
         S9xResetSuperFX ();
 
 #ifdef ZSNES_FX
     WinterGold = Settings.WinterGold;
 #endif
-//#endif
+
     ZeroMemory (Memory.FillRAM, 0x8000);
     memset (Memory.VRAM, 0x00, 0x10000);
     memset (Memory.RAM, 0x55, 0x20000);
 
     S9xResetCPU ();
     S9xResetPPU ();
-//#ifndef _ZAURUS
-    //S9xResetSRTC ();
+
+//S9xResetSRTC ();
+
     if (Settings.SDD1)
         S9xResetSDD1 ();
-//#endif
+
     S9xResetDMA ();
     S9xResetAPU ();
     S9xResetDSP1 ();
-//#ifndef _ZAURUS
+
     S9xSA1Init ();
-//#ifndef _ZAURUS
+
     if (Settings.C4)
         S9xInitC4 ();
-#ifndef _ZAURUS
+
+#ifdef CHEATS
     S9xInitCheatData ();
+    S9xApplyCheats ();
 #endif
+
 	if(Settings.OBC1)
 		ResetOBC1();
     Settings.Paused = FALSE;

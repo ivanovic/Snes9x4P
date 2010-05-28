@@ -6,6 +6,7 @@ UNZIP=1
 #GLIDE=1
 #OPENGL=1
 THREAD_SOUND=1
+CHEATS=1
 #ASMKREED=1
 #ZSNESC4=1
 
@@ -53,6 +54,12 @@ C4OBJ=c4.o c4emu.o
 C4DEFINES=
 C4DEPENDS=c_c4
 C4NO_DEPENDS=zsnes_c4
+endif
+
+ifdef CHEATS
+CHEAT=cheats.o cheats2.o
+else
+CHEAT=
 endif
 
 OBJECTS=$(CPUOBJ) $(FXOBJ) $(C4OBJ) \

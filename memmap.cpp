@@ -50,11 +50,14 @@
 #include "cpuexec.h"
 #include "ppu.h"
 #include "display.h"
-#include "cheats.h"
 #include "apu.h"
 #include "sa1.h"
 #include "srtc.h"
 #include "sdd1.h"
+
+#ifdef CHEATS
+#include "cheats.h"
+#endif
 
 #ifndef ZSNES_FX
 #include "fxemu.h"
@@ -544,111 +547,113 @@ again:
 
     if (!Settings.ForceNotInterleaved && Interleaved)
     {
-	CPU.TriedInterleavedMode2 = TRUE;
-	S9xMessage (S9X_INFO, S9X_ROM_INTERLEAVED_INFO,
-		    "ROM image is in interleaved format - converting...");
-
-	int nblocks = CalculatedSize >> 16;
+		CPU.TriedInterleavedMode2 = TRUE;
+		S9xMessage (S9X_INFO, S9X_ROM_INTERLEAVED_INFO,
+			    "ROM image is in interleaved format - converting...");
+	
+		int nblocks = CalculatedSize >> 16;
 #if 0
-	int step = 64;
-
-	while (nblocks <= step)
-	    step >>= 1;
-	    
-	nblocks = step;
+		int step = 64;
+	
+		while (nblocks <= step)
+		    step >>= 1;
+		    
+		nblocks = step;
 #endif
-	uint8 blocks [256];
-
-	if (Tales)
-	{
-	    nblocks = 0x60;
-	    for (i = 0; i < 0x40; i += 2)
-	    {
-		blocks [i + 0] = (i >> 1) + 0x20;
-		blocks [i + 1] = (i >> 1) + 0x00;
-	    }
-	    for (i = 0; i < 0x80; i += 2)
-	    {
-		blocks [i + 0x40] = (i >> 1) + 0x80;
-		blocks [i + 0x41] = (i >> 1) + 0x40;
-	    }
-	    LoROM = FALSE;
-	    HiROM = TRUE;
-	}
-	else
-	if (Settings.ForceInterleaved2)
-	{
-	    for (i = 0; i < nblocks * 2; i++)
-	    {
-		blocks [i] = (i & ~0x1e) | ((i & 2) << 2) | ((i & 4) << 2) |
-			     ((i & 8) >> 2) | ((i & 16) >> 2);
-	    }
-	}
-	else
-	{
-	    bool8_32 t = LoROM;
-
-	    LoROM = HiROM;
-	    HiROM = t;
-
-	    for (i = 0; i < nblocks; i++)
-	    {
-		blocks [i * 2] = i + nblocks;
-		blocks [i * 2 + 1] = i;
-	    }
-	}
-
-	uint8 *tmp = (uint8 *) malloc (0x8000);
-	if (tmp)
-	{
-	    for (i = 0; i < nblocks * 2; i++)
-	    {
-		for (int j = i; j < nblocks * 2; j++)
+		uint8 blocks [256];
+	
+		if (Tales)
 		{
-		    if (blocks [j] == i)
+		    nblocks = 0x60;
+		    for (i = 0; i < 0x40; i += 2)
 		    {
-			memmove (tmp, &ROM [blocks [j] * 0x8000], 0x8000);
-			memmove (&ROM [blocks [j] * 0x8000], 
-				 &ROM [blocks [i] * 0x8000], 0x8000);
-			memmove (&ROM [blocks [i] * 0x8000], tmp, 0x8000);
-			uint8 b = blocks [j];
-			blocks [j] = blocks [i];
-			blocks [i] = b;
-			break;
+			blocks [i + 0] = (i >> 1) + 0x20;
+			blocks [i + 1] = (i >> 1) + 0x00;
+		    }
+		    for (i = 0; i < 0x80; i += 2)
+		    {
+			blocks [i + 0x40] = (i >> 1) + 0x80;
+			blocks [i + 0x41] = (i >> 1) + 0x40;
+		    }
+		    LoROM = FALSE;
+		    HiROM = TRUE;
+		}
+		else
+		if (Settings.ForceInterleaved2)
+		{
+		    for (i = 0; i < nblocks * 2; i++)
+		    {
+			blocks [i] = (i & ~0x1e) | ((i & 2) << 2) | ((i & 4) << 2) |
+				     ((i & 8) >> 2) | ((i & 16) >> 2);
 		    }
 		}
-	    }
-	    free ((char *) tmp);
-	}
-
-	hi_score = ScoreHiROM (FALSE);
-	lo_score = ScoreLoROM (FALSE);
-
-	if ((HiROM &&
-	     (lo_score >= hi_score || hi_score < 0)) ||
-	    (LoROM && 
-	     (hi_score > lo_score || lo_score < 0)))
-	{
-	    if (retry_count == 0)
-	    {
-		S9xMessage (S9X_INFO, S9X_ROM_CONFUSING_FORMAT_INFO,
-			    "ROM lied about its type! Trying again.");
-		Settings.ForceNotInterleaved = TRUE;
-		Settings.ForceInterleaved = FALSE;
-		retry_count++;
-		goto again;
-	    }
-	}
+		else
+		{
+		    bool8_32 t = LoROM;
+	
+		    LoROM = HiROM;
+		    HiROM = t;
+	
+		    for (i = 0; i < nblocks; i++)
+		    {
+			blocks [i * 2] = i + nblocks;
+			blocks [i * 2 + 1] = i;
+		    }
+		}
+	
+		uint8 *tmp = (uint8 *) malloc (0x8000);
+		if (tmp)
+		{
+		    for (i = 0; i < nblocks * 2; i++)
+		    {
+			for (int j = i; j < nblocks * 2; j++)
+			{
+			    if (blocks [j] == i)
+			    {
+				memmove (tmp, &ROM [blocks [j] * 0x8000], 0x8000);
+				memmove (&ROM [blocks [j] * 0x8000], 
+					 &ROM [blocks [i] * 0x8000], 0x8000);
+				memmove (&ROM [blocks [i] * 0x8000], tmp, 0x8000);
+				uint8 b = blocks [j];
+				blocks [j] = blocks [i];
+				blocks [i] = b;
+				break;
+			    }
+			}
+		    }
+		    free ((char *) tmp);
+		}
+	
+		hi_score = ScoreHiROM (FALSE);
+		lo_score = ScoreLoROM (FALSE);
+	
+		if ((HiROM &&
+		     (lo_score >= hi_score || hi_score < 0)) ||
+		    (LoROM && 
+		     (hi_score > lo_score || lo_score < 0)))
+		{
+		    if (retry_count == 0)
+		    {
+			S9xMessage (S9X_INFO, S9X_ROM_CONFUSING_FORMAT_INFO,
+				    "ROM lied about its type! Trying again.");
+			Settings.ForceNotInterleaved = TRUE;
+			Settings.ForceInterleaved = FALSE;
+			retry_count++;
+			goto again;
+		    }
+		}
     }
-//#ifndef _ZAURUS
+
     FreeSDD1Data ();
-//#endif
+
     InitROM (Tales);
-#ifndef _ZAURUS
+    
+#ifdef CHEATS
     S9xLoadCheatFile (S9xGetFilename(".cht"));
-    S9xInitCheatData ();
-    S9xApplyCheats ();
+//    S9xInitCheatData ();
+//    S9xApplyCheats ();
 #endif
+
     S9xReset ();
 
     return (TRUE);

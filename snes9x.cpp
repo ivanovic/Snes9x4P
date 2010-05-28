@@ -259,67 +259,67 @@ char *S9xParseArgs (char **argv, int argc)
 	    {
 		Settings.DisableGraphicWindows = FALSE;
 	    }
-#ifndef _ZAURUS
 	    else if (strcasecmp (argv [i], "-im7") == 0)
 	    {
 		Settings.Mode7Interpolate = TRUE;
 	    }
+#ifdef CHEATS
 	    else if (strcasecmp (argv [i], "-gg") == 0 ||
 		     strcasecmp (argv [i], "-gamegenie") == 0)
 	    {
-		if (i + 1 < argc)
-		{
-		    uint32 address;
-		    uint8 byte;
-		    const char *error;
-		    if ((error = S9xGameGenieToRaw (argv [++i], address, byte)) == NULL)
-			S9xAddCheat (TRUE, FALSE, address, byte);
-		    else
-			S9xMessage (S9X_ERROR, S9X_GAME_GENIE_CODE_ERROR,
-				    error);
-		}
-		else
-		    S9xUsage ();
+			if (i + 1 < argc)
+			{
+			    uint32 address;
+			    uint8 byte;
+			    const char *error;
+			    if ((error = S9xGameGenieToRaw (argv [++i], address, byte)) == NULL)
+				S9xAddCheat (TRUE, FALSE, address, byte);
+			    else
+				S9xMessage (S9X_ERROR, S9X_GAME_GENIE_CODE_ERROR,
+					    error);
+			}
+			else
+			    S9xUsage ();
 	    }
 	    else if (strcasecmp (argv [i], "-ar") == 0 ||
 		     strcasecmp (argv [i], "-actionreplay") == 0)
 	    {
-		if (i + 1 < argc)
-		{
-		    uint32 address;
-		    uint8 byte;
-		    const char *error;
-		    if ((error = S9xProActionReplayToRaw (argv [++i], address, byte)) == NULL)
-			S9xAddCheat (TRUE, FALSE, address, byte);
-		    else
-			S9xMessage (S9X_ERROR, S9X_ACTION_REPLY_CODE_ERROR,
-				    error);
-		}
-		else
-		    S9xUsage ();
+			if (i + 1 < argc)
+			{
+			    uint32 address;
+			    uint8 byte;
+			    const char *error;
+			    if ((error = S9xProActionReplayToRaw (argv [++i], address, byte)) == NULL)
+				S9xAddCheat (TRUE, FALSE, address, byte);
+			    else
+				S9xMessage (S9X_ERROR, S9X_ACTION_REPLY_CODE_ERROR,
+					    error);
+			}
+			else
+			    S9xUsage ();
 	    }
 	    else if (strcasecmp (argv [i], "-gf") == 0 ||
 		     strcasecmp (argv [i], "-goldfinger") == 0)
 	    {
-		if (i + 1 < argc)
-		{
-		    uint32 address;
-		    uint8 bytes [3];
-		    bool8 sram;
-		    uint8 num_bytes;
-		    const char *error;
-		    if ((error = S9xGoldFingerToRaw (argv [++i], address, sram,
-						     num_bytes, bytes)) == NULL)
-		    {
-			for (int c = 0; c < num_bytes; c++)
-			    S9xAddCheat (TRUE, FALSE, address + c, bytes [c]);
-		    }
-		    else
-			S9xMessage (S9X_ERROR, S9X_GOLD_FINGER_CODE_ERROR,
-				    error);
-		}
-		else
-		    S9xUsage ();
+			if (i + 1 < argc)
+			{
+			    uint32 address;
+			    uint8 bytes [3];
+			    bool8 sram;
+			    uint8 num_bytes;
+			    const char *error;
+			    if ((error = S9xGoldFingerToRaw (argv [++i], address, sram,
+							     num_bytes, bytes)) == NULL)
+			    {
+				for (int c = 0; c < num_bytes; c++)
+				    S9xAddCheat (TRUE, FALSE, address + c, bytes [c]);
+			    }
+			    else
+				S9xMessage (S9X_ERROR, S9X_GOLD_FINGER_CODE_ERROR,
+					    error);
+			}
+			else
+			    S9xUsage ();
 	    }
 #endif
 	    else if (strcasecmp (argv[i], "-ft") == 0 ||
@@ -423,7 +423,6 @@ char *S9xParseArgs (char **argv, int argc)
 	    {
 		Settings.FixFrequency = 1;
 	    }
-//#ifndef _ZAURUS
 	    else if (strcasecmp (argv [i], "-nosuperfx") == 0 ||
 		     strcasecmp (argv [i], "-nosfx") == 0)
 		Settings.ForceNoSuperFX = TRUE;
@@ -465,7 +464,6 @@ char *S9xParseArgs (char **argv, int argc)
 	    {
 		Settings.SuperScope = FALSE;
 	    }
-//#endif
 #ifdef NETPLAY_SUPPORT
 	    else if (strcasecmp (argv [i], "-port") == 0 ||
 		     strcasecmp (argv [i], "-po") == 0)
@@ -495,22 +493,6 @@ char *S9xParseArgs (char **argv, int argc)
 			Settings.NetPlay = TRUE;
 	    }
 #endif
-/*
-#ifdef STORM
-            else if (strcasecmp(argv[i],"-nosecondjoy")==0){secondjoy=0;}
-            else if (strcasecmp(argv[i],"-showfps")==0){dofps=1;}
-            else if (strcasecmp(argv[i],"-hicolor")==0){hicolor=1;}
-            else if (strcasecmp(argv[i],"-minimal")==0){minimal=1;printf("Keyboard with exception of ESC switched off!\n");}
-            else if (strcasecmp(argv[i],"-ahiunit")==0)
-            {
-             if (i+1<argc)
-             {
-              fprintf(stderr,"AHI Unit set to: Unit %i\n",atoi(argv[++i]));
-              unit=atoi(argv[++i]);
-             }
-            }
-#endif
-*/
 	    else if (strcasecmp (argv [i], "-fullscreen") == 0 ||
 		     strcasecmp (argv [i], "-fs") == 0)
 	    {
@@ -525,7 +507,7 @@ char *S9xParseArgs (char **argv, int argc)
 
     return (rom_filename);
 }
-#ifndef _ZAURUS
+/*
 void S9xParseCheatsFile (const char *rom_filename)
 {
     FILE *f;
@@ -570,4 +552,4 @@ void S9xParseCheatsFile (const char *rom_filename)
         fclose(f);
     }
 }
-#endif
+*/

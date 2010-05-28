@@ -199,7 +199,10 @@ void S9xParseArg (char **argv, int &i, int argc)
 //	S9xParseDisplayArg (argv, i, argc);
 }
 
-/*#include "cheats.h"*/
+//#ifdef CHEATS
+//#include "cheats.h"
+//#endif
+
 extern "C"
 int main (int argc, char **argv)
 {
@@ -235,7 +238,7 @@ int main (int argc, char **argv)
     Settings.ServerName [0] = 0;
     Settings.ThreadSound = TRUE;
     Settings.AutoSaveDelay = 30;
-    Settings.ApplyCheats = FALSE;
+    Settings.ApplyCheats = TRUE;  //FALSE
     Settings.TurboMode = FALSE;
     Settings.TurboSkipFrames = 15;
     rom_filename = S9xParseArgs (argv, argc);
@@ -304,7 +307,7 @@ int main (int argc, char **argv)
 		    }
 		}
 		Memory.LoadSRAM (S9xGetFilename (".srm"));
-		//S9xLoadCheatFile (S9xGetFilename (".cht"));
+//		S9xLoadCheatFile (S9xGetFilename (".cht"));
     }
     else
     {
@@ -407,7 +410,7 @@ void S9xExit ()
     S9xSetSoundMute (TRUE);
     S9xDeinitDisplay ();
     Memory.SaveSRAM (S9xGetFilename (".srm"));
-//    S9xSaveCheatFile (S9xGetFilename (".cht"));
+//    S9xSaveCheatFile (S9xGetFilename (".cht")); //SiENcE - needed for what?
     Memory.Deinit ();
     S9xDeinitAPU ();
 

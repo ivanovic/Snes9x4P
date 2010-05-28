@@ -46,7 +46,10 @@
 #include "display.h"
 #include "gfx.h"
 #include "apu.h"
+
+#ifdef CHEATS
 #include "cheats.h"
+#endif
 
 #define M7 19
 #define M8 19
@@ -751,8 +754,7 @@ void S9xEndScreenRefresh(struct SPPU *ppu)
 	S9xDeinitUpdate (ippu->RenderedScreenWidth, ippu->RenderedScreenHeight);
     }
 
-
-#ifndef _ZAURUS
+#ifdef CHEATS
     S9xApplyCheats ();
 #endif
 
