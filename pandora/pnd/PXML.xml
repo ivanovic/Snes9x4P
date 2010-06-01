@@ -1,0 +1,33 @@
+
+<?xml version="1.0" encoding="UTF-8"?>
+<PXML xmlns="http://openpandora.org/namespaces/PXML" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="PXML_schema.xsd">
+
+  <application id="snes9x.skeezix.alpha">
+
+    <title lang="en_US">Snes9x4D4P</title>
+ 
+    <exec command="./runsnes9x-parag0n.sh"/>
+    <icon src="icon.png"/>
+
+    <previewpics>
+      <pic src="snes.png"/>
+    </previewpics>
+
+    <description lang="en_US">Super Nintendo (SNES) emulator; derived from Snes9x4d (Dingoo) port.</description>
+ 
+    <author name="snes9x team / SiENcE / skeezix" website="http://www.codejedi.com/"/>
+ 
+    <version major="1" minor="1" release="1" build="1"/><!--This programs version-->
+    <osversion major="1" minor="0" release="0" build="0"/><!--The minimum OS version required-->
+ 
+    <categories>
+      <category name="Game"><!--category like "Games", "Graphics", "Internet" etc-->
+	<subcategory name="Emulator"/><!--subcategory, like "Board Games", "Strategy", "First Person Shooters"-->
+      </category>
+    </categories>
+ 
+    <!--clockspeed frequency="600"/--><!--Frequency in Hz-->
+
+  </application>
+
+</PXML>

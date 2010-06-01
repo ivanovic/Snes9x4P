@@ -75,7 +75,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include "c4.h"
-#include "MEMMAP.H"
+#include "memmap.h"
 extern "C" {
 
 short C4WFXVal;

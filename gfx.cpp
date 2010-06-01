@@ -3233,8 +3233,8 @@ void DisplayChar (uint8 *Screen, uint8 c, uint32 pitch)
 
 void S9xDisplayFrameRate (uint8 *screen, uint32 pitch)
 {
-    uint8 *Screen = screen + 2 +
-		    (IPPU.RenderedScreenHeight - font_height - 1) * pitch + 400;
+    uint8 *Screen = screen + 2 + 400 +
+      (IPPU.RenderedScreenHeight - font_height - 1) * pitch;
     char string [16];
 //    int len = 5;
 
@@ -3254,7 +3254,7 @@ void S9xDisplayFrameRate (uint8 *screen, uint32 pitch)
 
 void S9xDisplayString (const char *string, uint8 *screen, uint32 pitch, int ypos)
 {
-    uint8 *Screen = screen + 2 + (ypos - font_height * 5) * pitch;
+  uint8 *Screen = screen + 2 + (ypos - font_height * 5) * pitch;
 
     int len = strlen (string);
     int max_chars = IPPU.RenderedScreenWidth / (font_width - 1);

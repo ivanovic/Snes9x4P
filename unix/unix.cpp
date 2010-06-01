@@ -87,6 +87,12 @@ pthread_mutex_t mutex;
 #include "soundux.h"
 #include "spc700.h"
 
+#ifdef PANDORA
+unsigned char g_scale = 2;
+unsigned char g_fullscreen = 1;
+unsigned char g_scanline = 0; // pixel doubling, but skipping the vertical alternate lines
+#endif
+
 uint8 *keyssnes;
 
 // SaveSlotNumber
@@ -334,7 +340,11 @@ int main (int argc, char **argv)
     sigemptyset(&sa.sa_mask);
     sigaction(SIGINT, &sa, NULL);
 
+#ifdef PANDORA
+    sprintf(msg,"Press SPACEBAR to Show MENU");
+#else
     sprintf(msg,"Press SELECT+B to Show MENU");
+#endif
     S9xSetInfoString(msg);
 
     if (snapshot_filename)
@@ -422,6 +432,36 @@ void S9xInitInputDevices ()
 {
 	memset(sfc_key, 0, 256);
 	sfc_key[QUIT] = SDLK_a;
+
+#ifdef PANDORA
+	// Pandora mapping
+	sfc_key[A_1] = SDLK_END; //DINGOO_BUTTON_A; A = B
+	sfc_key[B_1] = SDLK_PAGEDOWN; //DINGOO_BUTTON_B; B = X
+	sfc_key[X_1] = SDLK_PAGEUP; //DINGOO_BUTTON_X; X = Y
+	sfc_key[Y_1] = SDLK_HOME; //DINGOO_BUTTON_Y; Y = A
+	sfc_key[L_1] = SDLK_RSHIFT; //DINGOO_BUTTON_L;
+	sfc_key[R_1] = SDLK_RCTRL; // DINGOO_BUTTON_R;
+	sfc_key[START_1] = SDLK_LALT; //DINGOO_BUTTON_START;
+	sfc_key[SELECT_1] = SDLK_LCTRL; //DINGOO_BUTTON_SELECT;
+	sfc_key[LEFT_1] = SDLK_LEFT; //DINGOO_BUTTON_LEFT;
+	sfc_key[RIGHT_1] = SDLK_RIGHT; //DINGOO_BUTTON_RIGHT;
+	sfc_key[UP_1] = SDLK_UP; //DINGOO_BUTTON_UP;
+	sfc_key[DOWN_1] = SDLK_DOWN; //DINGOO_BUTTON_DOWN;
+
+	// for now, essentially unmapped
+	sfc_key[LEFT_2] = SDLK_g;
+	sfc_key[RIGHT_2] = SDLK_j;
+	sfc_key[UP_2] = SDLK_u;
+	sfc_key[DOWN_2] = SDLK_n;
+	sfc_key[LU_2] = SDLK_y;
+	sfc_key[LD_2] = SDLK_b;
+	sfc_key[RU_2] = SDLK_i;
+	sfc_key[RD_2] = SDLK_m;
+
+	sfc_key[QUIT] = SDLK_ESCAPE;
+	sfc_key[ACCEL] = SDLK_TAB;
+#else
+	// Dingoo defaults
 	sfc_key[A_1] = DINGOO_BUTTON_A;
 	sfc_key[B_1] = DINGOO_BUTTON_B;
 	sfc_key[X_1] = DINGOO_BUTTON_X;
@@ -446,6 +486,7 @@ void S9xInitInputDevices ()
 
 	sfc_key[QUIT] = SDLK_d;
 	sfc_key[ACCEL] = SDLK_u;
+#endif
 
 	int i = 0;
 	char *envp, *j;
@@ -638,6 +679,72 @@ bool8_32 S9xInitUpdate ()
 }
 
 //		uint32 xs = 320, ys = 240, cl = 0, cs = 0, mfs = 10;
+#ifdef PANDORA
+bool8_32 S9xDeinitUpdate ( int Width, int Height ) {
+
+  /* rules:
+   * if highres mode -> g_scale should always be 1 (ie: no scaling, since high res mode is 512x480
+   * for non-highres-mode -> g_scale can be 1 (1:1) or 2 (1:2, pixel doubling)
+   *
+   * future:
+   * g_scale -> to imply anti-aliasing or stretch-blit or other scaling modes
+   */
+
+  // NEEDS WORK, THIS IS JUST TO GET WORKING
+
+  register uint32 lp = (xs > 256) ? 16 : 0;
+  if (Width > 256 ) {
+    lp *= 2;
+  }
+
+  if ( g_scale > 1 ) {
+
+    for (register uint32 i = 0; i < Height; i++) {
+
+      // first scanline of doubled pair
+      register uint16 *dp16 = (uint16*)(screen -> pixels);
+      dp16 += ( i * screen -> pitch ); // pitch is in 1b increments, so is 2* what you think!
+      dp16 += ( ( screen -> w / 2 ) - Width ) / 2; // center horiz
+      register uint16 *sp16 = (uint16*)(GFX.Screen);
+      sp16 += ( i * 320 );
+
+      for (register uint32 j = 0; j < Width + 32/*256*/; j++, sp16++) {
+	*dp16++ = *sp16;
+	*dp16++ = *sp16;
+      }
+
+      if ( ! g_scanline ) {
+	// second scanline of doubled pair
+	dp16 = (uint16*)(screen -> pixels);
+	dp16 += ( i * screen -> pitch );
+	dp16 += ( screen -> pitch / 2 );
+	dp16 += ( ( screen -> w / 2 ) - Width ) / 2; // center horiz
+	sp16 = (uint16*)(GFX.Screen);
+	sp16 += ( i * 320 );
+	for (register uint32 j = 0; j < Width + 32/*256*/; j++, sp16++) {
+	  *dp16++ = *sp16;
+	  *dp16++ = *sp16;
+	}
+      } // scanline
+
+    } // for each height unit
+
+  } // scaled?
+
+  if (Settings.DisplayFrameRate) {
+    S9xDisplayFrameRate ((uint8 *)screen->pixels + 64, 640 * g_scale * g_scale );
+  }
+
+  if (GFX.InfoString) {
+    S9xDisplayString (GFX.InfoString, (uint8 *)screen->pixels + 64, 640 * g_scale * g_scale, 0 );
+  }
+
+  // SDL_UnlockSurface(screen);
+  SDL_UpdateRect(screen,0,0,0,0);
+
+  return(TRUE);
+}
+#else
 bool8_32 S9xDeinitUpdate (int Width, int Height)
 {
 	register uint32 lp = (xs > 256) ? 16 : 0;
@@ -740,6 +847,7 @@ bool8_32 S9xDeinitUpdate (int Width, int Height)
 //	SDL_Flip(screen);
 	return(TRUE);
 }
+#endif
 
 #ifndef _ZAURUS
 static unsigned long now ()
@@ -952,6 +1060,12 @@ void S9xProcessEvents (bool8_32 block)
 		case SDL_KEYDOWN:
 			keyssnes = SDL_GetKeyState(NULL);
 
+#ifdef PANDORA // shortcut
+			if ( event.key.keysym.sym == SDLK_q ) {
+			  exit ( 0 ); // just die
+			}
+#endif
+
 			if ((keyssnes[sfc_key[SELECT_1]] == SDL_PRESSED) && (keyssnes[sfc_key[START_1]] == SDL_PRESSED) && (keyssnes[sfc_key[B_1]] == SDL_PRESSED))
 				S9xReset();
 			else if ( (keyssnes[sfc_key[SELECT_1]] == SDL_PRESSED) &&(keyssnes[sfc_key[START_1]] == SDL_PRESSED) && (keyssnes[sfc_key[X_1]] == SDL_PRESSED) )
@@ -982,6 +1096,12 @@ void S9xProcessEvents (bool8_32 block)
 				gp2x_sound_volume(0, 0);
 				menu_loop();
 				gp2x_sound_volume(vol, vol);
+#ifdef PANDORA
+			} else if (event.key.keysym.sym == SDLK_SPACE) { // another shortcut I'm afraid
+				gp2x_sound_volume(0, 0);
+				menu_loop();
+				gp2x_sound_volume(vol, vol);
+#endif
 			}
 			break;
 		case SDL_KEYUP:

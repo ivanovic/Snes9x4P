@@ -67,6 +67,11 @@ uint16 *RGBconvert;
 extern uint32 xs, ys, cl, cs;
 extern bool8_32 Scale;
 
+#ifdef PANDORA
+extern unsigned char g_scale;
+extern unsigned char g_fullscreen;
+#endif
+
 #ifndef _ZAURUS
 int S9xMinCommandLineArgs ()
 {
@@ -96,10 +101,16 @@ void S9xInitDisplay (int /*argc*/, char ** /*argv*/)
 	SDL_ShowCursor(SDL_DISABLE);
 
 	keyssnes = SDL_GetKeyState(NULL);
-	screen = SDL_SetVideoMode(xs, ys, 16, SDL_SWSURFACE);	//SDL_HWSURFACE
+
 	//screen = SDL_CreateRGBSurface(SDL_HWSURFACE, xs, ys, 16, 0, 0, 0, 0);
 	//hwscreen = SDL_SetVideoMode(xs, ys, 16, SDL_HWSURFACE|SDL_FULLSCREEN);
-	
+#ifdef PANDORA
+	screen = SDL_SetVideoMode(xs * g_scale, ys * g_scale, 16,
+				  g_fullscreen ? SDL_SWSURFACE|SDL_FULLSCREEN : SDL_SWSURFACE);
+#else
+	screen = SDL_SetVideoMode(xs, ys, 16, SDL_SWSURFACE);	//SDL_HWSURFACE
+#endif
+
 	if (screen == NULL)
 	{
 		printf("Couldn't set video mode: %s\n", SDL_GetError());
@@ -114,6 +125,15 @@ void S9xInitDisplay (int /*argc*/, char ** /*argv*/)
 	}
 	else
 	{
+#ifdef PANDORA
+	  if ( g_scale > 1 ) {
+	    GFX.Screen = (uint8*) malloc ( ( 512 * 480 * 2 ) + 64 );
+	    GFX.Pitch = 320 * 2;
+	  } else {
+	    GFX.Screen = (uint8 *)screen->pixels + 64;
+	    GFX.Pitch = 320 * 2;
+	  }
+#else
 		if(Scale)
 		{
 			GFX.Screen = (uint8 *)screen->pixels;
@@ -123,6 +143,7 @@ void S9xInitDisplay (int /*argc*/, char ** /*argv*/)
 			GFX.Screen = (uint8 *)screen->pixels + 64;
 		}
 		GFX.Pitch = 320 * 2;
+#endif
 	}
 
 	GFX.SubScreen = (uint8 *)malloc(512 * 480 * 2);

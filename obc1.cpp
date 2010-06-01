@@ -74,7 +74,7 @@
 *******************************************************************************/
 
 #include <string.h>
-#include "MEMMAP.H"
+#include "memmap.h"
 #include "obc1.h"
 
 //#define OBC1_DEBUG

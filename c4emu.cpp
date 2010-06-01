@@ -78,7 +78,7 @@
 #include <math.h>
 #include "snes9x.h"
 #include "sar.h"
-#include "MEMMAP.H"
+#include "memmap.h"
 #include "ppu.h"
 #include "c4.h"
 
