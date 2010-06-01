@@ -1,11 +1,26 @@
 #!/bin/bash
 
+PWD=`pwd`
+echo "PWD at top $PWD"
+
+# pick up last path
+DIRPATH=`cat last-rom-path.txt`
+if [ $DIRPATH ]
+then
+    echo "Found stored dirpath $DIRPATH"
+    pushd $DIRPATH
+else
+    echo "No stored dirpath, using /media"
+    pushd /media
+fi
+
 # pick up ROM filename
-pushd /media
 FILENAME=`zenity --file-selection --title="Select a SNES ROM"`
 
 echo "ROM filename is $FILENAME"
 popd
+
+echo `dirname "$FILENAME"` > last-rom-path.txt
 
 PWD=`pwd`
 echo "PWD pre-run $PWD"
@@ -15,8 +30,8 @@ HOME=.
 export HOME
 
 # enable higher quality audio
-#ARGS='-sq 2'
-ARGS=''
+ARGS='-sq 2'
+#ARGS=''
 
 # run it!
 if [ $(echo "$FILENAME" | cut -d'.' -f2) = "7z" ] 
