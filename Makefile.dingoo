@@ -119,8 +119,11 @@ GASM	= mipsel-linux-g++
 
 INCLUDES=-I/opt/mipsel-linux-uclibc/include
 
-OPTIMISE= -D_ZAURUS -O2 -ffast-math -fstrict-aliasing -fomit-frame-pointer -ftree-vectorize -funroll-all-loops -fpeel-loops -ftracer -funswitch-loops -finline-functions -G 0 -march=mips32 -mtune=r4600 -mno-mips16 -msoft-float
-# -fprofile-use -ftest-coverage -fprofile-arcs
+OPTIMISE= -D_ZAURUS -O3 -ffast-math -fstrict-aliasing -fomit-frame-pointer -ftree-vectorize -funroll-all-loops -fpeel-loops -ftracer -funswitch-loops -finline-functions -G 0 -march=mips32 -mtune=r4600 -mno-mips16 -msoft-float
+# -ftest-coverage -fprofile-arcs
+#-fprofile-generate
+#-fprofile-use
+
 CCFLAGS = $(OPTIMISE) \
 -I/opt/mipsel-linux-uclibc/usr/include \
 -I/opt/mipsel-linux-uclibc/usr/include/SDL \
@@ -183,7 +186,7 @@ $(OPENGLDEPENDS):
 	$(RM) $(OPENGLNO_DEPENDS)
 
 Snes9x4D: $(OBJECTS) 
-	$(CC) $(INCLUDES) -o $@ $(OBJECTS) $(EXTRALIBS) $(LDLIBS) -lstdc++ -lz -lpthread -lm -lgcov
+	$(CC) $(INCLUDES) -o $@ $(OBJECTS) $(EXTRALIBS) $(LDLIBS) -lstdc++ -lz -lpthread -lm #-lgcov
 	$(STRIP) Snes9x4D
 
 gsnes9x: $(OBJECTS) unix/x11.o unix/glide.o

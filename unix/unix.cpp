@@ -1177,6 +1177,7 @@ bool8_32 S9xOpenSoundDevice (int mode, bool8_32 stereo, int buffer_size)
     
     so.playback_rate = Rates[mode & 0x07];
  //   so.playback_rate = 16000;
+
     if (ioctl (so.sound_fd, SNDCTL_DSP_SPEED, &so.playback_rate) < 0)
     {
 		perror ("ioctl SNDCTL_DSP_SPEED");
