@@ -243,6 +243,7 @@ void S9xExtraUsage ()
 bool8 S9xReadMousePosition (int /* which1 */, int &/* x */, int & /* y */,
 			    uint32 & /* buttons */)
 {
+//	SDL_GetMouseState
     return (FALSE);
 }
 

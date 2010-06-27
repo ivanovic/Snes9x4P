@@ -232,7 +232,7 @@ int main (int argc, char **argv)
     Settings.FrameTime = Settings.FrameTimeNTSC;
     Settings.DisableSampleCaching = FALSE;
     Settings.DisableMasterVolume = FALSE;
-    Settings.Mouse = FALSE;
+    Settings.Mouse = TRUE; //FALSE
     Settings.SuperScope = FALSE;
     Settings.MultiPlayer5 = FALSE;
 //    Settings.ControllerOption = SNES_MULTIPLAYER5;
@@ -1448,7 +1448,7 @@ uint32 S9xReadJoypad (int which1)
 	if (keyssnes[sfc_key[RD_2]] == SDL_PRESSED)	val |= SNES_RIGHT_MASK | SNES_DOWN_MASK;
 	return(val);
 }
-
+/*
 #if 0
 void S9xParseConfigFile ()
 {
@@ -1566,8 +1566,6 @@ void S9xLoadSDD1Data ()
     FILE *out_file;
     out_file = fopen ("LOG.out", "w");
 
-fprintf(out_file, "Start Loggin\n");
-	
     char filename [_MAX_PATH + 1];
     char index [_MAX_PATH + 1];
     char data [_MAX_PATH + 1];
@@ -1576,8 +1574,6 @@ fprintf(out_file, "Start Loggin\n");
     Memory.FreeSDD1Data ();
 
     strcpy (filename, S9xGetSnapshotDirectory ());
-
-fprintf(out_file, filename, "\n");
 
     if (strncmp (Memory.ROMName, "Star Ocean", 10) == 0)
 		strcat (filename, "/socnsdd1");
@@ -1592,7 +1588,6 @@ fprintf(out_file, filename, "\n");
 
     if (dir)
     {
-fprintf(out_file, " found.\n");
 		struct dirent *d;
 		
 		while ((d = readdir (dir)))
@@ -1610,17 +1605,14 @@ fprintf(out_file, " found.\n");
 			strcat (data, "/");
 			strcat (data, d->d_name);
 		    }
-		    /*
 		    if (strcasecmp (d->d_name, "SDD1GFX.PAT") == 0)
 		    {
 			strcpy (patch, filename);
 			strcat (patch, "/");
 			strcat (patch, d->d_name);
-		    }*/
+		    }
 		}
 		closedir (dir);
-
-fprintf(out_file, index);
 
 		if (strlen (index) && strlen (data))
 		{
@@ -1680,16 +1672,15 @@ fprintf(out_file, index);
 		}
 		else
 		{
-fprintf(out_file, "Decompressed data pack not found in '%s'.\n", filename);
 		  	printf ("Decompressed data pack not found in '%s'.\n", filename);
 		}
     }
 	else
 	{
-fprintf(out_file, "Dir not found in '%s'.\n", filename);
 		  	printf ("Dir not found in '%s'.\n", filename);
 	}
     
     fclose(out_file);
 }
 #endif
+*/
