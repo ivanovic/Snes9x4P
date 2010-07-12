@@ -158,7 +158,7 @@ else
 ifdef OPENGL
 all: offsets osnes9x
 else
-all: Snes9x4D 
+all: Snes9x4D.dge 
 endif
 endif
 
@@ -178,9 +178,9 @@ $(OPENGLDEPENDS):
 	touch $(OPENGLDEPENDS)
 	$(RM) $(OPENGLNO_DEPENDS)
 
-Snes9x4D: $(OBJECTS) 
+Snes9x4D.dge: $(OBJECTS) 
 	$(CC) -o $@ $(OBJECTS) $(EXTRALIBS) $(LDLIBS) -lstdc++ -lz -lpthread -lm -lgcov
-	$(STRIP) Snes9x4D
+	$(STRIP) Snes9x4D.dge
 
 .cpp.o:
 	$(CCC) -c $(CCFLAGS) $*.cpp -o $@
