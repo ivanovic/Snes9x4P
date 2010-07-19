@@ -12,6 +12,12 @@
 #include "display.h"
 #include "gfx.h"
 
+#ifdef PANDORA
+#include "blitscale.h"
+extern blit_scaler_option_t blit_scalers[];
+extern blit_scaler_e g_scale;
+#endif
+
 extern Uint16 sfc_key[256];
 extern bool8_32 Scale;
 extern char SaveSlotNum;
@@ -212,7 +218,11 @@ void menu_dispupdate(void){
 	strcpy(disptxt[4],"Load State           ");
 	strcpy(disptxt[5],"State Slot              No.");
 	strcpy(disptxt[6],"Display Frame Rate     ");
+#ifdef PANDORA
+	strcpy(disptxt[7],"Display mode        ");
+#else
 	strcpy(disptxt[7],"Full Screen         ");
+#endif
 	strcpy(disptxt[8],"Frameskip              ");	//	strcpy(disptxt[8],"Clock Speed          ");
 	strcpy(disptxt[9],"Sound Volume           ");
 	strcpy(disptxt[10],"Credit              ");
@@ -232,6 +242,12 @@ void menu_dispupdate(void){
 		sprintf(temp,"%sFalse",disptxt[6]);
 	strcpy(disptxt[6],temp);
 
+#ifdef PANDORA
+	{
+	  sprintf ( temp, "%s%s", disptxt [ 7 ], blit_scalers [ g_scale ].desc_en );
+	  strcpy ( disptxt[7], temp );
+	}
+#else
 	if (highres_current==false)
 	{
 		if(Scale_org)
@@ -245,6 +261,7 @@ void menu_dispupdate(void){
 		sprintf(temp,"%sinactive",disptxt[7]);
 		strcpy(disptxt[7],temp);
 	}
+#endif
 
 	if (Settings.SkipFrames == AUTO_FRAMERATE)
 	{
@@ -397,7 +414,14 @@ void menu_loop(void){
 						Settings.DisplayFrameRate = !Settings.DisplayFrameRate;
 					break;
 					case 7:
+#ifdef PANDORA
+					  // rotate through scalers
+					  do {
+					    g_scale = (blit_scaler_e) ( ( g_scale + 1 ) % bs_max );
+					  } while ( blit_scalers [ g_scale ].valid == bs_invalid );
+#else
 						Scale_org = !Scale_org;
+#endif
 					break;
 					case 8:
 /*

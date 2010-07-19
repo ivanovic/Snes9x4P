@@ -50,6 +50,12 @@
 
 #include <SDL/SDL.h>
 
+#ifdef PANDORA
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#endif
+
 #include "snes9x.h"
 #include "memmap.h"
 #include "debug.h"
@@ -68,7 +74,8 @@ extern uint32 xs, ys, cl, cs;
 extern bool8_32 Scale;
 
 #ifdef PANDORA
-extern unsigned char g_scale;
+#include "blitscale.h"
+extern blit_scaler_e g_scale;
 extern unsigned char g_fullscreen;
 #endif
 
@@ -105,8 +112,34 @@ void S9xInitDisplay (int /*argc*/, char ** /*argv*/)
 	//screen = SDL_CreateRGBSurface(SDL_HWSURFACE, xs, ys, 16, 0, 0, 0, 0);
 	//hwscreen = SDL_SetVideoMode(xs, ys, 16, SDL_HWSURFACE|SDL_FULLSCREEN);
 #ifdef PANDORA
-	screen = SDL_SetVideoMode(xs * g_scale, ys * g_scale, 16,
-				  g_fullscreen ? SDL_SWSURFACE|SDL_FULLSCREEN : SDL_SWSURFACE);
+	//screen = SDL_SetVideoMode(xs * blit_scalers [ g_scale ].scale_x, ys * blit_scalers [ g_scale ].scale_y, 16,
+	//  g_fullscreen ? SDL_SWSURFACE|SDL_FULLSCREEN : SDL_SWSURFACE);
+	screen = SDL_SetVideoMode( 800 /* pandora horiz */, 480 /* pandora vert */, 16,
+				   g_fullscreen ? SDL_SWSURFACE|SDL_FULLSCREEN : SDL_SWSURFACE);
+
+	// for vsync
+	{
+	  extern int g_fb;
+	  g_fb = open ("/dev/fb0", O_RDONLY /* O_RDWR */ );
+	  if ( g_fb < 0 ) {
+	    fprintf ( stderr, "Couldn't open /dev/fb0 for vsync\n" );
+	  }
+	}
+
+	// for LCD refresh rate
+	switch ( (int) Memory.ROMFramesPerSecond ) {
+	case 60:
+	  fprintf ( stderr, "Assuming 60hz LCD\n" );
+	  break; // nothing to do
+	case 50:
+	  fprintf ( stderr, "Switching to 50hz LCD\n" );
+	  system ( "/usr/bin/sudo -n /usr/pandora/scripts/op_lcdrate.sh 50" );
+	  break;
+	default:
+	  fprintf ( stderr, "Game reports %d hz display; ignoring.\n", (int) Memory.ROMFramesPerSecond );
+	  break;
+	}
+
 #else
 	screen = SDL_SetVideoMode(xs, ys, 16, SDL_SWSURFACE);	//SDL_HWSURFACE
 #endif
@@ -126,7 +159,7 @@ void S9xInitDisplay (int /*argc*/, char ** /*argv*/)
 	else
 	{
 #ifdef PANDORA
-	  if ( g_scale > 1 ) {
+	  if ( g_scale > bs_1to1 ) {
 	    GFX.Screen = (uint8*) malloc ( ( 512 * 480 * 2 ) + 64 );
 	    GFX.Pitch = 320 * 2;
 	  } else {
@@ -165,6 +198,17 @@ void S9xInitDisplay (int /*argc*/, char ** /*argv*/)
 void S9xDeinitDisplay ()
 {
 //	SDL_FreeSurface(gfxscreen);
+
+#ifdef PANDORA
+        // for vsync
+        extern int g_fb;
+        if ( g_fb >= 0 ) {
+	  close ( g_fb );
+	}
+	// for LCD refresh
+	system ( "/usr/bin/sudo -n /usr/pandora/scripts/op_lcdrate.sh 60" );
+#endif
+
 	SDL_FreeSurface(screen);
 	free(GFX.SubScreen);
 	free(GFX.ZBuffer);

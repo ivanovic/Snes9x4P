@@ -57,6 +57,13 @@
 #include "dingoo.h"
 #include "unix/menu.h"
 
+#ifdef PANDORA
+#include <linux/fb.h>
+#ifndef FBIO_WAITFORVSYNC
+#define FBIO_WAITFORVSYNC _IOW('F', 0x20, __u32)
+#endif
+#endif
+
 #undef USE_THREADS
 #define USE_THREADS
 #include <unistd.h>
@@ -88,9 +95,27 @@ pthread_mutex_t mutex;
 #include "spc700.h"
 
 #ifdef PANDORA
-unsigned char g_scale = 2;
+#include "blitscale.h"
+blit_scaler_option_t blit_scalers[] = {
+  // KEEP IN SYNC TO BLIT_SCALER_E or Earth Crashes Into The Sun
+  { bs_error,                bs_invalid, 0, 0,       "Error" },
+  { bs_1to1,                 bs_invalid, 1, 1,       "1 to 1" },
+  { bs_1to2_double,          bs_valid,   2, 2,       "2x2 no-AA" },
+  { bs_1to2_smooth,          bs_invalid, 2, 2,       "2x2 Smoothed" },
+  { bs_1to32_multiplied,     bs_valid,   3, 2,       "3x2 no-AA" },
+  { bs_1to32_smooth,         bs_invalid, 3, 2,       "3x2 Smoothed" },
+  { bs_fs_aspect_multiplied, bs_invalid, 0xFF, 0xFF, "Fullscreen (aspect) (unsmoothed)" },
+  { bs_fs_aspect_smooth,     bs_invalid, 0xFF, 0xFF, "Fullscreen (aspect) (smoothed)" },
+  { bs_fs_always_multiplied, bs_invalid, 0xFF, 0xFF, "Fullscreen (unsmoothed)" },
+  { bs_fs_always_smooth,     bs_invalid, 0xFF, 0xFF, "Fullscreen (smoothed)" },
+};
+
+blit_scaler_e g_scale = bs_1to2_double;
+//blit_scaler_e g_scale = bs_1to32_multiplied;
 unsigned char g_fullscreen = 1;
 unsigned char g_scanline = 0; // pixel doubling, but skipping the vertical alternate lines
+unsigned char g_vsync = 1; // if >0, do vsync
+int g_fb = -1; // fb for framebuffer
 #endif
 
 uint8 *keyssnes;
@@ -225,7 +250,11 @@ int main (int argc, char **argv)
     Settings.DisableSoundEcho = FALSE;
     Settings.APUEnabled = Settings.NextAPUEnabled = TRUE;
     Settings.H_Max = SNES_CYCLES_PER_SCANLINE;
+#ifdef PANDORA
+    Settings.SkipFrames = 1;
+#else
     Settings.SkipFrames = AUTO_FRAMERATE;
+#endif
     Settings.ShutdownMaster = TRUE;
     Settings.FrameTimePAL = 20000;
     Settings.FrameTimeNTSC = 16667;
@@ -697,14 +726,15 @@ bool8_32 S9xDeinitUpdate ( int Width, int Height ) {
     lp *= 2;
   }
 
-  if ( g_scale > 1 ) {
+  if ( g_scale == bs_1to2_double ) {
 
     for (register uint32 i = 0; i < Height; i++) {
 
       // first scanline of doubled pair
       register uint16 *dp16 = (uint16*)(screen -> pixels);
       dp16 += ( i * screen -> pitch ); // pitch is in 1b increments, so is 2* what you think!
-      dp16 += ( ( screen -> w / 2 ) - Width ) / 2; // center horiz
+      dp16 += ( screen -> w - ( Width * 2 ) ) / 2; // center horiz
+
       register uint16 *sp16 = (uint16*)(GFX.Screen);
       sp16 += ( i * 320 );
 
@@ -718,7 +748,7 @@ bool8_32 S9xDeinitUpdate ( int Width, int Height ) {
 	dp16 = (uint16*)(screen -> pixels);
 	dp16 += ( i * screen -> pitch );
 	dp16 += ( screen -> pitch / 2 );
-	dp16 += ( ( screen -> w / 2 ) - Width ) / 2; // center horiz
+	dp16 += ( screen -> w - ( Width * 2 ) ) / 2; // center horiz
 	sp16 = (uint16*)(GFX.Screen);
 	sp16 += ( i * 320 );
 	for (register uint32 j = 0; j < Width + 32/*256*/; j++, sp16++) {
@@ -729,17 +759,54 @@ bool8_32 S9xDeinitUpdate ( int Width, int Height ) {
 
     } // for each height unit
 
+  } else if ( g_scale == bs_1to32_multiplied ) {
+
+    unsigned int effective_height = Height * 2;
+    for (register uint32 i = 0; i < effective_height; i++) {
+
+      // first scanline of doubled pair
+      register uint16 *dp16 = (uint16*)(screen -> pixels);
+      dp16 += ( i * ( screen -> pitch / 2 ) ); // pitch is in 1b increments, so is 2* what you think!
+
+      dp16 += 20; // center-ish X :)
+      dp16 += ( 5 * screen -> pitch ); // center-ish Y
+
+      register uint16 *sp16 = (uint16*)(GFX.Screen);
+      sp16 += ( ( i / 2 ) * 320 );
+
+      for (register uint32 j = 0; j < Width + 32/*256*/; j++, sp16++) {
+	*dp16++ = *sp16;
+	*dp16++ = *sp16; // doubled
+	*dp16++ = *sp16; // tripled
+      }
+
+    } // for each height unit
+
+  } else {
+
+    // code error; unknown scaler
+    fprintf ( stderr, "invalid scaler option handed to render code; fix me!\n" );
+    exit ( 0 );
+
   } // scaled?
 
   if (Settings.DisplayFrameRate) {
-    S9xDisplayFrameRate ((uint8 *)screen->pixels + 64, 640 * g_scale * g_scale );
+    S9xDisplayFrameRate ((uint8 *)screen->pixels + 64, 800 * 2 * 2 );
   }
 
   if (GFX.InfoString) {
-    S9xDisplayString (GFX.InfoString, (uint8 *)screen->pixels + 64, 640 * g_scale * g_scale, 0 );
+    S9xDisplayString (GFX.InfoString, (uint8 *)screen->pixels + 64, 800 * 2 * 2, 460 );
   }
 
   // SDL_UnlockSurface(screen);
+
+  // vsync
+  if ( g_vsync && g_fb >= 0 ) {
+    int arg = 0;
+    ioctl ( g_fb, FBIO_WAITFORVSYNC, &arg );
+  }
+
+  // update the actual screen
   SDL_UpdateRect(screen,0,0,0,0);
 
   return(TRUE);

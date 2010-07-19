@@ -30,8 +30,18 @@ HOME=.
 export HOME
 
 # enable higher quality audio
-ARGS='-sq 2'
+#0 - off, 1 - 8192, 2 - 11025 (default), 3 - 16000,
+#4 - 22050, 5 - 32000, 6 - 44100,
+#7 - 48000
+ARGS='-sq 5'
 #ARGS=''
+
+PICKUPARGS=`cat args.txt`
+if [ $PICKUPARGS ]
+then
+    # http://wiki.arcadecontrols.com/wiki/Snes9x#Command_Line_Parameters
+    ARGS=$PICKUPARGS
+fi
 
 # run it!
 if [ $(echo "$FILENAME" | cut -d'.' -f2) = "7z" ] 
