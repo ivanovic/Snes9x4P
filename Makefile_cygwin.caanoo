@@ -5,7 +5,7 @@
 UNZIP=1
 #GLIDE=1
 #OPENGL=1
-THREAD_SOUND=1
+#THREAD_SOUND=1
 CHEATS=1
 #ASMKREED=1
 #ZSNESC4=1
@@ -108,10 +108,10 @@ OPENGLDEPENDS=no_opengl
 OPENGLNO_DEPENDS=use_opengl
 endif
 
-TOOLCHAINDIR := /devkitWIZ
+TOOLCHAINDIR := /gcc-4.2.4-glibc-2.7-eabi
 BINPATH    := ${TOOLCHAINDIR}/bin
 
-ARCH := arm-open2x-linux
+ARCH := arm-gph-linux-gnueabi
 
 CCC		:= ${BINPATH}/$(ARCH)-g++
 CC		:= ${BINPATH}/$(ARCH)-gcc
@@ -119,9 +119,8 @@ STRIP	:= ${BINPATH}/$(ARCH)-strip
 AS		:= ${BINPATH}/$(ARCH)-as
 GASM	:= ${BINPATH}/$(ARCH)-g++
 
-# OPTIMISE= -mcpu=arm926ej-s -mtune=arm926ej-s -D_ZAURUS -O2 -ffast-math -fstrict-aliasing -fomit-frame-pointer -ftree-vectorize -funroll-all-loops -fpeel-loops -ftracer -funswitch-loops -finline-functions 0 -msoft-float
-OPTIMISE = -mcpu=arm926ej-s -mtune=arm926ej-s -g -I. -I$(TOOLCHAINDIR)/arm-open2x-linux/include -O3 -D_ZAURUS -D__WIZ__ -DUSE_SA1
-OPTIMISE += -ffast-math -fexpensive-optimizations -finline -finline-functions -msoft-float  -falign-functions=32 -falign-loops -falign-labels -falign-jumps -fomit-frame-pointer
+OPTIMISE = -mcpu=arm926ej-s -mtune=arm926ej-s -g -I. -I$(TOOLCHAINDIR)/$(ARCH)/include -O3 -D_ZAURUS -DUSE_SA1
+OPTIMISE += -ffast-math -fexpensive-optimizations -finline -finline-functions -falign-functions=32 -falign-loops -falign-labels -falign-jumps -fomit-frame-pointer
 
 CCFLAGS = $(OPTIMISE) \
 -I. \
@@ -161,7 +160,7 @@ else
 ifdef OPENGL
 all: offsets osnes9x
 else
-all: Snes9x4Wiz.gpe
+all: Snes9x4C.gpe
 endif
 endif
 
@@ -181,9 +180,9 @@ $(OPENGLDEPENDS):
 	touch $(OPENGLDEPENDS)
 	$(RM) $(OPENGLNO_DEPENDS)
 
-Snes9x4Wiz.gpe: $(OBJECTS) 
+Snes9x4C.gpe: $(OBJECTS) 
 	$(CC) -o $@ $(OBJECTS) $(EXTRALIBS) $(LDLIBS) -lstdc++ -lz -lpthread -lm -lgcov
-	$(STRIP) Snes9x4Wiz.gpe
+	$(STRIP) Snes9x4C.gpe
 
 .cpp.o:
 	$(CCC) -c $(CCFLAGS) $*.cpp -o $@
