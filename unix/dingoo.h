@@ -1,3 +1,7 @@
+/*
+	Dingoo Keys
+*/
+
 #define DINGOO_BUTTON_UP            273
 #define DINGOO_BUTTON_DOWN          274
 #define DINGOO_BUTTON_RIGHT         275
