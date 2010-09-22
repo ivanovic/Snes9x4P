@@ -94,20 +94,37 @@ void S9xTextMode ()
 }
 #endif
 
-extern uint8 *keyssnes;
+#ifdef CAANOO
+	extern SDL_Joystick* keyssnes;
+#else
+	extern uint8 *keyssnes;
+#endif
+
 void S9xInitDisplay (int /*argc*/, char ** /*argv*/)
 {
+#ifdef CAANOO
+	if (SDL_Init(SDL_INIT_VIDEO|SDL_INIT_JOYSTICK|(Settings.NextAPUEnabled ? SDL_INIT_AUDIO : 0)) < 0 )
+ 	{
+		printf("Could not initialize SDL(%s)\n", SDL_GetError());
+		S9xExit();
+	}
+#else
 	if (SDL_Init(SDL_INIT_VIDEO | (Settings.NextAPUEnabled ? SDL_INIT_AUDIO : 0)) < 0 ) 
 	{
 		printf("Could not initialize SDL(%s)\n", SDL_GetError());
 		S9xExit();
 	}
+#endif
 	atexit(SDL_Quit);
 
 	// No more MOUSE-CURSOR
 	SDL_ShowCursor(SDL_DISABLE);
 
+#ifdef CAANOO
+	keyssnes = SDL_JoystickOpen(0);
+#else
 	keyssnes = SDL_GetKeyState(NULL);
+#endif
 
 	//screen = SDL_CreateRGBSurface(SDL_HWSURFACE, xs, ys, 16, 0, 0, 0, 0);
 	//hwscreen = SDL_SetVideoMode(xs, ys, 16, SDL_HWSURFACE|SDL_FULLSCREEN);

@@ -53,9 +53,14 @@
 #include <dirent.h>
 #include <SDL/SDL.h>
 #include <time.h>
-#include "keydef.h"
-#include "dingoo.h"
 #include "unix/menu.h"
+#include "keydef.h"
+
+#ifdef CAANOO
+	#include "caanoo.h"
+#else
+	#include "dingoo.h"
+#endif
 
 #ifdef PANDORA
 #include <linux/fb.h>
@@ -95,30 +100,34 @@ pthread_mutex_t mutex;
 #include "spc700.h"
 
 #ifdef PANDORA
-#include "blitscale.h"
-blit_scaler_option_t blit_scalers[] = {
-  // KEEP IN SYNC TO BLIT_SCALER_E or Earth Crashes Into The Sun
-  { bs_error,                bs_invalid, 0, 0,       "Error" },
-  { bs_1to1,                 bs_invalid, 1, 1,       "1 to 1" },
-  { bs_1to2_double,          bs_valid,   2, 2,       "2x2 no-AA" },
-  { bs_1to2_smooth,          bs_invalid, 2, 2,       "2x2 Smoothed" },
-  { bs_1to32_multiplied,     bs_valid,   3, 2,       "3x2 no-AA" },
-  { bs_1to32_smooth,         bs_invalid, 3, 2,       "3x2 Smoothed" },
-  { bs_fs_aspect_multiplied, bs_invalid, 0xFF, 0xFF, "Fullscreen (aspect) (unsmoothed)" },
-  { bs_fs_aspect_smooth,     bs_invalid, 0xFF, 0xFF, "Fullscreen (aspect) (smoothed)" },
-  { bs_fs_always_multiplied, bs_invalid, 0xFF, 0xFF, "Fullscreen (unsmoothed)" },
-  { bs_fs_always_smooth,     bs_invalid, 0xFF, 0xFF, "Fullscreen (smoothed)" },
-};
-
-blit_scaler_e g_scale = bs_1to2_double;
-//blit_scaler_e g_scale = bs_1to32_multiplied;
-unsigned char g_fullscreen = 1;
-unsigned char g_scanline = 0; // pixel doubling, but skipping the vertical alternate lines
-unsigned char g_vsync = 1; // if >0, do vsync
-int g_fb = -1; // fb for framebuffer
+	#include "blitscale.h"
+	blit_scaler_option_t blit_scalers[] = {
+	  // KEEP IN SYNC TO BLIT_SCALER_E or Earth Crashes Into The Sun
+	  { bs_error,                bs_invalid, 0, 0,       "Error" },
+	  { bs_1to1,                 bs_invalid, 1, 1,       "1 to 1" },
+	  { bs_1to2_double,          bs_valid,   2, 2,       "2x2 no-AA" },
+	  { bs_1to2_smooth,          bs_invalid, 2, 2,       "2x2 Smoothed" },
+	  { bs_1to32_multiplied,     bs_valid,   3, 2,       "3x2 no-AA" },
+	  { bs_1to32_smooth,         bs_invalid, 3, 2,       "3x2 Smoothed" },
+	  { bs_fs_aspect_multiplied, bs_invalid, 0xFF, 0xFF, "Fullscreen (aspect) (unsmoothed)" },
+	  { bs_fs_aspect_smooth,     bs_invalid, 0xFF, 0xFF, "Fullscreen (aspect) (smoothed)" },
+	  { bs_fs_always_multiplied, bs_invalid, 0xFF, 0xFF, "Fullscreen (unsmoothed)" },
+	  { bs_fs_always_smooth,     bs_invalid, 0xFF, 0xFF, "Fullscreen (smoothed)" },
+	};
+	
+	blit_scaler_e g_scale = bs_1to2_double;
+	//blit_scaler_e g_scale = bs_1to32_multiplied;
+	unsigned char g_fullscreen = 1;
+	unsigned char g_scanline = 0; // pixel doubling, but skipping the vertical alternate lines
+	unsigned char g_vsync = 1; // if >0, do vsync
+	int g_fb = -1; // fb for framebuffer
 #endif
 
-uint8 *keyssnes;
+#ifdef CAANOO
+	SDL_Joystick* keyssnes;
+#else
+	uint8 *keyssnes;
+#endif
 
 // SaveSlotNumber
 char SaveSlotNum = 0;
@@ -462,7 +471,33 @@ void S9xInitInputDevices ()
 	memset(sfc_key, 0, 256);
 	sfc_key[QUIT] = SDLK_a;
 
-#ifdef PANDORA
+#ifdef CAANOO
+	// Caanoo mapping
+	sfc_key[A_1] = CAANOO_BUTTON_A;
+	sfc_key[B_1] = CAANOO_BUTTON_B;
+	sfc_key[X_1] = CAANOO_BUTTON_X;
+	sfc_key[Y_1] = CAANOO_BUTTON_Y;
+	sfc_key[L_1] = CAANOO_BUTTON_L;
+	sfc_key[R_1] = CAANOO_BUTTON_R;
+	sfc_key[START_1] = CAANOO_BUTTON_START;
+	sfc_key[SELECT_1] = CAANOO_BUTTON_SELECT;
+	sfc_key[LEFT_1] = CAANOO_BUTTON_LEFT;
+	sfc_key[RIGHT_1] = CAANOO_BUTTON_RIGHT;
+	sfc_key[UP_1] = CAANOO_BUTTON_UP;
+	sfc_key[DOWN_1] = CAANOO_BUTTON_DOWN;
+
+	sfc_key[LEFT_2] = SDLK_g;
+	sfc_key[RIGHT_2] = SDLK_j;
+	sfc_key[UP_2] = SDLK_u;
+	sfc_key[DOWN_2] = SDLK_n;
+	sfc_key[LU_2] = SDLK_y;
+	sfc_key[LD_2] = SDLK_b;
+	sfc_key[RU_2] = SDLK_i;
+	sfc_key[RD_2] = SDLK_m;
+
+	sfc_key[QUIT] = SDLK_d;
+	sfc_key[ACCEL] = SDLK_u;
+#elif PANDORA
 	// Pandora mapping
 	sfc_key[A_1] = SDLK_END; //DINGOO_BUTTON_A; A = B
 	sfc_key[B_1] = SDLK_PAGEDOWN; //DINGOO_BUTTON_B; B = X
@@ -490,7 +525,7 @@ void S9xInitInputDevices ()
 	sfc_key[QUIT] = SDLK_ESCAPE;
 	sfc_key[ACCEL] = SDLK_TAB;
 #else
-	// Dingoo defaults
+	// Dingoo mapping
 	sfc_key[A_1] = DINGOO_BUTTON_A;
 	sfc_key[B_1] = DINGOO_BUTTON_B;
 	sfc_key[X_1] = DINGOO_BUTTON_X;
@@ -504,6 +539,7 @@ void S9xInitInputDevices ()
 	sfc_key[UP_1] = DINGOO_BUTTON_UP;
 	sfc_key[DOWN_1] = DINGOO_BUTTON_DOWN;
 
+	// for now, essentially unmapped
 	sfc_key[LEFT_2] = SDLK_g;
 	sfc_key[RIGHT_2] = SDLK_j;
 	sfc_key[UP_2] = SDLK_u;
@@ -1117,6 +1153,32 @@ void S9xSyncSpeed ()
     }
 }
 
+#ifdef CAANOO
+void S9xProcessEvents (bool8_32 block) {
+	SDL_Event event;
+
+	while(SDL_PollEvent(&event)) {
+		switch (event.type) {
+			keyssnes = SDL_JoystickOpen(0);
+
+			case SDL_JOYBUTTONDOWN:
+				switch(event.jbutton.button) {
+					if (SDL_JoystickGetButton(keyssnes, 9) && SDL_JoystickGetButton(keyssnes, 6) && SDL_JoystickGetButton(keyssnes, 2))
+						S9xReset();
+					/* My Crap in here ... */
+				}
+			break;
+
+			case SDL_JOYBUTTONUP:
+				switch(event.jbutton.button) {
+				}
+			break;
+		}
+	}
+}
+
+#else
+
 void S9xProcessEvents (bool8_32 block)
 {
 	SDL_Event event;
@@ -1176,6 +1238,8 @@ void S9xProcessEvents (bool8_32 block)
 		}
 	}
 }
+
+#endif
 
 static long log2 (long num)
 {
@@ -1489,6 +1553,28 @@ void gp2x_sound_volume(int l, int r)
   	ioctl(mixerdev, SOUND_MIXER_WRITE_VOLUME, &l);
 }
 
+#ifdef CAANOO
+uint32 S9xReadJoypad (int which1) {
+	uint32 val=0x80000000;
+
+	if (SDL_JoystickGetButton(keyssnes, 4))				val |= SNES_TL_MASK;
+	if (SDL_JoystickGetButton(keyssnes, 5))				val |= SNES_TR_MASK;
+	if (SDL_JoystickGetButton(keyssnes, 1))				val |= SNES_X_MASK;
+	if (SDL_JoystickGetButton(keyssnes, 3))				val |= SNES_Y_MASK;
+	if (SDL_JoystickGetButton(keyssnes, 2))				val |= SNES_B_MASK;
+	if (SDL_JoystickGetButton(keyssnes, 0))				val |= SNES_A_MASK;
+	if (SDL_JoystickGetButton(keyssnes, 6))				val |= SNES_START_MASK;
+	if (SDL_JoystickGetButton(keyssnes, 9))				val |= SNES_SELECT_MASK;
+	if (SDL_JoystickGetAxis(keyssnes, 1) < -20000)		val |= SNES_UP_MASK;
+	if (SDL_JoystickGetAxis(keyssnes, 1) > 20000)		val |= SNES_DOWN_MASK;
+	if (SDL_JoystickGetAxis(keyssnes, 0) < -20000)		val |= SNES_LEFT_MASK;
+	if (SDL_JoystickGetAxis(keyssnes, 0) > 20000)		val |= SNES_RIGHT_MASK;
+
+	return(val);
+}
+
+#else
+
 uint32 S9xReadJoypad (int which1)
 {
 	uint32 val=0x80000000;
@@ -1513,241 +1599,8 @@ uint32 S9xReadJoypad (int which1)
 	if (keyssnes[sfc_key[LD_2]] == SDL_PRESSED)	val |= SNES_LEFT_MASK | SNES_DOWN_MASK;
 	if (keyssnes[sfc_key[RU_2]] == SDL_PRESSED)	val |= SNES_RIGHT_MASK | SNES_UP_MASK;
 	if (keyssnes[sfc_key[RD_2]] == SDL_PRESSED)	val |= SNES_RIGHT_MASK | SNES_DOWN_MASK;
+	
 	return(val);
 }
-/*
-#if 0
-void S9xParseConfigFile ()
-{
-    int i, t = 0;
-    char *b, buf[10];
-    struct ffblk f;
 
-    set_config_file("SNES9X.CFG");
-
-    if (findfirst("SNES9X.CFG", &f, 0) != 0)
-    {
-        set_config_int("Graphics", "VideoMode", -1);
-        set_config_int("Graphics", "AutoFrameskip", 1);
-        set_config_int("Graphics", "Frameskip", 0);
-        set_config_int("Graphics", "Shutdown", 1);
-        set_config_int("Graphics", "FrameTimePAL", 20000);
-        set_config_int("Graphics", "FrameTimeNTSC", 16667);
-        set_config_int("Graphics", "Transparency", 0);
-        set_config_int("Graphics", "HiColor", 0);
-        set_config_int("Graphics", "Hi-ResSupport", 0);
-        set_config_int("Graphics", "CPUCycles", 100);
-        set_config_int("Graphics", "Scale", 0);
-        set_config_int("Graphics", "VSync", 0);
-        set_config_int("Sound", "APUEnabled", 1);
-        set_config_int("Sound", "SoundPlaybackRate", 4);
-        set_config_int("Sound", "Stereo", 1);
-        set_config_int("Sound", "SoundBufferSize", 256);
-        set_config_int("Sound", "SPCToCPURatio", 2);
-        set_config_int("Sound", "Echo", 1);
-        set_config_int("Sound", "SampleCaching", 1);
-        set_config_int("Sound", "MasterVolume", 1);
-        set_config_int("Peripherals", "Mouse", 1);
-        set_config_int("Peripherals", "SuperScope", 1);
-        set_config_int("Peripherals", "MultiPlayer5", 1);
-        set_config_int("Peripherals", "Controller", 0);
-        set_config_int("Controllers", "Type", JOY_TYPE_AUTODETECT);
-        set_config_string("Controllers", "Button1", "A");
-        set_config_string("Controllers", "Button2", "B");
-        set_config_string("Controllers", "Button3", "X");
-        set_config_string("Controllers", "Button4", "Y");
-        set_config_string("Controllers", "Button5", "TL");
-        set_config_string("Controllers", "Button6", "TR");
-        set_config_string("Controllers", "Button7", "START");
-        set_config_string("Controllers", "Button8", "SELECT");
-        set_config_string("Controllers", "Button9", "NONE");
-        set_config_string("Controllers", "Button10", "NONE");
-    }
-
-    mode = get_config_int("Graphics", "VideoMode", -1);
-    Settings.SkipFrames = get_config_int("Graphics", "AutoFrameskip", 1);
-    if (!Settings.SkipFrames)
-       Settings.SkipFrames = get_config_int("Graphics", "Frameskip", AUTO_FRAMERATE);
-    else
-       Settings.SkipFrames = AUTO_FRAMERATE;
-    Settings.ShutdownMaster = get_config_int("Graphics", "Shutdown", TRUE);
-    Settings.FrameTimePAL = get_config_int("Graphics", "FrameTimePAL", 20000);
-    Settings.FrameTimeNTSC = get_config_int("Graphics", "FrameTimeNTSC", 16667);
-    Settings.FrameTime = Settings.FrameTimeNTSC;
-    Settings.Transparency = get_config_int("Graphics", "Transparency", FALSE);
-    Settings.SixteenBit = get_config_int("Graphics", "HiColor", FALSE);
-    Settings.SupportHiRes = get_config_int("Graphics", "Hi-ResSupport", FALSE);
-    i = get_config_int("Graphics", "CPUCycles", 100);
-    Settings.H_Max = (i * SNES_CYCLES_PER_SCANLINE) / i;
-    stretch = get_config_int("Graphics", "Scale", 0);
-    _vsync = get_config_int("Graphics", "VSync", 0);
-
-    Settings.APUEnabled = get_config_int("Sound", "APUEnabled", TRUE);
-    Settings.SoundPlaybackRate = get_config_int("Sound", "SoundPlaybackRate", 4);
-    Settings.Stereo = get_config_int("Sound", "Stereo", TRUE);
-    Settings.SoundBufferSize = get_config_int("Sound", "SoundBufferSize", 256);
-    Settings.SPCTo65c816Ratio = get_config_int("Sound", "SPCToCPURatio", 2);
-    Settings.DisableSoundEcho = get_config_int("Sound", "Echo", TRUE) ? FALSE : TRUE;
-    Settings.DisableSampleCaching = get_config_int("Sound", "SampleCaching", TRUE) ? FALSE : TRUE;
-    Settings.DisableMasterVolume = get_config_int("Sound", "MasterVolume", TRUE) ? FALSE : TRUE;
-
-    Settings.Mouse = get_config_int("Peripherals", "Mouse", TRUE);
-    Settings.SuperScope = get_config_int("Peripherals", "SuperScope", TRUE);
-    Settings.MultiPlayer5 = get_config_int("Peripherals", "MultiPlayer5", TRUE);
-    Settings.ControllerOption = (uint32)get_config_int("Peripherals", "Controller", SNES_MULTIPLAYER5);
-
-    joy_type = get_config_int("Controllers", "Type", JOY_TYPE_AUTODETECT);
-    for (i = 0; i < 10; i++)
-    {
-        sprintf(buf, "Button%d", i+1);
-        b = get_config_string("Controllers", buf, "NONE");
-        if (!strcasecmp(b, "A"))
-        {JOY_BUTTON_INDEX[t] = i; SNES_BUTTON_MASKS[t++] = SNES_A_MASK;}
-        else if (!strcasecmp(b, "B"))
-        {JOY_BUTTON_INDEX[t] = i; SNES_BUTTON_MASKS[t++] = SNES_B_MASK;}
-        else if (!strcasecmp(b, "X"))
-        {JOY_BUTTON_INDEX[t] = i; SNES_BUTTON_MASKS[t++] = SNES_X_MASK;}
-        else if (!strcasecmp(b, "Y"))
-        {JOY_BUTTON_INDEX[t] = i; SNES_BUTTON_MASKS[t++] = SNES_Y_MASK;}
-        else if (!strcasecmp(b, "TL"))
-        {JOY_BUTTON_INDEX[t] = i; SNES_BUTTON_MASKS[t++] = SNES_TL_MASK;}
-        else if (!strcasecmp(b, "TR"))
-        {JOY_BUTTON_INDEX[t] = i; SNES_BUTTON_MASKS[t++] = SNES_TR_MASK;}
-        else if (!strcasecmp(b, "START"))
-        {JOY_BUTTON_INDEX[t] = i; SNES_BUTTON_MASKS[t++] = SNES_START_MASK;}
-        else if (!strcasecmp(b, "SELECT"))
-        {JOY_BUTTON_INDEX[t] = i; SNES_BUTTON_MASKS[t++] = SNES_SELECT_MASK;}
-    }
-}
 #endif
-
-#if 0
-static int S9xCompareSDD1IndexEntries (const void *p1, const void *p2)
-{
-    return (*(uint32 *) p1 - *(uint32 *) p2);
-}
-
-void S9xLoadSDD1Data ()
-{
-    int cur_char;
-    FILE *out_file;
-    out_file = fopen ("LOG.out", "w");
-
-    char filename [_MAX_PATH + 1];
-    char index [_MAX_PATH + 1];
-    char data [_MAX_PATH + 1];
-    char patch [_MAX_PATH + 1];
-
-    Memory.FreeSDD1Data ();
-
-    strcpy (filename, S9xGetSnapshotDirectory ());
-
-    if (strncmp (Memory.ROMName, "Star Ocean", 10) == 0)
-		strcat (filename, "/socnsdd1");
-    else
-		strcat (filename, "/sfa2sdd1");
-
-    DIR *dir = opendir (filename);
-
-    index [0] = 0;
-    data [0] = 0;
-    patch [0] = 0;
-
-    if (dir)
-    {
-		struct dirent *d;
-		
-		while ((d = readdir (dir)))
-		{
-		    if (strcasecmp (d->d_name, "SDD1GFX.IDX") == 0)
-		    {
-			strcpy (index, filename);
-			strcat (index, "/");
-			strcat (index, d->d_name);
-		    }
-		    else
-		    if (strcasecmp (d->d_name, "SDD1GFX.DAT") == 0)
-		    {
-			strcpy (data, filename);
-			strcat (data, "/");
-			strcat (data, d->d_name);
-		    }
-		    if (strcasecmp (d->d_name, "SDD1GFX.PAT") == 0)
-		    {
-			strcpy (patch, filename);
-			strcat (patch, "/");
-			strcat (patch, d->d_name);
-		    }
-		}
-		closedir (dir);
-
-		if (strlen (index) && strlen (data))
-		{
-		    FILE *fs = fopen (index, "rb");
-		    int len = 0;
-	
-		    if (fs)
-		    {
-			// Index is stored as a sequence of entries, each entry being
-			// 12 bytes consisting of:
-			// 4 byte key: (24bit address & 0xfffff * 16) | translated block
-			// 4 byte ROM offset
-			// 4 byte length
-			fseek (fs, 0, SEEK_END);
-			len = ftell (fs);
-			rewind (fs);
-			Memory.SDD1Index = (uint8 *) malloc (len);
-			fread (Memory.SDD1Index, 1, len, fs);
-			fclose (fs);
-			Memory.SDD1Entries = len / 12;
-	
-			if (!(fs = fopen (data, "rb")))
-			{
-			    free ((char *) Memory.SDD1Index);
-			    Memory.SDD1Index = NULL;
-			    Memory.SDD1Entries = 0;
-			}
-			else
-			{
-			    fseek (fs, 0, SEEK_END);
-			    len = ftell (fs);
-			    rewind (fs);
-			    Memory.SDD1Data = (uint8 *) malloc (len);
-			    fread (Memory.SDD1Data, 1, len, fs);
-			    fclose (fs);
-	
-			    if (strlen (patch) > 0 &&
-				(fs = fopen (patch, "rb")))
-			    {
-				fclose (fs);
-			    }
-	#ifdef MSB_FIRST
-			    // Swap the byte order of the 32-bit value triplets on
-			    // MSBFirst machines.
-			    uint8 *ptr = Memory.SDD1Index;
-			    for (int i = 0; i < Memory.SDD1Entries; i++, ptr += 12)
-			    {
-				SWAP_DWORD ((*(uint32 *) (ptr + 0)));
-				SWAP_DWORD ((*(uint32 *) (ptr + 4)));
-				SWAP_DWORD ((*(uint32 *) (ptr + 8)));
-			    }
-	#endif
-			    qsort (Memory.SDD1Index, Memory.SDD1Entries, 12,
-				   S9xCompareSDD1IndexEntries);
-			}
-		    }
-		}
-		else
-		{
-		  	printf ("Decompressed data pack not found in '%s'.\n", filename);
-		}
-    }
-	else
-	{
-		  	printf ("Dir not found in '%s'.\n", filename);
-	}
-    
-    fclose(out_file);
-}
-#endif
-*/

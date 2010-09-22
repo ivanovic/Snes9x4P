@@ -119,7 +119,7 @@ STRIP	:= ${BINPATH}/$(ARCH)-strip
 AS		:= ${BINPATH}/$(ARCH)-as
 GASM	:= ${BINPATH}/$(ARCH)-g++
 
-OPTIMISE = -mcpu=arm926ej-s -mtune=arm926ej-s -g -I. -I$(TOOLCHAINDIR)/$(ARCH)/include -O3 -D_ZAURUS -DUSE_SA1
+OPTIMISE = -mcpu=arm926ej-s -mtune=arm926ej-s -g -I. -I$(TOOLCHAINDIR)/$(ARCH)/include -O3 -D_ZAURUS -DCAANOO -DUSE_SA1
 OPTIMISE += -ffast-math -fexpensive-optimizations -finline -finline-functions -falign-functions=32 -falign-loops -falign-labels -falign-jumps -fomit-frame-pointer
 
 CCFLAGS = $(OPTIMISE) \
