@@ -1554,7 +1554,7 @@ void gp2x_sound_volume(int l, int r)
  	l<<=8; l|=r;
   	ioctl(mixerdev, SOUND_MIXER_WRITE_VOLUME, &l);
 }
-
+/*
 uint32 S9xReadJoypad (int which1)
 {
 	uint32 val=0x80000000;
@@ -1574,13 +1574,13 @@ uint32 S9xReadJoypad (int which1)
 
 	return(val);
 }
-/*
+*/
 uint32 S9xReadJoypad (int which1)
 {
 	uint32 val=0x80000000;
 
-//	if (which1 > 4)
-//		return 0;
+	if (which1 > 4)
+		return 0;
 
 //    if (which1 == 0 && !Settings.NetPlay)
 //        S9xLinuxScanJoypads ();
@@ -1631,4 +1631,3 @@ uint32 S9xReadJoypad (int which1)
 
 	return(val);
 }
-*/
