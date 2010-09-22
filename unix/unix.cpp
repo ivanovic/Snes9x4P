@@ -1151,8 +1151,6 @@ void S9xProcessEvents (bool8_32 block)
 #ifdef CAANOO
 			keyssnes = SDL_JoystickOpen(0);
 			case SDL_JOYBUTTONDOWN:
-				switch(event.jbutton.button)
-				{
 					//QUIT Emulator
 					if ( SDL_JoystickGetButton(keyssnes, sfc_key[QUIT]) && SDL_JoystickGetButton(keyssnes, sfc_key[X_1] ) )
 					{
@@ -1166,8 +1164,6 @@ void S9xProcessEvents (bool8_32 block)
 						gp2x_sound_volume(vol, vol);
 					}
 					break;
-				}
-			break;
 
 			case SDL_JOYBUTTONUP:
 				switch(event.jbutton.button)
@@ -1554,27 +1550,7 @@ void gp2x_sound_volume(int l, int r)
  	l<<=8; l|=r;
   	ioctl(mixerdev, SOUND_MIXER_WRITE_VOLUME, &l);
 }
-/*
-uint32 S9xReadJoypad (int which1)
-{
-	uint32 val=0x80000000;
 
-	if (SDL_JoystickGetButton(keyssnes, 4))				val |= SNES_TL_MASK;
-	if (SDL_JoystickGetButton(keyssnes, 5))				val |= SNES_TR_MASK;
-	if (SDL_JoystickGetButton(keyssnes, 1))				val |= SNES_X_MASK;
-	if (SDL_JoystickGetButton(keyssnes, 3))				val |= SNES_Y_MASK;
-	if (SDL_JoystickGetButton(keyssnes, 2))				val |= SNES_B_MASK;
-	if (SDL_JoystickGetButton(keyssnes, 0))				val |= SNES_A_MASK;
-	if (SDL_JoystickGetButton(keyssnes, 6))				val |= SNES_START_MASK;
-	if (SDL_JoystickGetButton(keyssnes, 9))				val |= SNES_SELECT_MASK;
-	if (SDL_JoystickGetAxis(keyssnes, 1) < -20000)		val |= SNES_UP_MASK;
-	if (SDL_JoystickGetAxis(keyssnes, 1) > 20000)		val |= SNES_DOWN_MASK;
-	if (SDL_JoystickGetAxis(keyssnes, 0) < -20000)		val |= SNES_LEFT_MASK;
-	if (SDL_JoystickGetAxis(keyssnes, 0) > 20000)		val |= SNES_RIGHT_MASK;
-
-	return(val);
-}
-*/
 uint32 S9xReadJoypad (int which1)
 {
 	uint32 val=0x80000000;
@@ -1619,6 +1595,7 @@ uint32 S9xReadJoypad (int which1)
 	if (keyssnes[sfc_key[LEFT_1]] == SDL_PRESSED)	val |= SNES_LEFT_MASK;
 	if (keyssnes[sfc_key[RIGHT_1]] == SDL_PRESSED)	val |= SNES_RIGHT_MASK;
 	//player2
+	/*
 	if (keyssnes[sfc_key[UP_2]] == SDL_PRESSED)		val |= SNES_UP_MASK;
 	if (keyssnes[sfc_key[DOWN_2]] == SDL_PRESSED)	val |= SNES_DOWN_MASK;
 	if (keyssnes[sfc_key[LEFT_2]] == SDL_PRESSED)	val |= SNES_LEFT_MASK;
@@ -1627,6 +1604,7 @@ uint32 S9xReadJoypad (int which1)
 	if (keyssnes[sfc_key[LD_2]] == SDL_PRESSED)	val |= SNES_LEFT_MASK | SNES_DOWN_MASK;
 	if (keyssnes[sfc_key[RU_2]] == SDL_PRESSED)	val |= SNES_RIGHT_MASK | SNES_UP_MASK;
 	if (keyssnes[sfc_key[RD_2]] == SDL_PRESSED)	val |= SNES_RIGHT_MASK | SNES_DOWN_MASK;
+	*/
 #endif
 
 	return(val);

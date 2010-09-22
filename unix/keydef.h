@@ -1,3 +1,4 @@
+/*
 #ifdef CAANOO
 
 #define A_1 0
@@ -15,7 +16,7 @@
 #define RIGHT_1 14
 
 #else
-
+*/
 #define A_1 0
 #define B_1 1
 #define X_1 2
@@ -56,4 +57,4 @@
 #define CTRLL 32
 #define CTRLR 33
 
-#endif
+//#endif
