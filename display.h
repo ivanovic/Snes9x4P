@@ -60,7 +60,6 @@ void S9xInitInputDevices ();
 void S9xSetTitle (const char *title);
 void S9xProcessEvents (bool8_32 block);
 void S9xPutImage (int width, int height);
-void S9xParseDisplayArg (char **argv, int &index, int argc);
 void S9xToggleSoundChannel (int channel);
 void S9xSetInfoString (const char *string);
 int S9xMinCommandLineArgs ();

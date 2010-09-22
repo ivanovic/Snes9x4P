@@ -51,9 +51,9 @@
 #include <SDL/SDL.h>
 
 #ifdef PANDORA
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
+	#include <sys/types.h>
+	#include <sys/stat.h>
+	#include <fcntl.h>
 #endif
 
 #include "snes9x.h"
@@ -68,15 +68,14 @@
 
 #define COUNT(a) (sizeof(a) / sizeof(a[0]))
 
-SDL_Surface *screen, *gfxscreen;// *hwscreen;
-uint16 *RGBconvert;
+SDL_Surface *screen, *gfxscreen;
 extern uint32 xs, ys, cl, cs;
 extern bool8_32 Scale;
 
 #ifdef PANDORA
-#include "blitscale.h"
-extern blit_scaler_e g_scale;
-extern unsigned char g_fullscreen;
+	#include "blitscale.h"
+	extern blit_scaler_e g_scale;
+	extern unsigned char g_fullscreen;
 #endif
 
 #ifndef _ZAURUS
@@ -94,27 +93,25 @@ void S9xTextMode ()
 }
 #endif
 
+
 #ifdef CAANOO
 	extern SDL_Joystick* keyssnes;
 #else
 	extern uint8 *keyssnes;
 #endif
 
+
 void S9xInitDisplay (int /*argc*/, char ** /*argv*/)
 {
 #ifdef CAANOO
 	if (SDL_Init(SDL_INIT_VIDEO|SDL_INIT_JOYSTICK|(Settings.NextAPUEnabled ? SDL_INIT_AUDIO : 0)) < 0 )
+#else
+	if (SDL_Init(SDL_INIT_VIDEO | (Settings.NextAPUEnabled ? SDL_INIT_AUDIO : 0)) < 0 ) 
+#endif
  	{
 		printf("Could not initialize SDL(%s)\n", SDL_GetError());
 		S9xExit();
 	}
-#else
-	if (SDL_Init(SDL_INIT_VIDEO | (Settings.NextAPUEnabled ? SDL_INIT_AUDIO : 0)) < 0 ) 
-	{
-		printf("Could not initialize SDL(%s)\n", SDL_GetError());
-		S9xExit();
-	}
-#endif
 	atexit(SDL_Quit);
 
 	// No more MOUSE-CURSOR
@@ -126,8 +123,6 @@ void S9xInitDisplay (int /*argc*/, char ** /*argv*/)
 	keyssnes = SDL_GetKeyState(NULL);
 #endif
 
-	//screen = SDL_CreateRGBSurface(SDL_HWSURFACE, xs, ys, 16, 0, 0, 0, 0);
-	//hwscreen = SDL_SetVideoMode(xs, ys, 16, SDL_HWSURFACE|SDL_FULLSCREEN);
 #ifdef PANDORA
 	//screen = SDL_SetVideoMode(xs * blit_scalers [ g_scale ].scale_x, ys * blit_scalers [ g_scale ].scale_y, 16,
 	//  g_fullscreen ? SDL_SWSURFACE|SDL_FULLSCREEN : SDL_SWSURFACE);
@@ -144,20 +139,22 @@ void S9xInitDisplay (int /*argc*/, char ** /*argv*/)
 	}
 
 	// for LCD refresh rate
-	switch ( (int) Memory.ROMFramesPerSecond ) {
-	case 60:
-	  fprintf ( stderr, "Assuming 60hz LCD\n" );
-	  break; // nothing to do
-	case 50:
-	  fprintf ( stderr, "Switching to 50hz LCD\n" );
-	  system ( "/usr/bin/sudo -n /usr/pandora/scripts/op_lcdrate.sh 50" );
-	  break;
-	default:
-	  fprintf ( stderr, "Game reports %d hz display; ignoring.\n", (int) Memory.ROMFramesPerSecond );
-	  break;
+	switch ( (int) Memory.ROMFramesPerSecond )
+	{
+		case 60:
+		  fprintf ( stderr, "Assuming 60hz LCD\n" );
+		  break; // nothing to do
+		case 50:
+		  fprintf ( stderr, "Switching to 50hz LCD\n" );
+		  system ( "/usr/bin/sudo -n /usr/pandora/scripts/op_lcdrate.sh 50" );
+		  break;
+		default:
+		  fprintf ( stderr, "Game reports %d hz display; ignoring.\n", (int) Memory.ROMFramesPerSecond );
+		  break;
 	}
 
 #else
+	//DINGOO / CAANOO
 	screen = SDL_SetVideoMode(xs, ys, 16, SDL_SWSURFACE);	//SDL_HWSURFACE
 #endif
 
@@ -199,27 +196,15 @@ void S9xInitDisplay (int /*argc*/, char ** /*argv*/)
 	GFX.SubScreen = (uint8 *)malloc(512 * 480 * 2);
 	GFX.ZBuffer = (uint8 *)malloc(512 * 480 * 2);
 	GFX.SubZBuffer = (uint8 *)malloc(512 * 480 * 2);
-
-/*
-	RGBconvert = (uint16 *)malloc(65536 * 2);
-	if (!RGBconvert)
-	{
-//		OutOfMemory();
-		S9xExit();
-	}
-	for (uint32 i = 0; i < 65536; i++) 
-		((uint16 *)(RGBconvert))[i] = ((i >> 11) << 10) | ((((i >> 5) & 63) >> 1) << 5) | (i & 31);
-*/
 }
 
 void S9xDeinitDisplay ()
 {
-//	SDL_FreeSurface(gfxscreen);
-
 #ifdef PANDORA
-        // for vsync
-        extern int g_fb;
-        if ( g_fb >= 0 ) {
+    // for vsync
+    extern int g_fb;
+    if ( g_fb >= 0 )
+    {
 	  close ( g_fb );
 	}
 	// for LCD refresh
@@ -250,51 +235,35 @@ const char *S9xSelectFilename (const char *def, const char *dir1,
     S9xTextMode ();
     printf ("\n%s (default: %s): ", title, def);
     fflush (stdout);
+    
     if (fgets (buffer, sizeof (buffer) - 1, stdin))
     {
-	char *p = buffer;
-	while (isspace (*p) || *p == '\n')
-	    p++;
-	if (!*p)
-	{
-	    strcpy (buffer, def);
-	    p = buffer;
-	}
-
-	char *q = strrchr (p, '\n');
-	if (q)
-	    *q = 0;
-
-	char fname [PATH_MAX];
-	char drive [_MAX_DRIVE];
-	char dir [_MAX_DIR];
-	char ext [_MAX_EXT];
-
-	_splitpath (p, drive, dir, fname, ext);
-	_makepath (path, drive, *dir ? dir : dir1, fname, *ext ? ext : ext1);
-	S9xGraphicsMode ();
-	return (path);
+		char *p = buffer;
+		while (isspace (*p) || *p == '\n')
+		    p++;
+		if (!*p)
+		{
+		    strcpy (buffer, def);
+		    p = buffer;
+		}
+	
+		char *q = strrchr (p, '\n');
+		if (q)
+		    *q = 0;
+	
+		char fname [PATH_MAX];
+		char drive [_MAX_DRIVE];
+		char dir [_MAX_DIR];
+		char ext [_MAX_EXT];
+	
+		_splitpath (p, drive, dir, fname, ext);
+		_makepath (path, drive, *dir ? dir : dir1, fname, *ext ? ext : ext1);
+		S9xGraphicsMode ();
+		return (path);
     }
+    
     S9xGraphicsMode ();
     return (NULL);
-}
-
-void S9xParseDisplayArg (char **argv, int &ind, int)
-{
-    if (strcasecmp (argv [ind], "-scale") == 0 ||
-	strcasecmp (argv [ind], "-sc") == 0)
-	stretch = TRUE;
-    else
-    if (strcasecmp (argv [ind], "-y") == 0 ||
-	strcasecmp (argv [ind], "-interpolation") == 0)
-    {
-	interpolation = TRUE;
-	Settings.SixteenBit = TRUE;
-	Settings.SupportHiRes = TRUE;
-	Settings.Transparency = TRUE;
-    }
-    else
-	S9xUsage ();
 }
 
 void S9xExtraUsage ()
