@@ -137,7 +137,6 @@ char msg[256];
 int vol=50;
 static int mixerdev = 0;
 clock_t start;
-//extern bool8_32 Scale_disp;
 
 int OldSkipFrame;
 void InitTimer ();
@@ -146,7 +145,6 @@ void gp2x_sound_volume(int l, int r);
 
 extern void S9xDisplayFrameRate (uint8 *, uint32);
 extern void S9xDisplayString (const char *string, uint8 *, uint32, int);
-//extern SDL_Surface *screen;
 extern SDL_Surface *screen,*gfxscreen;
 
 static uint32 ffc = 0;
@@ -306,16 +304,6 @@ int main (int argc, char **argv)
     S9xSetRenderPixelFormat (RGB565);
 #endif
 
-//    S9xInitInputDevices ();
-//    S9xInitDisplay (argc, argv);
-//    if (!S9xGraphicsInit ())
-//    {
-//		OutOfMemory ();
-//	}
-//#ifndef _ZAURUS
-//    S9xTextMode ();
-//#endif
-
     if (rom_filename)
     {
 		if (!Memory.LoadROM (rom_filename))
@@ -332,21 +320,22 @@ int main (int argc, char **argv)
 		    strcpy (fname, S9xGetROMDirectory ());
 		    strcat (fname, SLASH_STR);
 		    strcat (fname, name);
+		    
 		    if (ext [0])
 		    {
-			strcat (fname, ".");
-			strcat (fname, ext);
+				strcat (fname, ".");
+				strcat (fname, ext);
 		    }
 		    _splitpath (fname, drive, dir, name, ext);
 		    _makepath (fname, drive, dir, name, ext);
+		    
 		    if (!Memory.LoadROM (fname))
 		    {
-			printf ("Error opening: %s\n", rom_filename);
-			exit (1);
+				printf ("Error opening: %s\n", rom_filename);
+				exit (1);
 		    }
 		}
 		Memory.LoadSRAM (S9xGetFilename (".srm"));
-//		S9xLoadCheatFile (S9xGetFilename (".cht"));
     }
     else
     {
@@ -356,8 +345,14 @@ int main (int argc, char **argv)
 
     S9xInitDisplay (argc, argv);
     if (!S9xGraphicsInit ())
+    {
 		OutOfMemory ();
+	}
     S9xInitInputDevices ();
+    
+    // TODO:
+    //if (!rom_filename) open rom selector!!!!!!!!!!!!!!
+    //
 
     CPU.Flags = saved_flags;
 
@@ -373,7 +368,9 @@ int main (int argc, char **argv)
     sigemptyset(&sa.sa_mask);
     sigaction(SIGINT, &sa, NULL);
 
-#ifdef PANDORA
+#ifdef CAANOO
+	sprintf(msg,"Press HOME to Show MENU");
+#elif PANDORA
     sprintf(msg,"Press SPACEBAR to Show MENU");
 #else
     sprintf(msg,"Press SELECT+B to Show MENU");
@@ -382,11 +379,12 @@ int main (int argc, char **argv)
 
     if (snapshot_filename)
     {
-	int Flags = CPU.Flags & (DEBUG_MODE_FLAG | TRACE_FLAG);
-	if (!S9xLoadSnapshot (snapshot_filename))
-	    exit (1);
-	CPU.Flags |= Flags;
+		int Flags = CPU.Flags & (DEBUG_MODE_FLAG | TRACE_FLAG);
+		if (!S9xLoadSnapshot (snapshot_filename))
+		    exit (1);
+		CPU.Flags |= Flags;
     }
+
 #ifndef _ZAURUS
     S9xGraphicsMode ();
     sprintf (String, "\"%s\" %s: %s", Memory.ROMName, TITLE, VERSION);
@@ -453,7 +451,7 @@ void S9xExit ()
     S9xSetSoundMute (TRUE);
     S9xDeinitDisplay ();
     Memory.SaveSRAM (S9xGetFilename (".srm"));
-//    S9xSaveCheatFile (S9xGetFilename (".cht")); //SiENcE - needed for what?
+//    S9xSaveCheatFile (S9xGetFilename (".cht")); // not needed for embedded devices
     Memory.Deinit ();
     S9xDeinitAPU ();
 
@@ -463,6 +461,12 @@ void S9xExit ()
 Uint16 sfc_key[256];
 void S9xInitInputDevices ()
 {
+#ifdef CAANOO
+	keyssnes = SDL_JoystickOpen(0);
+#else
+	keyssnes = SDL_GetKeyState(NULL);
+#endif
+
 	memset(sfc_key, 0, 256);
 
 #ifdef CAANOO
@@ -1147,29 +1151,30 @@ void S9xProcessEvents (bool8_32 block)
 	{
 		switch(event.type)
 		{
-			// CAANOO -------------------------------------------------------------
 #ifdef CAANOO
-			keyssnes = SDL_JoystickOpen(0);
+			// CAANOO -------------------------------------------------------------
 			case SDL_JOYBUTTONDOWN:
-					//QUIT Emulator
-					if ( SDL_JoystickGetButton(keyssnes, sfc_key[QUIT]) && SDL_JoystickGetButton(keyssnes, sfc_key[X_1] ) )
-					{
-						S9xExit();
-					}
-					// MAINMENU
-					else if ( SDL_JoystickGetButton(keyssnes, sfc_key[QUIT]) )
-					{
-						gp2x_sound_volume(0, 0);
-						menu_loop();
-						gp2x_sound_volume(vol, vol);
-					}
-					break;
+				keyssnes = SDL_JoystickOpen(0);
+				//QUIT Emulator
+				if ( SDL_JoystickGetButton(keyssnes, sfc_key[QUIT]) && SDL_JoystickGetButton(keyssnes, sfc_key[B_1] ) )
+				{
+					S9xExit();
+				}
+				// MAINMENU
+				else if ( SDL_JoystickGetButton(keyssnes, sfc_key[QUIT]) )
+				{
+					gp2x_sound_volume(0, 0);
+					menu_loop();
+					gp2x_sound_volume(vol, vol);
+				}
+				break;
 
 			case SDL_JOYBUTTONUP:
+				keyssnes = SDL_JoystickOpen(0);
 				switch(event.jbutton.button)
 				{
 				}
-			break;
+				break;
 #else
 			//PANDORA & DINGOO ------------------------------------------------------
 			case SDL_KEYDOWN:

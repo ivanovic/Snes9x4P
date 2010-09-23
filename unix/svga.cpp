@@ -94,13 +94,6 @@ void S9xTextMode ()
 #endif
 
 
-#ifdef CAANOO
-	extern SDL_Joystick* keyssnes;
-#else
-	extern uint8 *keyssnes;
-#endif
-
-
 void S9xInitDisplay (int /*argc*/, char ** /*argv*/)
 {
 #ifdef CAANOO
@@ -116,12 +109,6 @@ void S9xInitDisplay (int /*argc*/, char ** /*argv*/)
 
 	// No more MOUSE-CURSOR
 	SDL_ShowCursor(SDL_DISABLE);
-
-#ifdef CAANOO
-	keyssnes = SDL_JoystickOpen(0);
-#else
-	keyssnes = SDL_GetKeyState(NULL);
-#endif
 
 #ifdef PANDORA
 	//screen = SDL_SetVideoMode(xs * blit_scalers [ g_scale ].scale_x, ys * blit_scalers [ g_scale ].scale_y, 16,
@@ -153,9 +140,8 @@ void S9xInitDisplay (int /*argc*/, char ** /*argv*/)
 		  break;
 	}
 
-#else
-	//DINGOO / CAANOO
-	screen = SDL_SetVideoMode(xs, ys, 16, SDL_SWSURFACE);	//SDL_HWSURFACE
+#else //DINGOO //CAANOO
+	screen = SDL_SetVideoMode(xs, ys, 16, SDL_SWSURFACE);	//do no take SDL_HWSURFACE on Dingoo (bad overlays) and CAANOO (flickers)
 #endif
 
 	if (screen == NULL)
