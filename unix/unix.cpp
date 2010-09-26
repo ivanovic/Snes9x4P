@@ -134,14 +134,14 @@ char SaveSlotNum = 0;
 
 bool8_32 Scale = FALSE;
 char msg[256];
-int vol=50;
+short vol=50;
 static int mixerdev = 0;
 clock_t start;
 
 int OldSkipFrame;
 void InitTimer ();
 void *S9xProcessSound (void *);
-void gp2x_sound_volume(int l, int r);
+//void gp2x_sound_volume(int l, int r);
 
 extern void S9xDisplayFrameRate (uint8 *, uint32);
 extern void S9xDisplayString (const char *string, uint8 *, uint32, int);
@@ -1158,14 +1158,16 @@ void S9xProcessEvents (bool8_32 block)
 				//QUIT Emulator
 				if ( SDL_JoystickGetButton(keyssnes, sfc_key[QUIT]) && SDL_JoystickGetButton(keyssnes, sfc_key[B_1] ) )
 				{
+					S9xSetSoundMute(true);
 					S9xExit();
 				}
 				// MAINMENU
 				else if ( SDL_JoystickGetButton(keyssnes, sfc_key[QUIT]) )
 				{
-					gp2x_sound_volume(0, 0);
+					S9xSetSoundMute(true);
 					menu_loop();
-					gp2x_sound_volume(vol, vol);
+					S9xSetSoundMute(false);
+					//S9xSetMasterVolume(vol,vol);
 				}
 				break;
 
@@ -1182,12 +1184,15 @@ void S9xProcessEvents (bool8_32 block)
 
 				// shortcut
 #ifdef PANDORA
-				if ( event.key.keysym.sym == SDLK_q ) {
-				  exit ( 0 ); // just die
+				if ( event.key.keysym.sym == SDLK_q )
+				{
+					S9xSetSoundMute(true);
+					exit ( 0 ); // just die
 				}
 #endif //PANDORA
 				//QUIT Emulator
 				if ( (keyssnes[sfc_key[SELECT_1]] == SDL_PRESSED) &&(keyssnes[sfc_key[START_1]] == SDL_PRESSED) && (keyssnes[sfc_key[X_1]] == SDL_PRESSED) )
+					S9xSetSoundMute(true);
 					S9xExit();
 				//RESET ROM Playback
 				else if ((keyssnes[sfc_key[SELECT_1]] == SDL_PRESSED) && (keyssnes[sfc_key[START_1]] == SDL_PRESSED) && (keyssnes[sfc_key[B_1]] == SDL_PRESSED))
@@ -1197,7 +1202,7 @@ void S9xProcessEvents (bool8_32 block)
 				{
 					//extern char snapscreen;
 					char fname[256], ext[20];
-					gp2x_sound_volume(0, 0);
+					S9xSetSoundMute(true);
 					sprintf(ext, ".00%d", SaveSlotNum);
 					strcpy(fname, S9xGetFilename (ext));
 					S9xFreezeGame (fname);
@@ -1205,32 +1210,34 @@ void S9xProcessEvents (bool8_32 block)
 					sprintf(ext, ".s0%d", SaveSlotNum);
 					strcpy(fname, S9xGetFilename (ext));
 					save_screenshot(fname);
-					gp2x_sound_volume(vol, vol);
+					S9xSetSoundMute(false);
 				}
 				//LOAD State
 				else if ( (keyssnes[sfc_key[START_1]] == SDL_PRESSED) && (keyssnes[sfc_key[L_1]] == SDL_PRESSED) )
 				{
 					char fname[256], ext[8];
-					gp2x_sound_volume(0, 0);
+					S9xSetSoundMute(true);
 					sprintf(ext, ".00%d", SaveSlotNum);
 					strcpy(fname, S9xGetFilename (ext));
 					S9xLoadSnapshot (fname);
-					gp2x_sound_volume(vol, vol);
+					S9xSetSoundMute(false);
 				}
 				// MAINMENU
 				else if ((keyssnes[sfc_key[SELECT_1]] == SDL_PRESSED)&&(keyssnes[sfc_key[B_1]] == SDL_PRESSED) )
 				{
-					gp2x_sound_volume(0, 0);
+					S9xSetSoundMute(true);
 					menu_loop();
-					gp2x_sound_volume(vol, vol);
+					S9xSetSoundMute(false);
+					//S9xSetMasterVolume (vol, vol);
 #ifdef PANDORA
-					}
-					// another shortcut I'm afraid
-					else if (event.key.keysym.sym == SDLK_SPACE)
-					{
-						gp2x_sound_volume(0, 0);
+				}
+				// another shortcut I'm afraid
+				else if (event.key.keysym.sym == SDLK_SPACE)
+				{
+						S9xSetSoundMute(true);
 						menu_loop();
-						gp2x_sound_volume(vol, vol);
+						S9xSetSoundMute(false);
+						//S9xSetMasterVolume (vol, vol);
 #endif //PANDORA
 				}
 				break;
@@ -1343,7 +1350,7 @@ bool8_32 S9xOpenSoundDevice (int mode, bool8_32 stereo, int buffer_size)
 	    so.playback_rate, so.buffer_size, so.sixteen_bit ? "yes" : "no",
 	    so.stereo ? "yes" : "no", so.encoded ? "yes" : "no");
 
-    gp2x_sound_volume(vol,vol);
+//    gp2x_sound_volume(vol,vol);
 
     return (TRUE);
 }
@@ -1549,12 +1556,14 @@ void *S9xProcessSound (void *)
     return (NULL);
 }
 
+/*
 void gp2x_sound_volume(int l, int r)
 {
  	l=l<0?0:l; l=l>255?255:l; r=r<0?0:r; r=r>255?255:r;
  	l<<=8; l|=r;
   	ioctl(mixerdev, SOUND_MIXER_WRITE_VOLUME, &l);
 }
+*/
 
 uint32 S9xReadJoypad (int which1)
 {

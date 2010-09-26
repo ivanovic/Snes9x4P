@@ -21,7 +21,7 @@
 extern Uint16 sfc_key[256];
 extern bool8_32 Scale;
 extern char SaveSlotNum;
-extern int vol;
+extern short vol;
 
 extern void S9xDisplayString (const char *string, uint8 *, uint32, int ypos);
 void save_screenshot(char *fname);
@@ -40,6 +40,11 @@ bool8_32 Scale_org=Scale;
 bool8_32 highres_current = false;
 char snapscreen[17120]={};
 extern clock_t start;
+
+void sys_sleep(int us)
+{
+	if(us>0) SDL_Delay(us/1000);
+}
 
 void menu_dispupdate(void){
 	char temp[256];
@@ -197,14 +202,14 @@ void menu_loop(void)
 	S9xInitDisplay(0, 0);
 
 	menu_dispupdate();
-	usleep(100000);
+	sys_sleep(100000); //usleep(100000);
 
 	SDL_Event event;
 
 	do
 	{
 		menu_dispupdate();
-		usleep(100);
+		sys_sleep(100); //usleep(100);
 
 #ifdef CAANOO
 		keyssnes = SDL_JoystickOpen(0);
@@ -220,17 +225,107 @@ void menu_loop(void)
 				// CAANOO -------------------------------------------------------------
 				case SDL_JOYBUTTONDOWN:
 					keyssnes = SDL_JoystickOpen(0);
+
+				if ( (SDL_JoystickGetAxis(keyssnes, 1) < -20000) || SDL_JoystickGetButton(keyssnes, sfc_key[START_1]) )
+					cursor--;
+				else if( (SDL_JoystickGetAxis(keyssnes, 1) > 20000) || SDL_JoystickGetButton(keyssnes, sfc_key[SELECT_1]) )
+					cursor++;
+				else if( SDL_JoystickGetButton(keyssnes, sfc_key[A_1]) || (SDL_JoystickGetAxis(keyssnes, 0) < -20000) )
+				{
+					switch(cursor)
+					{
+						case 2:
+							if ( SDL_JoystickGetButton(keyssnes, sfc_key[A_1]) )
+							{
+								S9xReset();
+								exit_loop = TRUE;
+							}
+						break;
+						case 3:
+							if ( SDL_JoystickGetButton(keyssnes, sfc_key[A_1]) )
+							{
+								memcpy(snapscreen,snapscreen_tmp,16050);
+								show_screenshot();
+								strcpy(fname," Saving...");
+								S9xDisplayString (fname, GFX.Screen +280, 640,204);
+								S9xDeinitUpdate (320, 240);
+								sprintf(ext, ".s0%d", SaveSlotNum);
+								strcpy(fname, S9xGetFilename (ext));
+								save_screenshot(fname);
+								sprintf(ext, ".00%d", SaveSlotNum);
+								strcpy(fname, S9xGetFilename (ext));
+								S9xFreezeGame (fname);
+								sync();
+								exit_loop = TRUE;
+							}
+						break;
+						case 4:
+							if ( SDL_JoystickGetButton(keyssnes, sfc_key[A_1]) )
+							{
+								sprintf(ext, ".00%d", SaveSlotNum);
+								strcpy(fname, S9xGetFilename (ext));
+								S9xLoadSnapshot (fname);
+								exit_loop = TRUE;
+							}
+						break;
+						case 5:
+							if ( SDL_JoystickGetAxis(keyssnes, 0) < -20000 )
+								SaveSlotNum--;
+							else SaveSlotNum++;
+							if(SaveSlotNum>3)
+								SaveSlotNum =0;
+							else if(SaveSlotNum<0)
+								SaveSlotNum=3;
+						break;
+						case 6:
+							Settings.DisplayFrameRate = !Settings.DisplayFrameRate;
+						break;
+						case 7:
+							Scale_org = !Scale_org;
+						break;
+						case 8:
+							if (Settings.SkipFrames == AUTO_FRAMERATE)
+								Settings.SkipFrames = 10;
+	
+							if ( SDL_JoystickGetAxis(keyssnes, 0) < -20000 )
+								Settings.SkipFrames--;
+							else
+								Settings.SkipFrames++;
+	
+							if(Settings.SkipFrames>=10)
+								Settings.SkipFrames = AUTO_FRAMERATE;
+							else if (Settings.SkipFrames <=1)
+								Settings.SkipFrames = 1;
+						break;
+						case 9:
+							if ( SDL_JoystickGetAxis(keyssnes, 0) < -20000 )
+								vol -= 10;
+							else	vol += 10;
+							if(vol>=100)
+								vol = 100;
+							else if (vol <=0)
+								vol = 0;
+						break;
+						case 10:
+							if ( SDL_JoystickGetButton(keyssnes, sfc_key[A_1]) )
+								ShowCredit();
+						break;
+						case 11:
+							if ( SDL_JoystickGetButton(keyssnes, sfc_key[A_1]) )
+								S9xExit();
+						break;
+					}
+				}
 #else
 				//PANDORA & DINGOO ------------------------------------------------------
 				case SDL_KEYDOWN:
 					keyssnes = SDL_GetKeyState(NULL);
+
 				if(keyssnes[sfc_key[UP_1]] == SDL_PRESSED)
 					cursor--;
 				else if(keyssnes[sfc_key[DOWN_1]] == SDL_PRESSED)
 					cursor++;
-				else if((keyssnes[sfc_key[A_1]] == SDL_PRESSED)||
-					(keyssnes[sfc_key[RIGHT_1]] == SDL_PRESSED)||
-					(keyssnes[sfc_key[LEFT_1]] == SDL_PRESSED))
+				else if( (keyssnes[sfc_key[A_1]] == SDL_PRESSED)|| (keyssnes[sfc_key[LEFT_1]] == SDL_PRESSED) )
 				{
 					switch(cursor)
 					{
@@ -413,7 +508,8 @@ void capt_screenshot() //107px*80px
 	}
 }
 
-void show_screenshot(){
+void show_screenshot()
+{
 	int s=0;
 	for(int y=126;y<126+80;y++){
 		for(int x=248; x<248+107*2; x+=2){
@@ -424,7 +520,8 @@ void show_screenshot(){
 	}
 }
 
-int batt_level(void){
+int batt_level(void)
+{
 	FILE *FP;
 	int mvolts;
 	char buf[6]={};
@@ -436,7 +533,8 @@ int batt_level(void){
 	return (mvolts);
 }
 
-int chk_hold(void){
+int chk_hold(void)
+{
 	FILE *FP;
 	uint32 hold=0;
 	char buf[12]={};
@@ -451,7 +549,8 @@ int chk_hold(void){
 		return (0);
 }
 
-int get_lcd_backlight(void){
+int get_lcd_backlight(void)
+{
 	FILE *FP;
 	int backlight=0;
 	char buf[12];
@@ -463,7 +562,8 @@ int get_lcd_backlight(void){
 	return (backlight);
 }
 
-void set_lcd_backlight(int bk){
+void set_lcd_backlight(int bk)
+{
 
 	char buf[128];
 	sprintf(buf,"echo %d >/proc/jz/lcd_backlight",bk);
@@ -471,17 +571,22 @@ void set_lcd_backlight(int bk){
 	//sync();
 }
 
-void ShowCredit(){
-	uint8 *keyssnes;
+void ShowCredit()
+{
+#ifdef CAANOO
+	SDL_Joystick* keyssnes = 0;
+#else
+	uint8 *keyssnes = 0;
+#endif
 	int line=0,ypix=0;
 	char disptxt[100][256]={
 	"",
 	"",
 	"",
 	"",
-	" Snes9x4D for Dingux",
+	" Snes9x4X",
 	"                                     ",
-	" Thank you using Snes9x4D!          ",
+	" Thank you using this Emulator!      ",
 	"                                     ",
 	" Key Configurations,     ",
 	"  State Save: START + R ",
@@ -496,11 +601,17 @@ void ShowCredit(){
 	" regards to joyrider & g17"
 	};
 
-	do{
+	do
+	{
 		SDL_Event event;
 		SDL_PollEvent(&event);
+
+#ifdef CAANOO
+	keyssnes = SDL_JoystickOpen(0);
+#else
 		keyssnes = SDL_GetKeyState(NULL);
-		
+#endif
+
 		for(int y=12; y<=212; y++){
 			for(int x=10; x<246*2; x+=2){
 				memset(GFX.Screen + 320*y*2+x,0x11,2);
@@ -520,8 +631,14 @@ void ShowCredit(){
 		}
 		if(line == 20) line = 0;
 		S9xDeinitUpdate (320, 240);
-		usleep(30000);
-	}while(keyssnes[sfc_key[B_1]] != SDL_PRESSED);
+		sys_sleep(30000); //usleep(30000);
+	}
+#ifdef CAANOO
+	while( SDL_JoystickGetButton(keyssnes, sfc_key[A_1])!=TRUE );
+#else
+	while(keyssnes[sfc_key[B_1]] != SDL_PRESSED);
+#endif
+
 	return;
 }
 

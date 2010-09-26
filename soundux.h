@@ -214,8 +214,7 @@ void S9xSetEchoDelay (int byte);
 void S9xSetEchoWriteEnable (uint8 byte);
 void S9xSetFilterCoefficient (int tap, int value);
 void S9xSetFrequencyModulationEnable (uint8 byte);
-void S9xSetEnvelopeRate (int channel, unsigned long rate, int direction,
-			 int target);
+void S9xSetEnvelopeRate (int channel, unsigned long rate, int direction, int target);
 bool8_32 S9xSetSoundMode (int channel, int mode);
 int S9xGetEnvelopeHeight (int channel);
 void S9xResetSound (bool8_32 full);
