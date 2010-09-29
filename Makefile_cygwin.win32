@@ -115,10 +115,8 @@ STRIP	= strip
 NASM	=
 GASM	= g++
 
-DEFAULT_CFLAGS = `sdl-config --cflags`
-LDLIBS         = `sdl-config --libs` -lSDL
-
-INCLUDES=
+DEFAULT_CFLAGS = -I/usr/local/include #`sdl-config --cflags`
+LDLIBS         = -l/usr/local/lib -lSDL #`sdl-config --libs`
 
 OPTIMISE= -D_ZAURUS -O2 -ffast-math -fstrict-aliasing -fomit-frame-pointer -funroll-all-loops -fpeel-loops -ftracer -funswitch-loops -finline-functions
 #-G 0 -ftree-vectorize

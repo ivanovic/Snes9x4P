@@ -56,6 +56,8 @@
 #include "unix/menu.h"
 #include "keydef.h"
 
+#include "../netplay.h"
+
 #ifdef CAANOO
 	#include "caanoo.h"
 #else
@@ -129,6 +131,11 @@ pthread_mutex_t mutex;
 	uint8 *keyssnes;
 #endif
 
+#ifdef NETPLAY_SUPPORT
+	static uint32	joypads[8];
+	static uint32	old_joypads[8];
+#endif
+
 // SaveSlotNumber
 char SaveSlotNum = 0;
 
@@ -141,6 +148,7 @@ clock_t start;
 int OldSkipFrame;
 void InitTimer ();
 void *S9xProcessSound (void *);
+void OutOfMemory();
 //void gp2x_sound_volume(int l, int r);
 
 extern void S9xDisplayFrameRate (uint8 *, uint32);
@@ -164,18 +172,6 @@ static void sigbrkhandler(int)
 }
 #endif
 #endif
-
-void OutOfMemory ()
-{
-    fprintf (stderr, "\
-Snes9X: Memory allocation failure - not enough RAM/virtual memory available.\n\
-        S9xExiting...\n");
-    Memory.Deinit ();
-    S9xDeinitAPU ();
-    S9xDeinitDisplay();
-    
-    exit (1);
-}
 
 void S9xParseArg (char **argv, int &i, int argc)
 {
@@ -241,7 +237,8 @@ int main (int argc, char **argv)
 {
     start = clock();
     if (argc < 2)
-	S9xUsage ();
+		S9xUsage ();
+
     ZeroMemory (&Settings, sizeof (Settings));
 
     Settings.JoystickEnabled = FALSE;	//unused
@@ -266,7 +263,7 @@ int main (int argc, char **argv)
     Settings.Mouse = TRUE; //FALSE
     Settings.SuperScope = FALSE;
     Settings.MultiPlayer5 = FALSE;
-//    Settings.ControllerOption = SNES_MULTIPLAYER5;
+    Settings.ControllerOption = SNES_MULTIPLAYER5;
     Settings.ControllerOption = 0;
     Settings.Transparency = TRUE;
     Settings.SixteenBit = TRUE;
@@ -278,19 +275,20 @@ int main (int argc, char **argv)
     Settings.ApplyCheats = TRUE;  //FALSE
     Settings.TurboMode = FALSE;
     Settings.TurboSkipFrames = 15;
-    rom_filename = S9xParseArgs (argv, argc);
-
-//    Settings.Transparency = Settings.ForceTransparency;
     if (Settings.ForceNoTransparency)
-	Settings.Transparency = FALSE;
-
+		Settings.Transparency = FALSE;
     if (Settings.Transparency)
-	Settings.SixteenBit = TRUE;
+		Settings.SixteenBit = TRUE;
+
+	//parse commandline arguments for ROM filename
+	rom_filename = S9xParseArgs (argv, argc);
 
     Settings.HBlankStart = (256 * Settings.H_Max) / SNES_HCOUNTER_MAX;
 
     if (!Memory.Init () || !S9xInitAPU())
-	OutOfMemory ();
+    {
+		OutOfMemory ();
+	}
 
    (void) S9xInitSound (Settings.SoundPlaybackRate, Settings.Stereo,
 			 Settings.SoundBufferSize);
@@ -303,6 +301,16 @@ int main (int argc, char **argv)
 #ifdef GFX_MULTI_FORMAT
     S9xSetRenderPixelFormat (RGB565);
 #endif
+
+    S9xInitDisplay (argc, argv);
+    if (!S9xGraphicsInit ())
+    {
+		OutOfMemory ();
+	}
+    S9xInitInputDevices ();
+    
+    // TODO:
+    //open rom selector if no rom filename is available!!!!!!!!!!!!!!
 
     if (rom_filename)
     {
@@ -332,7 +340,7 @@ int main (int argc, char **argv)
 		    if (!Memory.LoadROM (fname))
 		    {
 				printf ("Error opening: %s\n", rom_filename);
-				exit (1);
+				OutOfMemory();
 		    }
 		}
 		Memory.LoadSRAM (S9xGetFilename (".srm"));
@@ -343,19 +351,9 @@ int main (int argc, char **argv)
 		Settings.Paused |= 2;
     }
 
-    S9xInitDisplay (argc, argv);
-    if (!S9xGraphicsInit ())
-    {
-		OutOfMemory ();
-	}
-    S9xInitInputDevices ();
-    
-    // TODO:
-    //if (!rom_filename) open rom selector!!!!!!!!!!!!!!
-    //
-
     CPU.Flags = saved_flags;
-
+    Settings.StopEmulation = FALSE;
+/*
     struct sigaction sa;
 //    sa.sa_handler = sigbrkhandler;
 
@@ -367,6 +365,51 @@ int main (int argc, char **argv)
 
     sigemptyset(&sa.sa_mask);
     sigaction(SIGINT, &sa, NULL);
+*/  
+    
+#ifdef DEBUGGER
+	struct sigaction sa;
+	sa.sa_handler = sigbrkhandler;
+#ifdef SA_RESTART
+	sa.sa_flags = SA_RESTART;
+#else
+	sa.sa_flags = 0;
+#endif
+	sigemptyset(&sa.sa_mask);
+	sigaction(SIGINT, &sa, NULL);
+#endif
+
+#ifdef NETPLAY_SUPPORT
+	if (strlen(Settings.ServerName) == 0)
+	{
+		char	*server = getenv("S9XSERVER");
+		if (server)
+		{
+			strncpy(Settings.ServerName, server, 127);
+			Settings.ServerName[127] = 0;
+		}
+	}
+
+	char	*port = getenv("S9XPORT");
+	if (Settings.Port >= 0 && port)
+		Settings.Port = atoi(port);
+	else
+	if (Settings.Port < 0)
+		Settings.Port = -Settings.Port;
+
+	if (Settings.NetPlay)
+	{
+		NetPlay.MaxFrameSkip = 10;
+
+		if (!S9xNPConnectToServer(Settings.ServerName, Settings.Port, Memory.ROMName))
+		{
+			fprintf(stderr, "Failed to connect to server %s on port %d.\n", Settings.ServerName, Settings.Port);
+			S9xExit();
+		}
+
+		fprintf(stderr, "Connected to server %s on port %d as player #%d playing %s.\n", Settings.ServerName, Settings.Port, NetPlay.Player, Memory.ROMName);
+	}
+#endif
 
 #ifdef CAANOO
 	sprintf(msg,"Press HOME to Show MENU");
@@ -396,8 +439,44 @@ int main (int argc, char **argv)
 	else
     	InitTimer ();
 
+#ifdef NETPLAY_SUPPORT
+	bool8	NP_Activated = Settings.NetPlay;
+#endif
+
     while (1)
     {
+#ifdef NETPLAY_SUPPORT
+		if (NP_Activated)
+		{
+			if (NetPlay.PendingWait4Sync && !S9xNPWaitForHeartBeatDelay(100))
+			{
+				S9xProcessEvents(FALSE);
+				continue;
+			}
+/*
+			for (int J = 0; J < 8; J++)
+				old_joypads[J] = MovieGetJoypad(J);
+
+			for (int J = 0; J < 8; J++)
+				MovieSetJoypad(J, joypads[J]);
+*/
+			if (NetPlay.Connected)
+			{
+				if (NetPlay.PendingWait4Sync)
+				{
+					NetPlay.PendingWait4Sync = FALSE;
+					NetPlay.FrameCount++;
+					S9xNPStepJoypadHistory();
+				}
+			}
+			else
+			{
+				fprintf(stderr, "Lost connection to server.\n");
+				S9xExit();
+			}
+		}
+#endif
+
 #ifndef _ZAURUS
 	if (!Settings.Paused
 #ifdef DEBUGGER
@@ -406,6 +485,15 @@ int main (int argc, char **argv)
            )
 #endif
 	    S9xMainLoop ();
+
+#ifdef NETPLAY_SUPPORT
+		if (NP_Activated)
+		{
+//			for (int J = 0; J < 8; J++)
+//				MovieSetJoypad(J, old_joypads[J]);
+		}
+#endif
+
 #ifndef _ZAURUS
 	if (Settings.Paused
 #ifdef DEBUGGER
@@ -423,10 +511,9 @@ int main (int argc, char **argv)
 	}
 	else
 #endif
+
 	if (Settings.Paused)
 	    S9xProcessEvents (TRUE);
-
-//	S9xProcessEvents (FALSE);
 
 	if (!Settings.Paused
 #ifdef DEBUGGER
@@ -446,14 +533,32 @@ void S9xAutoSaveSRAM ()
     Memory.SaveSRAM (S9xGetFilename (".srm"));
 }
 
-void S9xExit ()
+void OutOfMemory()
 {
-    S9xSetSoundMute (TRUE);
-    S9xDeinitDisplay ();
-    Memory.SaveSRAM (S9xGetFilename (".srm"));
-//    S9xSaveCheatFile (S9xGetFilename (".cht")); // not needed for embedded devices
+    fprintf (stderr, "Snes9X: Memory allocation failure - not enough RAM/virtual memory available.\n S9xExiting...\n");
+
     Memory.Deinit ();
     S9xDeinitAPU ();
+    S9xDeinitDisplay();
+    
+    exit (1);
+}
+
+void S9xExit()
+{
+    S9xSetSoundMute (TRUE);
+
+#ifdef NETPLAY_SUPPORT
+	if (Settings.NetPlay)
+		S9xNPDisconnect();
+#endif
+
+    Memory.SaveSRAM (S9xGetFilename (".srm"));
+//    S9xSaveCheatFile (S9xGetFilename (".cht")); // not needed for embedded devices
+
+    Memory.Deinit ();
+    S9xDeinitAPU ();
+    S9xDeinitDisplay ();
 
     exit (0);
 }
@@ -576,7 +681,11 @@ void S9xInitInputDevices ()
 
 const char *GetHomeDirectory ()
 {
+#if CAANOO
     return (getenv ("HOME"));
+#else
+    return (getenv ("HOME"));
+#endif
 }
 
 const char *S9xGetSnapshotDirectory ()
@@ -587,12 +696,12 @@ const char *S9xGetSnapshotDirectory ()
     if (!(snapshot = getenv ("SNES9X_SNAPSHOT_DIR")) &&
 	!(snapshot = getenv ("SNES96_SNAPSHOT_DIR")))
     {
-	const char *home = GetHomeDirectory ();
-	strcpy (filename, home);
-	strcat (filename, SLASH_STR);
-	strcat (filename, ".snes96_snapshots");
-	mkdir (filename, 0777);
-	chown (filename, getuid (), getgid ());
+		const char *home = GetHomeDirectory ();
+		strcpy (filename, home);
+		strcat (filename, SLASH_STR);
+		strcat (filename, ".snes96_snapshots");
+		mkdir (filename, 0777);
+		chown (filename, getuid (), getgid ());
     }
     else
 	return (snapshot);
@@ -636,7 +745,7 @@ const char *S9xBasename (const char *f)
 
     return (f);
 }
-
+/*
 #ifndef _ZAURUS
 const char *S9xChooseFilename (bool8 read_only)
 {
@@ -658,7 +767,7 @@ const char *S9xChooseFilename (bool8 read_only)
     return (filename);
 }
 #endif
-
+*/
 bool8 S9xOpenSnapshotFile (const char *fname, bool8 read_only, STREAM *file)
 {
     char filename [PATH_MAX + 1];
@@ -1079,6 +1188,59 @@ void InitTimer ()
 void S9xSyncSpeed ()
 {
 	S9xProcessEvents (FALSE);
+	
+#ifdef NETPLAY_SUPPORT
+	if (Settings.NetPlay && NetPlay.Connected)
+	{
+	#if defined(NP_DEBUG) && NP_DEBUG == 2
+		printf("CLIENT: SyncSpeed @%d\n", S9xGetMilliTime());
+	#endif
+
+		S9xNPSendJoypadUpdate(old_joypads[0]);
+		for (int J = 0; J < 8; J++)
+			joypads[J] = S9xNPGetJoypad(J);
+
+		if (!S9xNPCheckForHeartBeat())
+		{
+			NetPlay.PendingWait4Sync = !S9xNPWaitForHeartBeatDelay(100);
+		#if defined(NP_DEBUG) && NP_DEBUG == 2
+			if (NetPlay.PendingWait4Sync)
+				printf("CLIENT: PendingWait4Sync1 @%d\n", S9xGetMilliTime());
+		#endif
+
+			IPPU.RenderThisFrame = TRUE;
+			IPPU.SkippedFrames = 0;
+		}
+		else
+		{
+			NetPlay.PendingWait4Sync = !S9xNPWaitForHeartBeatDelay(200);
+		#if defined(NP_DEBUG) && NP_DEBUG == 2
+			if (NetPlay.PendingWait4Sync)
+				printf("CLIENT: PendingWait4Sync2 @%d\n", S9xGetMilliTime());
+		#endif
+
+			if (IPPU.SkippedFrames < NetPlay.MaxFrameSkip)
+			{
+				IPPU.RenderThisFrame = FALSE;
+				IPPU.SkippedFrames++;
+			}
+			else
+			{
+				IPPU.RenderThisFrame = TRUE;
+				IPPU.SkippedFrames = 0;
+			}
+		}
+
+		if (!NetPlay.PendingWait4Sync)
+		{
+			NetPlay.FrameCount++;
+			S9xNPStepJoypadHistory();
+		}
+
+		return;
+	}
+#endif
+
     if (!Settings.TurboMode && Settings.SkipFrames == AUTO_FRAMERATE)
     {
 		static struct timeval next1 = {0, 0};
@@ -1158,7 +1320,6 @@ void S9xProcessEvents (bool8_32 block)
 				//QUIT Emulator
 				if ( SDL_JoystickGetButton(keyssnes, sfc_key[QUIT]) && SDL_JoystickGetButton(keyssnes, sfc_key[B_1] ) )
 				{
-					S9xSetSoundMute(true);
 					S9xExit();
 				}
 				// MAINMENU
@@ -1192,11 +1353,14 @@ void S9xProcessEvents (bool8_32 block)
 #endif //PANDORA
 				//QUIT Emulator
 				if ( (keyssnes[sfc_key[SELECT_1]] == SDL_PRESSED) &&(keyssnes[sfc_key[START_1]] == SDL_PRESSED) && (keyssnes[sfc_key[X_1]] == SDL_PRESSED) )
-					S9xSetSoundMute(true);
+				{
 					S9xExit();
+				}
 				//RESET ROM Playback
 				else if ((keyssnes[sfc_key[SELECT_1]] == SDL_PRESSED) && (keyssnes[sfc_key[START_1]] == SDL_PRESSED) && (keyssnes[sfc_key[B_1]] == SDL_PRESSED))
+				{
 					S9xReset();
+				}
 				//SAVE State
 				else if ( (keyssnes[sfc_key[START_1]] == SDL_PRESSED) && (keyssnes[sfc_key[R_1]] == SDL_PRESSED) )
 				{

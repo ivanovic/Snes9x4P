@@ -43,7 +43,8 @@ extern clock_t start;
 
 void sys_sleep(int us)
 {
-	if(us>0) SDL_Delay(us/1000);
+	if(us>0)
+		SDL_Delay(us/1000);
 }
 
 void menu_dispupdate(void){
@@ -56,8 +57,13 @@ void menu_dispupdate(void){
 			memset(GFX.Screen + 320*y*2+x,0x11,2);
 		}	
 	}
-
-	strcpy(disptxt[0],"Snes9x4X v20100429");
+#if CAANOO
+	strcpy(disptxt[0],"Snes9x4C v20101029");
+#elif PANDORA
+	strcpy(disptxt[0],"Snes9x4P v20101029");
+#else
+	strcpy(disptxt[0],"Snes9x4D v20101029");
+#endif
 	strcpy(disptxt[1],"");
 	//strcpy(disptxt[2],"Resume Game          ");
 	strcpy(disptxt[2],"Reset Game           ");
@@ -139,15 +145,9 @@ void menu_dispupdate(void){
 
 	sprintf(temp,"%s  (%5d)",disptxt[14],(batt_level()/10)*10);
 	strcpy(disptxt[14],temp);	
-/*
-	sprintf(temp,"%s%3d", disptxt[15], 0 ); //1000000, 4707032
-	strcpy(disptxt[15],temp);
-*/
-/*
-	sprintf(temp,"%s %d%%",disptxt[16],get_lcd_backlight());
-	strcpy(disptxt[16],temp);	
-*/
-	for(int i=0;i<=14;i++){ //15
+
+	for(int i=0;i<=14;i++) //15
+	{
 		if(i==cursor)
 			sprintf(temp," >%s",disptxt[i]);
 		else
@@ -158,7 +158,8 @@ void menu_dispupdate(void){
 	}
 
 	//show screen shot for snapshot
-	if(SaveSlotNum_old != SaveSlotNum){
+	if(SaveSlotNum_old != SaveSlotNum)
+	{
 		strcpy(temp,"Loading...");
 		S9xDisplayString (temp, GFX.Screen +280, 640,204);
 		S9xDeinitUpdate (320, 240);
@@ -584,21 +585,23 @@ void ShowCredit()
 	"",
 	"",
 	"",
-	" Snes9x4X",
+	"",
 	"                                     ",
 	" Thank you using this Emulator!      ",
 	"                                     ",
-	" Key Configurations,     ",
-	"  State Save: START + R ",
-	"  State Load: START + L  ",
-	"  Exit      : START + SEL + X ",
-	"  Reset Game: START + SEL + B "
+	"",
+	"",
+	"",
+	"",
+	"",
 	"",
 	"",
 	" by SiENcE",
 	" crankgaming.blogspot.com",
 	"",
-	" regards to joyrider & g17"
+	" regards to joyrider & g17",
+	"",
+	"",
 	};
 
 	do
@@ -607,7 +610,7 @@ void ShowCredit()
 		SDL_PollEvent(&event);
 
 #ifdef CAANOO
-	keyssnes = SDL_JoystickOpen(0);
+		keyssnes = SDL_JoystickOpen(0);
 #else
 		keyssnes = SDL_GetKeyState(NULL);
 #endif

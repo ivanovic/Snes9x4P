@@ -1,11 +1,11 @@
 #ZSNES_FX=1
 #ASMCPU=1
 #SPC700ASM=1
-#NETPLAY=1
+NETPLAY=1
 UNZIP=1
 #GLIDE=1
 #OPENGL=1
-#THREAD_SOUND=1
+THREAD_SOUND=1
 CHEATS=1
 #ASMKREED=1
 #ZSNESC4=1
@@ -119,15 +119,14 @@ STRIP	:= ${BINPATH}/$(ARCH)-strip
 AS		:= ${BINPATH}/$(ARCH)-as
 GASM	:= ${BINPATH}/$(ARCH)-g++
 
-OPTIMISE = -mcpu=arm926ej-s -mtune=arm926ej-s -I. -I$(TOOLCHAINDIR)/$(ARCH)/include -O3 -D_ZAURUS -DCAANOO -DUSE_SA1
-OPTIMISE += -ffast-math -fexpensive-optimizations -finline -finline-functions -falign-functions=32 -falign-loops -falign-labels -falign-jumps -fomit-frame-pointer -fprofile-use
+OPTIMISE = -O3 -mcpu=arm926ej-s -mtune=arm926ej-s -D_ZAURUS -DCAANOO -DUSE_SA1 -DIS_LITTLE_ENDIAN
+OPTIMISE += -ffast-math -fexpensive-optimizations -finline -finline-functions -falign-functions=32 -falign-loops -falign-labels -falign-jumps -fomit-frame-pointer
 #-fprofile-generate
 #-fprofile-use
 
 CCFLAGS = $(OPTIMISE) \
 -I. \
 -Iunzip \
--Isdl \
 -D__linux \
 -DZLIB \
 -DVAR_CYCLES \
@@ -145,12 +144,12 @@ $(GUIDEFINES) \
 $(KREEDDEFINES) \
 $(CHEATDEFINES) \
 
-CFLAGS	= $(CCFLAGS)
+CCFLAGS  += -I. -I$(TOOLCHAINDIR)/$(ARCH)/include
 LDLIBS	= -L$(TOOLCHAINDIR)/$(ARCH)/lib
 
 # SDL
-CFLAGS  += $(shell $(BINPATH)/sdl-config --cflags) -I$(TOOLCHAINDIR)/$(ARCH)/include/SDL
-LDLIBS  += $(shell $(BINPATH)/sdl-config --libs) -lSDL
+CCFLAGS  += $(shell $(TOOLCHAINDIR)/$(ARCH)/sys-root/usr/bin/sdl-config --cflags)
+LDLIBS  += $(shell $(TOOLCHAINDIR)/$(ARCH)/sys-root/usr/bin/sdl-config --libs)
 
 #-------------------------------------------------------------------------------------------
 
@@ -182,8 +181,8 @@ $(OPENGLDEPENDS):
 	touch $(OPENGLDEPENDS)
 	$(RM) $(OPENGLNO_DEPENDS)
 
-Snes9x4C.gpe: $(OBJECTS) 
-	$(CC) -o $@ $(OBJECTS) $(EXTRALIBS) $(LDLIBS) -lstdc++ -lz -lpthread -lm -lgcov
+Snes9x4C.gpe: $(OBJECTS)
+	$(CCC) -o $@ $(OBJECTS) $(EXTRALIBS) $(LDLIBS) -lstdc++ -lz -lpthread -lm -lgcov
 	$(STRIP) Snes9x4C.gpe
 
 .cpp.o:
