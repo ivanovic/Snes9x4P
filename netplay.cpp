@@ -176,11 +176,11 @@
 
 
 #ifdef NETPLAY_SUPPORT
-#ifdef _DEBUG
-	#define NP_DEBUG 1
-#endif
+//#ifdef _DEBUG
+//	#define NP_DEBUG 1
+//#endif
 
-#define NP_DEBUG 3 // FF-FIXME
+//#define NP_DEBUG 3 // FF-FIXME
 
 #include <stdio.h>
 #include <stdlib.h>

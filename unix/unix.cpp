@@ -260,19 +260,19 @@ int main (int argc, char **argv)
     Settings.FrameTime = Settings.FrameTimeNTSC;
     Settings.DisableSampleCaching = FALSE;
     Settings.DisableMasterVolume = FALSE;
-    Settings.Mouse = TRUE; //FALSE
+    Settings.Mouse = TRUE;
     Settings.SuperScope = FALSE;
     Settings.MultiPlayer5 = FALSE;
     Settings.ControllerOption = SNES_MULTIPLAYER5;
     Settings.ControllerOption = 0;
     Settings.Transparency = TRUE;
     Settings.SixteenBit = TRUE;
-    Settings.SupportHiRes = FALSE; //TRUE;
+    Settings.SupportHiRes = FALSE; //autodetected for known highres roms
     Settings.NetPlay = FALSE;
     Settings.ServerName [0] = 0;
     Settings.ThreadSound = TRUE;
     Settings.AutoSaveDelay = 30;
-    Settings.ApplyCheats = TRUE;  //FALSE
+    Settings.ApplyCheats = TRUE;
     Settings.TurboMode = FALSE;
     Settings.TurboSkipFrames = 15;
     if (Settings.ForceNoTransparency)
@@ -411,6 +411,7 @@ int main (int argc, char **argv)
 	}
 #endif
 
+	//Handheld Key Infos
 #ifdef CAANOO
 	sprintf(msg,"Press HOME to Show MENU");
 #elif PANDORA
@@ -420,6 +421,7 @@ int main (int argc, char **argv)
 #endif
     S9xSetInfoString(msg);
 
+    //load Snapshot
     if (snapshot_filename)
     {
 		int Flags = CPU.Flags & (DEBUG_MODE_FLAG | TRACE_FLAG);
@@ -434,6 +436,102 @@ int main (int argc, char **argv)
     S9xSetTitle (String);
 #endif
 
+#ifdef JOYSTICK_SUPPORT
+	uint32	JoypadSkip = 0;
+#endif
+
+	InitTimer();
+	S9xSetSoundMute(FALSE);
+
+#ifdef NETPLAY_SUPPORT
+	bool8	NP_Activated = Settings.NetPlay;
+#endif
+
+	while (1)
+	{
+	#ifdef NETPLAY_SUPPORT
+		if (NP_Activated)
+		{
+			if (NetPlay.PendingWait4Sync && !S9xNPWaitForHeartBeatDelay(100))
+			{
+				S9xProcessEvents(FALSE);
+				continue;
+			}
+
+//			for (int J = 0; J < 8; J++)
+//				old_joypads[J] = MovieGetJoypad(J);
+
+//			for (int J = 0; J < 8; J++)
+//				MovieSetJoypad(J, joypads[J]);
+
+			if (NetPlay.Connected)
+			{
+				if (NetPlay.PendingWait4Sync)
+				{
+					NetPlay.PendingWait4Sync = FALSE;
+					NetPlay.FrameCount++;
+					S9xNPStepJoypadHistory();
+				}
+			}
+			else
+			{
+				fprintf(stderr, "Lost connection to server.\n");
+				S9xExit();
+			}
+		}
+	#endif
+
+	#ifdef DEBUGGER
+		if (!Settings.Paused || (CPU.Flags & (DEBUG_MODE_FLAG | SINGLE_STEP_FLAG)))
+	#else
+		if (!Settings.Paused)
+	#endif
+			S9xMainLoop();
+
+	#ifdef NETPLAY_SUPPORT
+//		if (NP_Activated)
+//		{
+//			for (int J = 0; J < 8; J++)
+//				MovieSetJoypad(J, old_joypads[J]);
+//		}
+	#endif
+
+	#ifdef DEBUGGER
+		if (Settings.Paused || (CPU.Flags & DEBUG_MODE_FLAG))
+	#else
+		if (Settings.Paused)
+	#endif
+			S9xSetSoundMute(TRUE);
+
+	#ifdef DEBUGGER
+		if (CPU.Flags & DEBUG_MODE_FLAG)
+			S9xDoDebug();
+		else
+	#endif
+		if (Settings.Paused)
+		{
+			S9xProcessEvents(FALSE);
+			usleep(100000);
+		}
+
+	#ifdef JOYSTICK_SUPPORT
+		if (unixSettings.JoystickEnabled && (JoypadSkip++ & 1) == 0)
+			ReadJoysticks();
+	#endif
+
+		S9xProcessEvents(TRUE); //FALSE
+
+	#ifdef DEBUGGER
+		if (!Settings.Paused && !(CPU.Flags & DEBUG_MODE_FLAG))
+	#else
+		if (!Settings.Paused)
+	#endif
+			S9xSetSoundMute(FALSE);
+	}
+
+	return (0);
+
+/*
     if (!Settings.APUEnabled)
 		S9xSetSoundMute (FALSE);
 	else
@@ -453,13 +551,13 @@ int main (int argc, char **argv)
 				S9xProcessEvents(FALSE);
 				continue;
 			}
-/*
-			for (int J = 0; J < 8; J++)
-				old_joypads[J] = MovieGetJoypad(J);
 
-			for (int J = 0; J < 8; J++)
-				MovieSetJoypad(J, joypads[J]);
-*/
+//			for (int J = 0; J < 8; J++)
+//				old_joypads[J] = MovieGetJoypad(J);
+
+//			for (int J = 0; J < 8; J++)
+//				MovieSetJoypad(J, joypads[J]);
+
 			if (NetPlay.Connected)
 			{
 				if (NetPlay.PendingWait4Sync)
@@ -526,6 +624,7 @@ int main (int argc, char **argv)
 #endif
     }
     return (0);
+*/
 }
 
 void S9xAutoSaveSRAM ()
@@ -1187,7 +1286,7 @@ void InitTimer ()
 
 void S9xSyncSpeed ()
 {
-	S9xProcessEvents (FALSE);
+//	S9xProcessEvents (FALSE);
 	
 #ifdef NETPLAY_SUPPORT
 	if (Settings.NetPlay && NetPlay.Connected)
@@ -1309,7 +1408,7 @@ void S9xProcessEvents (bool8_32 block)
 {
 	SDL_Event event;
 
-	while(SDL_PollEvent(&event))
+	while(block && SDL_PollEvent(&event))
 	{
 		switch(event.type)
 		{
@@ -1736,14 +1835,6 @@ uint32 S9xReadJoypad (int which1)
 	if (which1 > 4)
 		return 0;
 
-//    if (which1 == 0 && !Settings.NetPlay)
-//        S9xLinuxScanJoypads ();
-
-#ifdef NETPLAY_SUPPORT
-    if (Settings.NetPlay)
-		return (S9xNPGetJoypad (which1));
-#endif
-
 #ifdef CAANOO
 	//player1
 	if (SDL_JoystickGetButton(keyssnes, sfc_key[L_1]))			val |= SNES_TL_MASK;
@@ -1783,6 +1874,11 @@ uint32 S9xReadJoypad (int which1)
 	if (keyssnes[sfc_key[RU_2]] == SDL_PRESSED)	val |= SNES_RIGHT_MASK | SNES_UP_MASK;
 	if (keyssnes[sfc_key[RD_2]] == SDL_PRESSED)	val |= SNES_RIGHT_MASK | SNES_DOWN_MASK;
 	*/
+#endif
+
+#ifdef NETPLAY_SUPPORT
+    if (Settings.NetPlay)
+		return (S9xNPGetJoypad (which1));
 #endif
 
 	return(val);

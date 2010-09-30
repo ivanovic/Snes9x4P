@@ -220,12 +220,10 @@ void menu_loop(void)
 	
 		while(SDL_PollEvent(&event)==1)
 		{
-			switch(event.type)
-			{
 #ifdef CAANOO
 				// CAANOO -------------------------------------------------------------
-				case SDL_JOYBUTTONDOWN:
-					keyssnes = SDL_JoystickOpen(0);
+				//case SDL_JOYBUTTONDOWN:
+				//	keyssnes = SDL_JoystickOpen(0);
 
 				if ( (SDL_JoystickGetAxis(keyssnes, 1) < -20000) || SDL_JoystickGetButton(keyssnes, sfc_key[START_1]) )
 					cursor--;
@@ -301,11 +299,17 @@ void menu_loop(void)
 						case 9:
 							if ( SDL_JoystickGetAxis(keyssnes, 0) < -20000 )
 								vol -= 10;
-							else	vol += 10;
+							else
+								vol += 10;
+
 							if(vol>=100)
+							{
 								vol = 100;
+							}
 							else if (vol <=0)
+							{
 								vol = 0;
+							}
 						break;
 						case 10:
 							if ( SDL_JoystickGetButton(keyssnes, sfc_key[A_1]) )
@@ -318,7 +322,9 @@ void menu_loop(void)
 					}
 				}
 #else
-				//PANDORA & DINGOO ------------------------------------------------------
+			//PANDORA & DINGOO ------------------------------------------------------
+			switch(event.type)
+			{
 				case SDL_KEYDOWN:
 					keyssnes = SDL_GetKeyState(NULL);
 
@@ -416,14 +422,14 @@ void menu_loop(void)
 						break;
 					}
 				}
+			}
 #endif
 
-				if(cursor==1)
-					cursor=11;
-				else if(cursor==12)
-					cursor=2;
-				break;
-			}
+			if(cursor==1)
+				cursor=11;
+			else if(cursor==12)
+				cursor=2;
+			break;
 		}
 
 	}
