@@ -54,7 +54,7 @@ extern bool8_32 Scale;
 void S9xUsage ()
 {
     printf("usage: snes9x <options> <rom image filename>\n");
-    S9xExit();
+//    S9xExit();
 }
 
 /*
@@ -97,23 +97,23 @@ char *S9xParseArgs (char **argv, int argc)
 	    else if (strcasecmp (argv [i], "-ra") == 0 ||
 		     strcasecmp (argv [i], "-ratio") == 0)
 	    {
-		if ((i + 1) < argc)
-		{
-		}
-		else
-		    S9xUsage ();
+			if ((i + 1) < argc)
+			{
+			}
+			else
+			    S9xUsage ();
 	    }
 	    else if (strcasecmp (argv [i], "-h") == 0 ||
 		     strcasecmp (argv [i], "-cycles") == 0)
 	    {
-		if (i + 1 < argc)
-		{
-		    int p = atoi (argv [++i]);
-		    if (p > 0 && p < 200)
-			Settings.CyclesPercentage = p;
-		}
-		else
-		    S9xUsage ();
+			if (i + 1 < argc)
+			{
+			    int p = atoi (argv [++i]);
+			    if (p > 0 && p < 200)
+				Settings.CyclesPercentage = p;
+			}
+			else
+			    S9xUsage ();
 	    }
 	    else if (strcasecmp (argv [i], "-nh") == 0 ||
 		     strcasecmp (argv [i], "-nohdma") == 0)
@@ -148,10 +148,10 @@ char *S9xParseArgs (char **argv, int argc)
 	    else if (strcasecmp (argv [i], "-f") == 0 ||
 		     strcasecmp (argv [i], "-frameskip") == 0)
 	    {
-		if (i + 1 < argc)
-		    Settings.SkipFrames = atoi (argv [++i]) /*+ 1*/;	//SiENcE
-		else
-		    S9xUsage ();
+			if (i + 1 < argc)
+			    Settings.SkipFrames = atoi (argv [++i]) /*+ 1*/;	//SiENcE
+			else
+			    S9xUsage ();
 	    }
 	    else if (strcasecmp (argv [i], "-fh") == 0 ||
 		     strcasecmp (argv [i], "-hr") == 0 ||

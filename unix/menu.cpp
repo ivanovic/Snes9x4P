@@ -1,6 +1,7 @@
 #include <SDL/SDL.h>
 #include <time.h>
 #include <fcntl.h>
+#include <dirent.h>
 #include <sys/mman.h>
 #include "keydef.h"
 #include "dingoo.h"
@@ -28,6 +29,7 @@ void save_screenshot(char *fname);
 void load_screenshot(char *fname);
 void show_screenshot(void);
 void capt_screenshot(void);
+void menu_dispupdate(void);
 int batt_level(void);
 int chk_hold(void);
 void set_lcd_backlight(int backlight);
@@ -35,11 +37,11 @@ int get_lcd_backlight(void);
 void ShowCredit(void);
 
 int cursor = 2;
+int loadcursor = 1;
 char SaveSlotNum_old=255;
 bool8_32 Scale_org=Scale;
 bool8_32 highres_current = false;
 char snapscreen[17120]={};
-extern clock_t start;
 
 void sys_sleep(int us)
 {
@@ -47,7 +49,147 @@ void sys_sleep(int us)
 		SDL_Delay(us/1000);
 }
 
-void menu_dispupdate(void){
+//------------------------------------------------------------------------------------------
+
+struct dirent **namelist;
+int FileDir(char *dir, const char *ext)
+{
+	int n;
+
+	n = scandir (dir, &namelist, 0, alphasort);
+	if (n >= 0)
+	{
+		int cnt;
+		for (cnt = 0; cnt < n; ++cnt)
+			puts (namelist[cnt]->d_name);
+	}
+	else
+		perror ("Couldn't open the directory");
+		
+	return n;
+}
+
+void loadmenu_dispupdate(int romcount)
+{
+	char temp[256];
+	char disptxt[20][256];
+
+	for(int y=12;y<=212;y++){
+		for(int x=10;x<246*2;x+=2){
+			memset(GFX.Screen + 320*y*2+x,0x11,2);
+		}	
+	}
+	
+#if CAANOO
+	strcpy(disptxt[0],"Snes9x4C v20101029");
+#elif PANDORA
+	strcpy(disptxt[0],"Snes9x4P v20101029");
+#else
+	strcpy(disptxt[0],"Snes9x4D v20101029");
+#endif
+	strcpy(disptxt[1],"");
+/*
+	for (int cnt = 0; cnt < 20; ++cnt)
+	{
+		strcpy(disptxt[cnt],namelist[cnt]->d_name);
+	}
+
+	for(int i=0;i<=1;i++)
+	{
+		if(i==loadcursor)
+			sprintf(temp," >%s",disptxt[i]);
+		else
+			sprintf(temp,"  %s",disptxt[i]);
+		strcpy(disptxt[i],temp);
+
+		S9xDisplayString (disptxt[i], GFX.Screen, 640,i*10+64);		
+	}
+*/
+	strcpy(temp,"Hello World");
+	S9xDisplayString (temp, GFX.Screen +280, 640,204);
+
+	S9xDeinitUpdate (320, 240);
+}
+
+void menu_load(void)
+{
+	bool8_32 exit_loop = false;
+
+#ifdef CAANOO
+	SDL_Joystick* keyssnes = 0;
+#else
+	uint8 *keyssnes = 0;
+#endif
+
+	int romcount = FileDir("./roms/", "sfc,smc");
+
+	Scale_org = Scale;
+	highres_current=Settings.SupportHiRes;
+
+	Scale = false;
+	Settings.SupportHiRes=FALSE;
+	S9xDeinitDisplay();
+	S9xInitDisplay(0, 0);
+	
+	loadmenu_dispupdate(romcount);
+	sys_sleep(100000);
+
+	SDL_Event event;
+	
+	do
+	{
+		loadmenu_dispupdate(romcount);
+		sys_sleep(100);
+
+#ifdef CAANOO
+		keyssnes = SDL_JoystickOpen(0);
+#else
+		keyssnes = SDL_GetKeyState(NULL);
+#endif
+	
+		while(SDL_PollEvent(&event)==1)
+		{
+#ifdef CAANOO
+			// CAANOO -------------------------------------------------------------
+			if ( (SDL_JoystickGetAxis(keyssnes, 1) < -16384) || SDL_JoystickGetButton(keyssnes, sfc_key[START_1]) )
+				loadcursor--;
+			else if( (SDL_JoystickGetAxis(keyssnes, 1) > 16384) || SDL_JoystickGetButton(keyssnes, sfc_key[SELECT_1]) )
+				loadcursor++;
+			else if( SDL_JoystickGetButton(keyssnes, sfc_key[A_1]) ||
+					(SDL_JoystickGetAxis(keyssnes, 0) < -16384) ||
+					(SDL_JoystickGetAxis(keyssnes, 0) > 16384)
+					)
+			{
+				switch(loadcursor)
+				{
+					default:
+						break;
+				}
+			}
+#endif
+//			if(cursor==1)
+//				cursor=11;
+//			else if(cursor==12)
+//				cursor=2;
+//			break;
+		}
+	}
+#ifdef CAANOO
+	while( exit_loop!=TRUE && SDL_JoystickGetButton(keyssnes, sfc_key[QUIT])!=TRUE );
+#else
+	while( exit_loop!=TRUE && keyssnes[sfc_key[B_1]] != SDL_PRESSED );
+#endif
+
+	Scale = Scale_org;
+	Settings.SupportHiRes=highres_current;
+	S9xDeinitDisplay();
+	S9xInitDisplay(0, 0);
+}
+
+//------------------------------------------------------------------------------------------
+
+void menu_dispupdate(void)
+{
 	char temp[256];
 	char disptxt[20][256];
 
@@ -176,18 +318,15 @@ void menu_dispupdate(void){
 
 void menu_loop(void)
 {
+	bool8_32 exit_loop = false;
+	char fname[256], ext[8];
+	char snapscreen_tmp[17120];
+
 #ifdef CAANOO
 	SDL_Joystick* keyssnes = 0;
 #else
 	uint8 *keyssnes = 0;
 #endif
-
-	bool8_32 exit_loop = false;
-	char fname[256], ext[8];
-	char snapscreen_tmp[17120];
-	//int backlight = get_lcd_backlight();
-	//int hold_state = 0;	
-	//int backlight_to_sleep = backlight;
 
 	SaveSlotNum_old = -1;
 
@@ -203,14 +342,14 @@ void menu_loop(void)
 	S9xInitDisplay(0, 0);
 
 	menu_dispupdate();
-	sys_sleep(100000); //usleep(100000);
+	sys_sleep(100000);
 
 	SDL_Event event;
 
 	do
 	{
 		menu_dispupdate();
-		sys_sleep(100); //usleep(100);
+		sys_sleep(100);
 
 #ifdef CAANOO
 		keyssnes = SDL_JoystickOpen(0);
@@ -222,14 +361,14 @@ void menu_loop(void)
 		{
 #ifdef CAANOO
 				// CAANOO -------------------------------------------------------------
-				//case SDL_JOYBUTTONDOWN:
-				//	keyssnes = SDL_JoystickOpen(0);
-
-				if ( (SDL_JoystickGetAxis(keyssnes, 1) < -20000) || SDL_JoystickGetButton(keyssnes, sfc_key[START_1]) )
+				if ( (SDL_JoystickGetAxis(keyssnes, 1) < -16384) || SDL_JoystickGetButton(keyssnes, sfc_key[START_1]) )
 					cursor--;
-				else if( (SDL_JoystickGetAxis(keyssnes, 1) > 20000) || SDL_JoystickGetButton(keyssnes, sfc_key[SELECT_1]) )
+				else if( (SDL_JoystickGetAxis(keyssnes, 1) > 16384) || SDL_JoystickGetButton(keyssnes, sfc_key[SELECT_1]) )
 					cursor++;
-				else if( SDL_JoystickGetButton(keyssnes, sfc_key[A_1]) || (SDL_JoystickGetAxis(keyssnes, 0) < -20000) )
+				else if( SDL_JoystickGetButton(keyssnes, sfc_key[A_1]) ||
+						(SDL_JoystickGetAxis(keyssnes, 0) < -16384) ||
+						(SDL_JoystickGetAxis(keyssnes, 0) > 16384)
+						)
 				{
 					switch(cursor)
 					{
@@ -268,9 +407,11 @@ void menu_loop(void)
 							}
 						break;
 						case 5:
-							if ( SDL_JoystickGetAxis(keyssnes, 0) < -20000 )
+							if ( SDL_JoystickGetAxis(keyssnes, 0) < -16384 )
 								SaveSlotNum--;
-							else SaveSlotNum++;
+							else if (SDL_JoystickGetAxis(keyssnes, 0) > 16384)
+								SaveSlotNum++;
+
 							if(SaveSlotNum>3)
 								SaveSlotNum =0;
 							else if(SaveSlotNum<0)
@@ -286,9 +427,9 @@ void menu_loop(void)
 							if (Settings.SkipFrames == AUTO_FRAMERATE)
 								Settings.SkipFrames = 10;
 	
-							if ( SDL_JoystickGetAxis(keyssnes, 0) < -20000 )
+							if ( SDL_JoystickGetAxis(keyssnes, 0) < -16384 )
 								Settings.SkipFrames--;
-							else
+							else if (SDL_JoystickGetAxis(keyssnes, 0) > 16384)
 								Settings.SkipFrames++;
 	
 							if(Settings.SkipFrames>=10)
@@ -297,9 +438,9 @@ void menu_loop(void)
 								Settings.SkipFrames = 1;
 						break;
 						case 9:
-							if ( SDL_JoystickGetAxis(keyssnes, 0) < -20000 )
+							if ( SDL_JoystickGetAxis(keyssnes, 0) < -16384 )
 								vol -= 10;
-							else
+							else if (SDL_JoystickGetAxis(keyssnes, 0) > 16384)
 								vol += 10;
 
 							if(vol>=100)
@@ -643,7 +784,7 @@ void ShowCredit()
 		sys_sleep(30000); //usleep(30000);
 	}
 #ifdef CAANOO
-	while( SDL_JoystickGetButton(keyssnes, sfc_key[A_1])!=TRUE );
+	while( SDL_JoystickGetButton(keyssnes, sfc_key[B_1])!=TRUE );
 #else
 	while(keyssnes[sfc_key[B_1]] != SDL_PRESSED);
 #endif

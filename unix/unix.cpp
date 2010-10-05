@@ -50,7 +50,6 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <ctype.h>
-#include <dirent.h>
 #include <SDL/SDL.h>
 #include <time.h>
 #include "unix/menu.h"
@@ -309,8 +308,15 @@ int main (int argc, char **argv)
 	}
     S9xInitInputDevices ();
     
+//#ifdef CAANOO
     // TODO:
     //open rom selector if no rom filename is available!!!!!!!!!!!!!!
+//    if (!rom_filename)
+//		menu_load();
+//#endif
+
+	if(!rom_filename)
+		S9xExit();
 
     if (rom_filename)
     {
@@ -530,101 +536,6 @@ int main (int argc, char **argv)
 	}
 
 	return (0);
-
-/*
-    if (!Settings.APUEnabled)
-		S9xSetSoundMute (FALSE);
-	else
-    	InitTimer ();
-
-#ifdef NETPLAY_SUPPORT
-	bool8	NP_Activated = Settings.NetPlay;
-#endif
-
-    while (1)
-    {
-#ifdef NETPLAY_SUPPORT
-		if (NP_Activated)
-		{
-			if (NetPlay.PendingWait4Sync && !S9xNPWaitForHeartBeatDelay(100))
-			{
-				S9xProcessEvents(FALSE);
-				continue;
-			}
-
-//			for (int J = 0; J < 8; J++)
-//				old_joypads[J] = MovieGetJoypad(J);
-
-//			for (int J = 0; J < 8; J++)
-//				MovieSetJoypad(J, joypads[J]);
-
-			if (NetPlay.Connected)
-			{
-				if (NetPlay.PendingWait4Sync)
-				{
-					NetPlay.PendingWait4Sync = FALSE;
-					NetPlay.FrameCount++;
-					S9xNPStepJoypadHistory();
-				}
-			}
-			else
-			{
-				fprintf(stderr, "Lost connection to server.\n");
-				S9xExit();
-			}
-		}
-#endif
-
-#ifndef _ZAURUS
-	if (!Settings.Paused
-#ifdef DEBUGGER
-	    || (CPU.Flags & (DEBUG_MODE_FLAG | SINGLE_STEP_FLAG))
-#endif
-           )
-#endif
-	    S9xMainLoop ();
-
-#ifdef NETPLAY_SUPPORT
-		if (NP_Activated)
-		{
-//			for (int J = 0; J < 8; J++)
-//				MovieSetJoypad(J, old_joypads[J]);
-		}
-#endif
-
-#ifndef _ZAURUS
-	if (Settings.Paused
-#ifdef DEBUGGER
-	    || (CPU.Flags & DEBUG_MODE_FLAG)
-#endif
-           )
-	{
-	    S9xSetSoundMute (TRUE);
-	}
-
-#ifdef DEBUGGER
-	if (CPU.Flags & DEBUG_MODE_FLAG)
-	{
-	    S9xDoDebug ();
-	}
-	else
-#endif
-
-	if (Settings.Paused)
-	    S9xProcessEvents (TRUE);
-
-	if (!Settings.Paused
-#ifdef DEBUGGER
-	    && !(CPU.Flags & DEBUG_MODE_FLAG)
-#endif	    
-           )
-	{
-	    S9xSetSoundMute (FALSE);
-	}
-#endif
-    }
-    return (0);
-*/
 }
 
 void S9xAutoSaveSRAM ()
@@ -658,6 +569,9 @@ void S9xExit()
     Memory.Deinit ();
     S9xDeinitAPU ();
     S9xDeinitDisplay ();
+    
+    SDL_ShowCursor(SDL_ENABLE);
+    SDL_Quit();
 
     exit (0);
 }
@@ -1552,6 +1466,7 @@ static int BufferSizes [8] =
 
 bool8_32 S9xOpenSoundDevice (int mode, bool8_32 stereo, int buffer_size)
 {
+#ifndef CYGWIN32
     int J, K;
 
     if ((so.sound_fd = open ("/dev/dsp", O_WRONLY|O_ASYNC)) < 0)
@@ -1614,7 +1529,7 @@ bool8_32 S9xOpenSoundDevice (int mode, bool8_32 stereo, int buffer_size)
 	    so.stereo ? "yes" : "no", so.encoded ? "yes" : "no");
 
 //    gp2x_sound_volume(vol,vol);
-
+#endif
     return (TRUE);
 }
 
