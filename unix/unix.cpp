@@ -307,12 +307,15 @@ int main (int argc, char **argv)
 		OutOfMemory ();
 	}
     S9xInitInputDevices ();
-    
+
+    // just to init Font here for ROM selector    
+    S9xReset ();
+
 //#ifdef CAANOO
     // TODO:
-    //open rom selector if no rom filename is available!!!!!!!!!!!!!!
-//    if (!rom_filename)
-//		menu_load();
+    // ROM selector if no rom filename is available!!!!!!!!!!!!!!
+    if (!rom_filename)
+		menu_romselector();
 //#endif
 
 	if(!rom_filename)
@@ -422,6 +425,8 @@ int main (int argc, char **argv)
 	sprintf(msg,"Press HOME to Show MENU");
 #elif PANDORA
     sprintf(msg,"Press SPACEBAR to Show MENU");
+#elif CYGWIN32
+	sprintf(msg,"Press ESC+LALT to Show MENU");
 #else
     sprintf(msg,"Press SELECT+B to Show MENU");
 #endif

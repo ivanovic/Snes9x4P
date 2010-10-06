@@ -84,6 +84,8 @@ void loadmenu_dispupdate(int romcount)
 	strcpy(disptxt[0],"Snes9x4C v20101029");
 #elif PANDORA
 	strcpy(disptxt[0],"Snes9x4P v20101029");
+#elif CYGWIN32
+	strcpy(disptxt[0],"Snes9x4W v20101029");
 #else
 	strcpy(disptxt[0],"Snes9x4D v20101029");
 #endif
@@ -111,7 +113,7 @@ void loadmenu_dispupdate(int romcount)
 	S9xDeinitUpdate (320, 240);
 }
 
-void menu_load(void)
+void menu_romselector(void)
 {
 	bool8_32 exit_loop = false;
 
@@ -203,6 +205,8 @@ void menu_dispupdate(void)
 	strcpy(disptxt[0],"Snes9x4C v20101029");
 #elif PANDORA
 	strcpy(disptxt[0],"Snes9x4P v20101029");
+#elif CYGWIN32
+	strcpy(disptxt[0],"Snes9x4W v20101029");
 #else
 	strcpy(disptxt[0],"Snes9x4D v20101029");
 #endif
