@@ -311,12 +311,10 @@ int main (int argc, char **argv)
     // just to init Font here for ROM selector    
     S9xReset ();
 
-//#ifdef CAANOO
-    // TODO:
     // ROM selector if no rom filename is available!!!!!!!!!!!!!!
     if (!rom_filename)
-		menu_romselector();
-//#endif
+		rom_filename = menu_romselector();
+	printf ("rom_filename %s\n", rom_filename);
 
 	if(!rom_filename)
 		S9xExit();
@@ -530,7 +528,7 @@ int main (int argc, char **argv)
 			ReadJoysticks();
 	#endif
 
-		S9xProcessEvents(TRUE); //FALSE
+		S9xProcessEvents(TRUE);
 
 	#ifdef DEBUGGER
 		if (!Settings.Paused && !(CPU.Flags & DEBUG_MODE_FLAG))
@@ -1205,8 +1203,6 @@ void InitTimer ()
 
 void S9xSyncSpeed ()
 {
-//	S9xProcessEvents (FALSE);
-	
 #ifdef NETPLAY_SUPPORT
 	if (Settings.NetPlay && NetPlay.Connected)
 	{
@@ -1278,7 +1274,6 @@ void S9xSyncSpeed ()
 				do
 				{
 				    CHECK_SOUND ();
-//				    S9xProcessEvents (FALSE);
 				    while (gettimeofday (&now, NULL) < 0) ;
 				} while (timercmp(&next1, &now, >));
 		    }

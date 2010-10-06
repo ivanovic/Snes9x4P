@@ -36,8 +36,8 @@ void set_lcd_backlight(int backlight);
 int get_lcd_backlight(void);
 void ShowCredit(void);
 
-int cursor = 2;
-int loadcursor = 1;
+int cursor = 3;
+int loadcursor = 4;
 char SaveSlotNum_old=255;
 bool8_32 Scale_org=Scale;
 bool8_32 highres_current = false;
@@ -46,7 +46,7 @@ char snapscreen[17120]={};
 void sys_sleep(int us)
 {
 	if(us>0)
-		SDL_Delay(us/1000);
+		SDL_Delay(us/100);
 }
 
 //------------------------------------------------------------------------------------------
@@ -59,9 +59,9 @@ int FileDir(char *dir, const char *ext)
 	n = scandir (dir, &namelist, 0, alphasort);
 	if (n >= 0)
 	{
-		int cnt;
-		for (cnt = 0; cnt < n; ++cnt)
-			puts (namelist[cnt]->d_name);
+//		int cnt;
+//		for (cnt = 0; cnt < n; ++cnt)
+//			puts (namelist[cnt]->d_name);
 	}
 	else
 		perror ("Couldn't open the directory");
@@ -79,42 +79,38 @@ void loadmenu_dispupdate(int romcount)
 			memset(GFX.Screen + 320*y*2+x,0x11,2);
 		}	
 	}
-	
+
 #if CAANOO
-	strcpy(disptxt[0],"Snes9x4C v20101029");
+	strcpy(disptxt[0],"  Snes9x4C v20101029");
 #elif PANDORA
-	strcpy(disptxt[0],"Snes9x4P v20101029");
+	strcpy(disptxt[0],"  Snes9x4P v20101029");
 #elif CYGWIN32
-	strcpy(disptxt[0],"Snes9x4W v20101029");
+	strcpy(disptxt[0],"  Snes9x4W v20101029");
 #else
-	strcpy(disptxt[0],"Snes9x4D v20101029");
+	strcpy(disptxt[0],"  Snes9x4D v20101029");
 #endif
 	strcpy(disptxt[1],"");
-/*
-	for (int cnt = 0; cnt < 20; ++cnt)
-	{
-		strcpy(disptxt[cnt],namelist[cnt]->d_name);
-	}
 
-	for(int i=0;i<=1;i++)
+	S9xDisplayString (disptxt[0], GFX.Screen, 640,0*10+64);
+	S9xDisplayString (disptxt[1], GFX.Screen, 640,1*10+64);		
+
+	for(int i=2;i<19;i++)	//romcount+2
 	{
 		if(i==loadcursor)
-			sprintf(temp," >%s",disptxt[i]);
+			sprintf(temp," >%s",namelist[i-2]->d_name);
 		else
-			sprintf(temp,"  %s",disptxt[i]);
-		strcpy(disptxt[i],temp);
+			sprintf(temp,"  %s",namelist[i-2]->d_name);
 
+		strcpy(disptxt[i],temp);
 		S9xDisplayString (disptxt[i], GFX.Screen, 640,i*10+64);		
 	}
-*/
-	strcpy(temp,"Hello World");
-	S9xDisplayString (temp, GFX.Screen +280, 640,204);
 
 	S9xDeinitUpdate (320, 240);
 }
 
-void menu_romselector(void)
+char* menu_romselector()
 {
+	char *rom_filename = NULL;
 	bool8_32 exit_loop = false;
 
 #ifdef CAANOO
@@ -164,20 +160,54 @@ void menu_romselector(void)
 			{
 				switch(loadcursor)
 				{
-					default:
-						break;
+				}
+			}
+#else
+			//PANDORA & DINGOO & WIN32 -----------------------------------------------------
+			switch(event.type)
+			{
+				case SDL_KEYDOWN:
+					keyssnes = SDL_GetKeyState(NULL);
+
+				if(keyssnes[sfc_key[UP_1]] == SDL_PRESSED)
+					loadcursor--;
+				else if(keyssnes[sfc_key[DOWN_1]] == SDL_PRESSED)
+					loadcursor++;
+				else if( (keyssnes[sfc_key[B_1]] == SDL_PRESSED) )
+				{
+					switch(loadcursor)
+					{
+						case 0:
+							break;
+						case 1:
+							break;
+						case 2:
+							break;
+						case 3:
+							//TODO Change Directory
+							break;
+						default:
+							if ((keyssnes[sfc_key[B_1]] == SDL_PRESSED))
+							{
+								rom_filename=namelist[loadcursor-2]->d_name;
+								exit_loop = TRUE;
+							}
+							break;
+					}
 				}
 			}
 #endif
-//			if(cursor==1)
-//				cursor=11;
-//			else if(cursor==12)
-//				cursor=2;
-//			break;
+			if(loadcursor==1)
+				loadcursor=18;
+			else if(loadcursor==19)
+				loadcursor=2;
+			break;
 		}
 	}
 #ifdef CAANOO
 	while( exit_loop!=TRUE && SDL_JoystickGetButton(keyssnes, sfc_key[QUIT])!=TRUE );
+#elif CYGWIN32
+	while( exit_loop!=TRUE && keyssnes[sfc_key[SELECT_1]] != SDL_PRESSED );
 #else
 	while( exit_loop!=TRUE && keyssnes[sfc_key[B_1]] != SDL_PRESSED );
 #endif
@@ -186,6 +216,8 @@ void menu_romselector(void)
 	Settings.SupportHiRes=highres_current;
 	S9xDeinitDisplay();
 	S9xInitDisplay(0, 0);
+	
+	return (rom_filename);
 }
 
 //------------------------------------------------------------------------------------------
@@ -467,7 +499,7 @@ void menu_loop(void)
 					}
 				}
 #else
-			//PANDORA & DINGOO ------------------------------------------------------
+			//PANDORA & DINGOO & WIN32 -----------------------------------------------------
 			switch(event.type)
 			{
 				case SDL_KEYDOWN:
@@ -785,7 +817,7 @@ void ShowCredit()
 		}
 		if(line == 20) line = 0;
 		S9xDeinitUpdate (320, 240);
-		sys_sleep(30000); //usleep(30000);
+		sys_sleep(30000);
 	}
 #ifdef CAANOO
 	while( SDL_JoystickGetButton(keyssnes, sfc_key[B_1])!=TRUE );
