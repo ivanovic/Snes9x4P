@@ -308,17 +308,24 @@ int main (int argc, char **argv)
 	}
     S9xInitInputDevices ();
 
+    printf ("Trace: %s\n", "1");
+
     // just to init Font here for ROM selector    
     S9xReset ();
+    printf ("Trace: %s\n", "2");
 
     // ROM selector if no rom filename is available!!!!!!!!!!!!!!
-    do
+    if (!rom_filename)
     {
-//    if (!rom_filename)
-		rom_filename = menu_romselector();
-	}while(rom_filename==NULL);
+        printf ("Trace: %s\n", "3");
+	    do
+	    {
+			rom_filename = menu_romselector();
+		}while(rom_filename==NULL);
+	    printf ("Trace: %s\n", "10");
+		printf ("Romfile selected: %s\n", rom_filename);
+	}
 
-	printf ("Romfile selected: %s\n", rom_filename);
 
 //	if(!rom_filename)
 //		S9xExit();

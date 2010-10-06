@@ -38,6 +38,8 @@ void ShowCredit(void);
 
 int cursor = 3;
 int loadcursor = 4;
+int romcount_max = 16;
+
 char SaveSlotNum_old=255;
 bool8_32 Scale_org=Scale;
 bool8_32 highres_current = false;
@@ -94,15 +96,18 @@ void loadmenu_dispupdate(int romcount)
 	S9xDisplayString (disptxt[0], GFX.Screen, 640,0*10+64);
 	S9xDisplayString (disptxt[1], GFX.Screen, 640,1*10+64);		
 
-	for(int i=2;i<19;i++)	//romcount+2
+	for(int i=2;i<=romcount+2;i++)	//romcount+2
 	{
-		if(i==loadcursor)
-			sprintf(temp," >%s",namelist[i-2]->d_name);
-		else
-			sprintf(temp,"  %s",namelist[i-2]->d_name);
-
-		strcpy(disptxt[i],temp);
-		S9xDisplayString (disptxt[i], GFX.Screen, 640,i*10+64);		
+		if (i<=romcount_max+2)
+		{
+			if(i==loadcursor)
+				sprintf(temp," >%s",namelist[i-2]->d_name);
+			else
+				sprintf(temp,"  %s",namelist[i-2]->d_name);
+	
+			strcpy(disptxt[i],temp);
+			S9xDisplayString (disptxt[i], GFX.Screen, 640,i*10+64);
+		}
 	}
 
 	S9xDeinitUpdate (320, 240);
@@ -111,6 +116,8 @@ void loadmenu_dispupdate(int romcount)
 char* menu_romselector()
 {
 	char *rom_filename = NULL;
+	int romcount = 0;
+
 	bool8_32 exit_loop = false;
 
 #ifdef CAANOO
@@ -119,7 +126,9 @@ char* menu_romselector()
 	uint8 *keyssnes = 0;
 #endif
 
-	int romcount = FileDir("./roms/", "sfc,smc");
+    printf ("Trace: %s\n", "4");
+	romcount = FileDir("./roms/", "sfc,smc");
+    printf ("Trace: %s\n", "5");
 
 	Scale_org = Scale;
 	highres_current=Settings.SupportHiRes;
@@ -133,7 +142,8 @@ char* menu_romselector()
 	sys_sleep(100000);
 
 	SDL_Event event;
-	
+    printf ("Trace: %s\n", "6");
+
 	do
 	{
 		loadmenu_dispupdate(romcount);
@@ -158,9 +168,25 @@ char* menu_romselector()
 					(SDL_JoystickGetAxis(keyssnes, 0) > 16384)
 					)
 			{
-				switch(loadcursor)
-				{
-				}
+					switch(loadcursor)
+					{
+						case 0:
+							break;
+						case 1:
+							break;
+						case 2:
+							break;
+						case 3:
+							//TODO Change Directory
+							break;
+						default:
+							if ( SDL_JoystickGetButton(keyssnes, sfc_key[A_1]) )
+							{
+								rom_filename=namelist[loadcursor-2]->d_name;
+								exit_loop = TRUE;
+							}
+							break;
+					}
 			}
 #else
 			//PANDORA & DINGOO & WIN32 -----------------------------------------------------
@@ -198,8 +224,8 @@ char* menu_romselector()
 			}
 #endif
 			if(loadcursor==1)
-				loadcursor=18;
-			else if(loadcursor==19)
+				loadcursor=romcount_max-1+3;
+			else if(loadcursor==romcount_max+3)
 				loadcursor=2;
 			break;
 		}
@@ -212,11 +238,15 @@ char* menu_romselector()
 	while( exit_loop!=TRUE && keyssnes[sfc_key[B_1]] != SDL_PRESSED );
 #endif
 
+    printf ("Trace: %s\n", "7");
+
 	Scale = Scale_org;
 	Settings.SupportHiRes=highres_current;
 	S9xDeinitDisplay();
 	S9xInitDisplay(0, 0);
-	
+
+    printf ("Trace: %s\n", "8");
+
 	return (rom_filename);
 }
 
@@ -817,7 +847,7 @@ void ShowCredit()
 		}
 		if(line == 20) line = 0;
 		S9xDeinitUpdate (320, 240);
-		sys_sleep(30000);
+		sys_sleep(3000);
 	}
 #ifdef CAANOO
 	while( SDL_JoystickGetButton(keyssnes, sfc_key[B_1])!=TRUE );
