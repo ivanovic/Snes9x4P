@@ -312,12 +312,16 @@ int main (int argc, char **argv)
     S9xReset ();
 
     // ROM selector if no rom filename is available!!!!!!!!!!!!!!
-    if (!rom_filename)
+    do
+    {
+//    if (!rom_filename)
 		rom_filename = menu_romselector();
-	printf ("rom_filename %s\n", rom_filename);
+	}while(rom_filename==NULL);
 
-	if(!rom_filename)
-		S9xExit();
+	printf ("Romfile selected: %s\n", rom_filename);
+
+//	if(!rom_filename)
+//		S9xExit();
 
     if (rom_filename)
     {
@@ -354,25 +358,13 @@ int main (int argc, char **argv)
     }
     else
     {
-		S9xReset ();
-		Settings.Paused |= 2;
+	    S9xExit();
+//		S9xReset ();
+//		Settings.Paused |= 2;
     }
 
     CPU.Flags = saved_flags;
     Settings.StopEmulation = FALSE;
-/*
-    struct sigaction sa;
-//    sa.sa_handler = sigbrkhandler;
-
-#ifdef SA_RESTART
-    sa.sa_flags = SA_RESTART;
-#else
-    sa.sa_flags = 0;
-#endif
-
-    sigemptyset(&sa.sa_mask);
-    sigaction(SIGINT, &sa, NULL);
-*/  
     
 #ifdef DEBUGGER
 	struct sigaction sa;
