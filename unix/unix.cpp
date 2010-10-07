@@ -308,21 +308,16 @@ int main (int argc, char **argv)
 	}
     S9xInitInputDevices ();
 
-    printf ("Trace: %s\n", "1");
-
     // just to init Font here for ROM selector    
     S9xReset ();
-    printf ("Trace: %s\n", "2");
 
     // ROM selector if no rom filename is available!!!!!!!!!!!!!!
     if (!rom_filename)
     {
-        printf ("Trace: %s\n", "3");
 	    do
 	    {
 			rom_filename = menu_romselector();
 		}while(rom_filename==NULL);
-	    printf ("Trace: %s\n", "10");
 		printf ("Romfile selected: %s\n", rom_filename);
 	}
 
@@ -697,7 +692,9 @@ void S9xInitInputDevices ()
 const char *GetHomeDirectory ()
 {
 #if CAANOO
-    return (getenv ("HOME"));
+    return (".");
+#elif CYGWIN32
+    return (".");
 #else
     return (getenv ("HOME"));
 #endif
@@ -760,29 +757,7 @@ const char *S9xBasename (const char *f)
 
     return (f);
 }
-/*
-#ifndef _ZAURUS
-const char *S9xChooseFilename (bool8 read_only)
-{
-    char def [PATH_MAX + 1];
-    char title [PATH_MAX + 1];
-    char drive [_MAX_DRIVE + 1];
-    char dir [_MAX_DIR + 1];
-    char ext [_MAX_EXT + 1];
 
-    _splitpath (Memory.ROMFilename, drive, dir, def, ext);
-    strcat (def, ".s96");
-    sprintf (title, "%s snapshot filename",
-	    read_only ? "Select load" : "Choose save");
-    const char *filename;
-
-    S9xSetSoundMute (TRUE);
-    filename = S9xSelectFilename (def, S9xGetSnapshotDirectory (), "s96", title);
-    S9xSetSoundMute (FALSE);
-    return (filename);
-}
-#endif
-*/
 bool8 S9xOpenSnapshotFile (const char *fname, bool8 read_only, STREAM *file)
 {
     char filename [PATH_MAX + 1];
