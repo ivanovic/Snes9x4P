@@ -37,7 +37,7 @@ int get_lcd_backlight(void);
 void ShowCredit(void);
 
 int cursor = 3;
-int loadcursor = 3;
+int loadcursor = 1;
 int romcount_maxrows = 16;
 
 char SaveSlotNum_old=255;
@@ -52,8 +52,29 @@ void sys_sleep(int us)
 }
 
 //------------------------------------------------------------------------------------------
-
 struct dirent **namelist;
+/*
+int file_select(struct dirent *entry)
+{
+	char *ptr;
+	char *rindex(char *s, char c);
+	
+	if ((strcmp(entry->d_name, ".")== 0) ||
+	(strcmp(entry->d_name, "..") == 0))
+	return (FALSE);
+	
+	// Check for filename extensions
+	ptr = rindex(entry->d_name, '.');
+	if ((ptr != NULL) &&
+	((strcmp(ptr, ".sfc") == 0)
+	||(strcmp(ptr, ".smc") == 0)
+	||(strcmp(ptr, ".gd3") == 0) ))
+	return (TRUE);
+	else
+	return(FALSE);
+}
+*/
+
 int FileDir(char *dir, const char *ext)
 {
 	int n;
@@ -76,6 +97,9 @@ void loadmenu_dispupdate(int romcount)
 	char temp[256];
 	char disptxt[20][256];
 
+	for(int i=0;i<19;i++)
+		strcpy(disptxt[i],"");
+
 	for(int y=12;y<=212;y++){
 		for(int x=10;x<246*2;x+=2){
 			memset(GFX.Screen + 320*y*2+x,0x11,2);
@@ -91,25 +115,38 @@ void loadmenu_dispupdate(int romcount)
 #else
 	strcpy(disptxt[0],"  Snes9x4D v20101029");
 #endif
-	strcpy(disptxt[1],"");
 
-	S9xDisplayString (disptxt[0], GFX.Screen, 640,0*10+64);
-	S9xDisplayString (disptxt[1], GFX.Screen, 640,1*10+64);		
-
-	for(int i=2;i<romcount+2;i++)	//romcount+2
+	//copy roms filenames to disp[] cache
+	for(int i=0;i<=romcount_maxrows;i++)
 	{
-		if (i<=romcount_maxrows+2)
+		if (loadcursor>romcount_maxrows)
+		{
+			if((i+(loadcursor-romcount_maxrows))==loadcursor)
+				sprintf(temp," >%s",namelist[ i+(loadcursor-romcount_maxrows) ]->d_name);
+			else
+				sprintf(temp,"  %s",namelist[ i+(loadcursor-romcount_maxrows) ]->d_name);
+
+			strcpy(disptxt[i+2],temp);
+		}
+		else
+		if (i<romcount)
 		{
 			if(i==loadcursor)
-				sprintf(temp," >%s",namelist[i-2]->d_name);
+				sprintf(temp," >%s",namelist[i]->d_name);
 			else
-				sprintf(temp,"  %s",namelist[i-2]->d_name);
-	
-			strcpy(disptxt[i],temp);
-			S9xDisplayString (disptxt[i], GFX.Screen, 640,i*10+64);
+				sprintf(temp,"  %s",namelist[i]->d_name);
+		
+			strcpy(disptxt[i+2],temp);
 		}
 	}
 
+	//draw 20 lines on screen
+	for(int i=0;i<19;i++)
+	{
+		S9xDisplayString (disptxt[i], GFX.Screen, 640,i*10+64);
+	}
+
+	//update screen
 	S9xDeinitUpdate (320, 240);
 }
 
@@ -126,6 +163,7 @@ char* menu_romselector()
 	uint8 *keyssnes = 0;
 #endif
 
+	//Read ROM-Directory
 	romcount = FileDir("./roms/", "sfc,smc");
 
 	Scale_org = Scale;
@@ -155,6 +193,10 @@ char* menu_romselector()
 				loadcursor--;
 			else if( (SDL_JoystickGetAxis(keyssnes, 1) > 16384) || SDL_JoystickGetButton(keyssnes, sfc_key[SELECT_1]) )
 				loadcursor++;
+			else if ( SDL_JoystickGetButton(keyssnes, sfc_key[L_1]) )
+				loadcursor=loadcursor-10;
+			else if ( SDL_JoystickGetButton(keyssnes, sfc_key[R_1]) )
+				loadcursor=loadcursor+10;
 			else if ( SDL_JoystickGetButton(keyssnes, sfc_key[QUIT]) )
 				S9xExit();
 			else if( SDL_JoystickGetButton(keyssnes, sfc_key[A_1]) ||
@@ -164,20 +206,14 @@ char* menu_romselector()
 			{
 					switch(loadcursor)
 					{
-						case 0:
-							break;
-						case 1:
-							break;
-						case 2:
-							break;
-						case 3:
-							//TODO Change Directory
-							break;
 						default:
 							if ( SDL_JoystickGetButton(keyssnes, sfc_key[A_1]) )
 							{
-								rom_filename=namelist[loadcursor-2]->d_name;
-								exit_loop = TRUE;
+								if ((loadcursor>1) && (loadcursor<(romcount)))
+								{
+									rom_filename=namelist[loadcursor]->d_name;
+									exit_loop = TRUE;
+								}
 							}
 							break;
 					}
@@ -190,10 +226,18 @@ char* menu_romselector()
 				case SDL_KEYDOWN:
 					keyssnes = SDL_GetKeyState(NULL);
 
+					//UP
 					if(keyssnes[sfc_key[UP_1]] == SDL_PRESSED)
 						loadcursor--;
+					//DOWN
 					else if(keyssnes[sfc_key[DOWN_1]] == SDL_PRESSED)
 						loadcursor++;
+					//LS
+					else if(keyssnes[sfc_key[L_1]] == SDL_PRESSED)
+						loadcursor=loadcursor-10;
+					//RS
+					else if(keyssnes[sfc_key[R_1]] == SDL_PRESSED)
+						loadcursor=loadcursor+10;
 					//QUIT Emulator : press ESCAPE KEY
 					else if (keyssnes[sfc_key[SELECT_1]] == SDL_PRESSED)
 						S9xExit();
@@ -201,20 +245,14 @@ char* menu_romselector()
 					{
 						switch(loadcursor)
 						{
-							case 0:
-								break;
-							case 1:
-								break;
-							case 2:
-								break;
-							case 3:
-								//TODO Change Directory
-								break;
 							default:
 								if ((keyssnes[sfc_key[B_1]] == SDL_PRESSED))
 								{
-									rom_filename=namelist[loadcursor-2]->d_name;
-									exit_loop = TRUE;
+									if ((loadcursor>1) && (loadcursor<(romcount)))
+									{
+										rom_filename=namelist[loadcursor]->d_name;
+										exit_loop = TRUE;
+									}
 								}
 								break;
 						}
@@ -223,20 +261,16 @@ char* menu_romselector()
 			}
 #endif
 
-			if (romcount<romcount_maxrows)
+			if(loadcursor==-1)
 			{
-				if(loadcursor==1)
-					loadcursor=romcount-1+2;
-				else if(loadcursor==romcount+2)
-					loadcursor=2;
+				loadcursor=romcount-1;
 			}
-			else //romcount => romcount_maxrows //scrolling
+			else
+			if(loadcursor==romcount)
 			{
-				if(loadcursor==1)
-					loadcursor=romcount_maxrows-1+3;
-				else if(loadcursor==romcount_maxrows+3)
-					loadcursor=2;
+				loadcursor=0;
 			}
+
 			break;
 		}
 	}
@@ -247,6 +281,9 @@ char* menu_romselector()
 #else
 	while( exit_loop!=TRUE && keyssnes[sfc_key[B_1]] != SDL_PRESSED );
 #endif
+
+	// TODO:
+	///free(). 	namelist
 
 	Scale = Scale_org;
 	Settings.SupportHiRes=highres_current;
@@ -279,7 +316,6 @@ void menu_dispupdate(void)
 	strcpy(disptxt[0],"Snes9x4D v20101029");
 #endif
 	strcpy(disptxt[1],"");
-	//strcpy(disptxt[2],"Resume Game          ");
 	strcpy(disptxt[2],"Reset Game           ");
 	strcpy(disptxt[3],"Save State           ");
 	strcpy(disptxt[4],"Load State           ");
@@ -541,18 +577,22 @@ void menu_loop(void)
 					cursor--;
 				else if(keyssnes[sfc_key[DOWN_1]] == SDL_PRESSED)
 					cursor++;
-				else if( (keyssnes[sfc_key[A_1]] == SDL_PRESSED)|| (keyssnes[sfc_key[LEFT_1]] == SDL_PRESSED) )
+				else if( (keyssnes[sfc_key[A_1]] == SDL_PRESSED) ||
+						 (keyssnes[sfc_key[LEFT_1]] == SDL_PRESSED) ||
+						 (keyssnes[sfc_key[RIGHT_1]] == SDL_PRESSED) )
 				{
 					switch(cursor)
 					{
 						case 2:
-							if ((keyssnes[sfc_key[A_1]] == SDL_PRESSED)){
+							if ((keyssnes[sfc_key[A_1]] == SDL_PRESSED))
+							{
 								S9xReset();
 								exit_loop = TRUE;
 							}
 						break;
 						case 3:
-							if (keyssnes[sfc_key[A_1]] == SDL_PRESSED){
+							if (keyssnes[sfc_key[A_1]] == SDL_PRESSED)
+							{
 								memcpy(snapscreen,snapscreen_tmp,16050);
 								show_screenshot();
 								strcpy(fname," Saving...");
@@ -569,7 +609,8 @@ void menu_loop(void)
 							}
 						break;
 						case 4:
-							if (keyssnes[sfc_key[A_1]] == SDL_PRESSED){
+							if (keyssnes[sfc_key[A_1]] == SDL_PRESSED)
+							{
 								sprintf(ext, ".00%d", SaveSlotNum);
 								strcpy(fname, S9xGetFilename (ext));
 								S9xLoadSnapshot (fname);
@@ -579,7 +620,10 @@ void menu_loop(void)
 						case 5:
 							if (keyssnes[sfc_key[LEFT_1]] == SDL_PRESSED)
 								SaveSlotNum--;
-							else SaveSlotNum++;
+							else
+							if (keyssnes[sfc_key[RIGHT_1]] == SDL_PRESSED)
+								SaveSlotNum++;
+
 							if(SaveSlotNum>3)
 								SaveSlotNum =0;
 							else if(SaveSlotNum<0)
@@ -615,7 +659,10 @@ void menu_loop(void)
 						case 9:
 							if (keyssnes[sfc_key[LEFT_1]] == SDL_PRESSED)
 								vol -= 10;
-							else	vol += 10;
+							else
+							if (keyssnes[sfc_key[RIGHT_1]] == SDL_PRESSED)
+								vol += 10;
+
 							if(vol>=100)
 								vol = 100;
 							else if (vol <=0)

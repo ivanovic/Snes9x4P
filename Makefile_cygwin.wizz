@@ -27,7 +27,6 @@ SOUNDOBJ=spctool/spc700.o spctool/dsp.o spctool.o spctool/soundmod.o spc.o
 SOUNDDEFINES=-DSPCTOOL
 else
 SOUNDOBJ=spc700.o soundux.o apu.o
-#spc_decode.o
 SOUNDDEFINES=-DSPC700_C
 endif
 

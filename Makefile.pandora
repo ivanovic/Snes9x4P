@@ -67,7 +67,7 @@ else
 CHEAT=
 endif
 
-OBJECTS=$(CPUOBJ) $(FXOBJ) $(C4OBJ) \
+OBJECTS=$(CPUOBJ) $(FXOBJ) $(C4OBJ) $(CHEAT) \
 	cpu.o tile.o gfx.o clip.o \
 	memmap.o ppu.o dma.o unix/menu.o unix/unix.o \
 	$(SOUNDOBJ) unix/svga.o \
