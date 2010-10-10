@@ -103,13 +103,13 @@ void loadmenu_dispupdate(int romcount)
 	}
 
 #if CAANOO
-	strcpy(disptxt[0],"  Snes9x4C v20101029");
+	strcpy(disptxt[0],"  Snes9x4C v20101010");
 #elif PANDORA
-	strcpy(disptxt[0],"  Snes9x4P v20101029");
+	strcpy(disptxt[0],"  Snes9x4P v20101010");
 #elif CYGWIN32
-	strcpy(disptxt[0],"  Snes9x4W v20101029");
+	strcpy(disptxt[0],"  Snes9x4W v20101010");
 #else
-	strcpy(disptxt[0],"  Snes9x4D v20101029");
+	strcpy(disptxt[0],"  Snes9x4D v20101010");
 #endif
 
 	//copy roms filenames to disp[] cache
@@ -305,13 +305,13 @@ void menu_dispupdate(void)
 		}	
 	}
 #if CAANOO
-	strcpy(disptxt[0],"Snes9x4C v20101029");
+	strcpy(disptxt[0],"Snes9x4C v20101010");
 #elif PANDORA
-	strcpy(disptxt[0],"Snes9x4P v20101029");
+	strcpy(disptxt[0],"Snes9x4P v20101010");
 #elif CYGWIN32
-	strcpy(disptxt[0],"Snes9x4W v20101029");
+	strcpy(disptxt[0],"Snes9x4W v20101010");
 #else
-	strcpy(disptxt[0],"Snes9x4D v20101029");
+	strcpy(disptxt[0],"Snes9x4D v20101010");
 #endif
 	strcpy(disptxt[1],"");
 	strcpy(disptxt[2],"Reset Game           ");

@@ -559,6 +559,10 @@ void S9xExit()
 {
 	S9xSetSoundMute(true);
 	
+	int status = pthread_cancel(thread);
+	if (status != 0)
+		perror ("Error pthread_cancel");
+	
 #ifdef NETPLAY_SUPPORT
 	if (Settings.NetPlay)
 		S9xNPDisconnect();
@@ -1154,9 +1158,9 @@ void InitTimer ()
 #ifdef USE_THREADS
     if (Settings.ThreadSound)
     {
-	pthread_mutex_init (&mutex, NULL);
-	pthread_create (&thread, NULL, S9xProcessSound, NULL);
-	return;
+		pthread_mutex_init (&mutex, NULL);
+		pthread_create (&thread, NULL, S9xProcessSound, NULL);
+		return;
     }
 #endif
 
@@ -1495,13 +1499,78 @@ static uint8 Buf[MAX_BUFFER_SIZE] __attribute__((aligned(4)));
 static volatile bool8 block_signal = FALSE;
 static volatile bool8 block_generate_sound = FALSE;
 static volatile bool8 pending_signal = FALSE;
+
 /*
+#include "pcm.h"
+
+struct pcm pcm;
+
+static int sound = 1;
+static int samplerate = 44100;
+static volatile int audio_done;
+
+void S9xSDLSoundInit (void)
+{
+    SDL_InitSubSystem (SDL_INIT_AUDIO);
+    SDL_PauseAudio (1);
+    return;
+}
+
+void S9xSDLSoundTerminate (void)
+{
+	SDL_PauseAudio (1);
+	SDL_CloseAudio ();
+	SDL_QuitSubSystem (SDL_INIT_AUDIO);
+	return;
+}
+
+static void audio_callback(void *blah, byte *stream, int len)
+{
+//	memcpy(stream, pcm.buf, len);
+//	audio_done = 1;
+}
+
 bool8_32 S9xOpenSoundDevice (int mode, bool8_32 stereo, int buffer_size)
 {
+	int i;
+	SDL_AudioSpec as;
+
+	if (!sound)
+		return (FALSE);
+	
+	samplerate = Rates[mode & 0x07];
+	
+	SDL_InitSubSystem(SDL_INIT_AUDIO);
+	as.freq = samplerate;
+	as.format = AUDIO_U8;
+	as.channels = 1 + stereo;
+	as.samples = samplerate / 60;
+	for (i = 1; i < as.samples; i<<=1);
+	as.samples = i;
+//	as.callback = audio_callback;
+	as.userdata = 0;
+	if (SDL_OpenAudio(&as, 0) == -1)
+		return (FALSE);
+	
+	pcm.hz = as.freq;
+	pcm.stereo = as.channels - 1;
+	pcm.len = as.size;
+	pcm.buf = malloc(pcm.len);
+	pcm.pos = 0;
+	memset(pcm.buf, 0, pcm.len);
+	
+	SDL_PauseAudio(0);
+	
+	return (TRUE);
 }
 
 void S9xGenerateSound ()
 {
+	SDL_LockAudio ();
+	S9xMixSamples (output, bytes >> (Settings.SixteenBitSound ? 1 : 0));
+	SDL_UnlockAudio ();
+
+	return;
 }
 
 void *S9xProcessSound (void *)
@@ -1598,8 +1667,8 @@ void S9xGenerateSound ()
 #ifdef USE_THREADS
     if (Settings.ThreadSound)
     {
-	if (block_generate_sound || pthread_mutex_trylock (&mutex))
-	    return;
+		if (block_generate_sound || pthread_mutex_trylock (&mutex))
+		    return;
     }
 #endif
 
@@ -1653,7 +1722,7 @@ void S9xGenerateSound ()
 
 #ifdef USE_THREADS
     if (Settings.ThreadSound)
-	pthread_mutex_unlock (&mutex);
+		pthread_mutex_unlock (&mutex);
     else
 #endif    
     if (pending_signal)
@@ -1699,23 +1768,26 @@ void *S9xProcessSound (void *)
 
     if (so.samples_mixed_so_far < sample_count)
     {
-//	byte_offset = so.play_position + 
-//		      (so.sixteen_bit ? (so.samples_mixed_so_far << 1)
-//				      : so.samples_mixed_so_far);
-	byte_offset = so.play_position + (so.samples_mixed_so_far << 1);
-
-	if (Settings.SoundSync == 2)
-	{
-	    memset (Buf + (byte_offset & SOUND_BUFFER_SIZE_MASK), 0,
-		    sample_count - so.samples_mixed_so_far);
-	}
-	else
-	    S9xMixSamplesO (Buf, sample_count - so.samples_mixed_so_far,
-			    byte_offset & SOUND_BUFFER_SIZE_MASK);
-	so.samples_mixed_so_far = 0;
+	//	byte_offset = so.play_position + 
+	//		      (so.sixteen_bit ? (so.samples_mixed_so_far << 1)
+	//				      : so.samples_mixed_so_far);
+		byte_offset = so.play_position + (so.samples_mixed_so_far << 1);
+	
+		if (Settings.SoundSync == 2)
+		{
+		    memset (Buf + (byte_offset & SOUND_BUFFER_SIZE_MASK), 0, sample_count - so.samples_mixed_so_far);
+		}
+		else
+		{
+		    S9xMixSamplesO (Buf, sample_count - so.samples_mixed_so_far, byte_offset & SOUND_BUFFER_SIZE_MASK);
+	    }
+	
+		so.samples_mixed_so_far = 0;
     }
     else
-	so.samples_mixed_so_far -= sample_count;
+    {
+		so.samples_mixed_so_far -= sample_count;
+	}
     
 //    if (!so.mute_sound)
     {

@@ -1,7 +1,15 @@
-Snes9x4D (for DINGUX) v20100429
-===============================
-(c)^SiENcE^2010.04.29
+Snes9x4X v20101010
+=====================
+(c)^SiENcE^2010.10.10
 
+I renamed Snes9x4D to Snes9x4X. Every System gets his own Name extension.
+
+Supported devices:
+ Snes9x4C	- GPH Caanoo
+ Snes9x4Wiz	- GPH Wiz
+ Snes9x4D	- Dingoo
+ Snes9x4P	- Pandora
+ Snes9x4W	- Windows
 
 KNOW ISSUES:
 -No Fullscreen support for HighRes Games
@@ -12,6 +20,18 @@ FX1
 FX2
 *Dirt Racer FX
 
+ver 20101010
+------------
+-ROM-BROWSER added
+ *only if no ROM is specified during startup via: ./Snes9x4D.gpe romfile.smc
+-CHEAT (*.cht files) support added
+ *put a *.cht files for your ROMs into the SRAM Folder ".snes96_snapshots"
+-Bugfixes and Menu fixes
+-Soundbug when quitting removed
+-NETPLAY Client support added (not playable yet - only for testing)
+ *someone have to host a Snes9x session (Snes9x-1.52_fix4 <- tested and best compatibility
+ *later i will add this to inGame Menu
+ *you have to adjust the Snes9x4C_Net.gpu and rename to Snes9x4C.gpu
 
 ver 20100429
 ------------
@@ -85,7 +105,7 @@ v1.39-ff
 ------------
 -base source see changes.txt
 
-7Blog:
+Blog:
 http://crankgaming.blogspot.com/
 
 Sources:
