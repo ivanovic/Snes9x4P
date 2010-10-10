@@ -37,13 +37,16 @@ int get_lcd_backlight(void);
 void ShowCredit(void);
 
 int cursor = 3;
-int loadcursor = 1;
+int loadcursor = 0;	//1
 int romcount_maxrows = 16;
 
 char SaveSlotNum_old=255;
 bool8_32 Scale_org=Scale;
 bool8_32 highres_current = false;
 char snapscreen[17120]={};
+
+char temp[256];
+char disptxt[20][256];
 
 void sys_sleep(int us)
 {
@@ -53,33 +56,29 @@ void sys_sleep(int us)
 
 //------------------------------------------------------------------------------------------
 struct dirent **namelist;
-/*
-int file_select(struct dirent *entry)
-{
-	char *ptr;
-	char *rindex(char *s, char c);
-	
-	if ((strcmp(entry->d_name, ".")== 0) ||
-	(strcmp(entry->d_name, "..") == 0))
-	return (FALSE);
-	
-	// Check for filename extensions
-	ptr = rindex(entry->d_name, '.');
-	if ((ptr != NULL) &&
-	((strcmp(ptr, ".sfc") == 0)
-	||(strcmp(ptr, ".smc") == 0)
-	||(strcmp(ptr, ".gd3") == 0) ))
-	return (TRUE);
-	else
-	return(FALSE);
+
+int isFile(const struct dirent *nombre) {
+ int isFile = 0;
+ char *extension = strrchr(nombre->d_name, '.');
+ if (strcmp(extension, ".sfc") == 0 ||
+ 	 strcmp(extension, ".smc") == 0 ||
+ 	 strcmp(extension, ".zip" ) == 0 )
+ {
+  isFile = 1;
+ }
+
+ return isFile;
 }
-*/
 
 int FileDir(char *dir, const char *ext)
 {
 	int n;
 
-	n = scandir (dir, &namelist, 0, alphasort);
+	//printf ("Try to create ./roms directory..");
+	mkdir (dir, 0777);
+	chown (dir, getuid (), getgid ());
+
+	n = scandir (dir, &namelist, isFile, alphasort);
 	if (n >= 0)
 	{
 //		int cnt;
@@ -87,19 +86,16 @@ int FileDir(char *dir, const char *ext)
 //			puts (namelist[cnt]->d_name);
 	}
 	else
-		perror ("Couldn't open the directory");
+	{
+		perror ("Couldn't open the directory..");
+	}
 		
 	return n;
 }
 
 void loadmenu_dispupdate(int romcount)
 {
-	char temp[256];
-	char disptxt[20][256];
-
-	for(int i=0;i<19;i++)
-		strcpy(disptxt[i],"");
-
+	//draw blue screen
 	for(int y=12;y<=212;y++){
 		for(int x=10;x<246*2;x+=2){
 			memset(GFX.Screen + 320*y*2+x,0x11,2);
@@ -126,7 +122,8 @@ void loadmenu_dispupdate(int romcount)
 			else
 				sprintf(temp,"  %s",namelist[ i+(loadcursor-romcount_maxrows) ]->d_name);
 
-			strcpy(disptxt[i+2],temp);
+			strncpy(disptxt[i+2],temp,34);
+			disptxt[i+2][34]='\0';
 		}
 		else
 		if (i<romcount)
@@ -135,8 +132,9 @@ void loadmenu_dispupdate(int romcount)
 				sprintf(temp," >%s",namelist[i]->d_name);
 			else
 				sprintf(temp,"  %s",namelist[i]->d_name);
-		
-			strcpy(disptxt[i+2],temp);
+
+			strncpy(disptxt[i+2],temp,34);
+			disptxt[i+2][34]='\0';
 		}
 	}
 
@@ -164,7 +162,7 @@ char* menu_romselector()
 #endif
 
 	//Read ROM-Directory
-	romcount = FileDir("./roms/", "sfc,smc");
+	romcount = FileDir("./roms", "sfc,smc");
 
 	Scale_org = Scale;
 	highres_current=Settings.SupportHiRes;
@@ -193,10 +191,10 @@ char* menu_romselector()
 				loadcursor--;
 			else if( (SDL_JoystickGetAxis(keyssnes, 1) > 16384) || SDL_JoystickGetButton(keyssnes, sfc_key[SELECT_1]) )
 				loadcursor++;
-			else if ( SDL_JoystickGetButton(keyssnes, sfc_key[L_1]) )
-				loadcursor=loadcursor-10;
-			else if ( SDL_JoystickGetButton(keyssnes, sfc_key[R_1]) )
-				loadcursor=loadcursor+10;
+//			else if ( SDL_JoystickGetButton(keyssnes, sfc_key[L_1]) )
+//				loadcursor=loadcursor-10;
+//			else if ( SDL_JoystickGetButton(keyssnes, sfc_key[R_1]) )
+//				loadcursor=loadcursor+10;
 			else if ( SDL_JoystickGetButton(keyssnes, sfc_key[QUIT]) )
 				S9xExit();
 			else if( SDL_JoystickGetButton(keyssnes, sfc_key[A_1]) ||
@@ -209,7 +207,7 @@ char* menu_romselector()
 						default:
 							if ( SDL_JoystickGetButton(keyssnes, sfc_key[A_1]) )
 							{
-								if ((loadcursor>1) && (loadcursor<(romcount)))
+								if ((loadcursor>=0) && (loadcursor<(romcount)))
 								{
 									rom_filename=namelist[loadcursor]->d_name;
 									exit_loop = TRUE;
@@ -232,12 +230,12 @@ char* menu_romselector()
 					//DOWN
 					else if(keyssnes[sfc_key[DOWN_1]] == SDL_PRESSED)
 						loadcursor++;
-					//LS
-					else if(keyssnes[sfc_key[L_1]] == SDL_PRESSED)
-						loadcursor=loadcursor-10;
-					//RS
-					else if(keyssnes[sfc_key[R_1]] == SDL_PRESSED)
-						loadcursor=loadcursor+10;
+//					//LS
+//					else if(keyssnes[sfc_key[L_1]] == SDL_PRESSED)
+//						loadcursor=loadcursor-10;
+//					//RS
+//					else if(keyssnes[sfc_key[R_1]] == SDL_PRESSED)
+//						loadcursor=loadcursor+10;
 					//QUIT Emulator : press ESCAPE KEY
 					else if (keyssnes[sfc_key[SELECT_1]] == SDL_PRESSED)
 						S9xExit();
@@ -248,7 +246,7 @@ char* menu_romselector()
 							default:
 								if ((keyssnes[sfc_key[B_1]] == SDL_PRESSED))
 								{
-									if ((loadcursor>1) && (loadcursor<(romcount)))
+									if ((loadcursor>=0) && (loadcursor<(romcount)))
 									{
 										rom_filename=namelist[loadcursor]->d_name;
 										exit_loop = TRUE;
@@ -297,8 +295,8 @@ char* menu_romselector()
 
 void menu_dispupdate(void)
 {
-	char temp[256];
-	char disptxt[20][256];
+//	char temp[256];
+//	char disptxt[20][256];
 
 	//memset(GFX.Screen + 320*12*2,0x11,320*200*2);
 	for(int y=12;y<=212;y++){
@@ -515,10 +513,10 @@ void menu_loop(void)
 							else if (SDL_JoystickGetAxis(keyssnes, 0) > 16384)
 								SaveSlotNum++;
 
-							if(SaveSlotNum>3)
-								SaveSlotNum =0;
-							else if(SaveSlotNum<0)
-								SaveSlotNum=3;
+							if(SaveSlotNum>=3)
+								SaveSlotNum=3;			//0
+							else if(SaveSlotNum<=0)
+								SaveSlotNum=0;			//3
 						break;
 						case 6:
 							Settings.DisplayFrameRate = !Settings.DisplayFrameRate;
@@ -537,7 +535,7 @@ void menu_loop(void)
 	
 							if(Settings.SkipFrames>=10)
 								Settings.SkipFrames = AUTO_FRAMERATE;
-							else if (Settings.SkipFrames <=1)
+							else if (Settings.SkipFrames<=1)
 								Settings.SkipFrames = 1;
 						break;
 						case 9:
@@ -624,10 +622,10 @@ void menu_loop(void)
 							if (keyssnes[sfc_key[RIGHT_1]] == SDL_PRESSED)
 								SaveSlotNum++;
 
-							if(SaveSlotNum>3)
-								SaveSlotNum =0;
-							else if(SaveSlotNum<0)
-								SaveSlotNum=3;
+							if(SaveSlotNum>=3)
+								SaveSlotNum=3;		//3
+							else if(SaveSlotNum<=0)
+								SaveSlotNum=0;		//3
 						break;
 						case 6:
 							Settings.DisplayFrameRate = !Settings.DisplayFrameRate;
@@ -653,7 +651,7 @@ void menu_loop(void)
 	
 							if(Settings.SkipFrames>=10)
 								Settings.SkipFrames = AUTO_FRAMERATE;
-							else if (Settings.SkipFrames <=1)
+							else if (Settings.SkipFrames<=1)
 								Settings.SkipFrames = 1;
 						break;
 						case 9:
@@ -665,7 +663,7 @@ void menu_loop(void)
 
 							if(vol>=100)
 								vol = 100;
-							else if (vol <=0)
+							else if (vol<=0)
 								vol = 0;
 						break;
 						case 10:

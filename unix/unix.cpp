@@ -289,11 +289,10 @@ int main (int argc, char **argv)
 		OutOfMemory ();
 	}
 
-   (void) S9xInitSound (Settings.SoundPlaybackRate, Settings.Stereo,
-			 Settings.SoundBufferSize);
+   (void) S9xInitSound (Settings.SoundPlaybackRate, Settings.Stereo, Settings.SoundBufferSize);
 
     if (!Settings.APUEnabled)
-	S9xSetSoundMute (TRUE);
+		S9xSetSoundMute (TRUE);
 
     uint32 saved_flags = CPU.Flags;
 
@@ -301,29 +300,27 @@ int main (int argc, char **argv)
     S9xSetRenderPixelFormat (RGB565);
 #endif
 
-    S9xInitDisplay (argc, argv);
-    if (!S9xGraphicsInit ())
-    {
-		OutOfMemory ();
-	}
-    S9xInitInputDevices ();
-
-    // just to init Font here for ROM selector    
-    S9xReset ();
-
     // ROM selector if no rom filename is available!!!!!!!!!!!!!!
     if (!rom_filename)
     {
+	    S9xInitDisplay (argc, argv);
+	    if (!S9xGraphicsInit ())
+	    {
+			OutOfMemory ();
+		}
+	    S9xInitInputDevices ();
+	
+	    // just to init Font here for ROM selector    
+	    S9xReset ();
+
 	    do
 	    {
 			rom_filename = menu_romselector();
 		}while(rom_filename==NULL);
+
+		S9xDeinitDisplay();
 		printf ("Romfile selected: %s\n", rom_filename);
 	}
-
-
-//	if(!rom_filename)
-//		S9xExit();
 
     if (rom_filename)
     {
@@ -364,6 +361,13 @@ int main (int argc, char **argv)
 //		S9xReset ();
 //		Settings.Paused |= 2;
     }
+    
+    S9xInitDisplay (argc, argv);
+    if (!S9xGraphicsInit ())
+    {
+		OutOfMemory ();
+	}
+    S9xInitInputDevices ();
 
     CPU.Flags = saved_flags;
     Settings.StopEmulation = FALSE;
@@ -452,7 +456,7 @@ int main (int argc, char **argv)
 
 	while (1)
 	{
-	#ifdef NETPLAY_SUPPORT
+#ifdef NETPLAY_SUPPORT
 		if (NP_Activated)
 		{
 			if (NetPlay.PendingWait4Sync && !S9xNPWaitForHeartBeatDelay(100))
@@ -482,53 +486,53 @@ int main (int argc, char **argv)
 				S9xExit();
 			}
 		}
-	#endif
+#endif
 
-	#ifdef DEBUGGER
+#ifdef DEBUGGER
 		if (!Settings.Paused || (CPU.Flags & (DEBUG_MODE_FLAG | SINGLE_STEP_FLAG)))
-	#else
+#else
 		if (!Settings.Paused)
-	#endif
+#endif
 			S9xMainLoop();
 
-	#ifdef NETPLAY_SUPPORT
+#ifdef NETPLAY_SUPPORT
 //		if (NP_Activated)
 //		{
 //			for (int J = 0; J < 8; J++)
 //				MovieSetJoypad(J, old_joypads[J]);
 //		}
-	#endif
+#endif
 
-	#ifdef DEBUGGER
+#ifdef DEBUGGER
 		if (Settings.Paused || (CPU.Flags & DEBUG_MODE_FLAG))
-	#else
+#else
 		if (Settings.Paused)
-	#endif
+#endif
 			S9xSetSoundMute(TRUE);
 
-	#ifdef DEBUGGER
+#ifdef DEBUGGER
 		if (CPU.Flags & DEBUG_MODE_FLAG)
 			S9xDoDebug();
 		else
-	#endif
+#endif
 		if (Settings.Paused)
 		{
 			S9xProcessEvents(FALSE);
 			usleep(100000);
 		}
 
-	#ifdef JOYSTICK_SUPPORT
+#ifdef JOYSTICK_SUPPORT
 		if (unixSettings.JoystickEnabled && (JoypadSkip++ & 1) == 0)
 			ReadJoysticks();
-	#endif
+#endif
 
 		S9xProcessEvents(TRUE);
 
-	#ifdef DEBUGGER
+#ifdef DEBUGGER
 		if (!Settings.Paused && !(CPU.Flags & DEBUG_MODE_FLAG))
-	#else
+#else
 		if (!Settings.Paused)
-	#endif
+#endif
 			S9xSetSoundMute(FALSE);
 	}
 
@@ -553,8 +557,8 @@ void OutOfMemory()
 
 void S9xExit()
 {
-    S9xSetSoundMute (TRUE);
-
+	S9xSetSoundMute(true);
+	
 #ifdef NETPLAY_SUPPORT
 	if (Settings.NetPlay)
 		S9xNPDisconnect();
@@ -1127,7 +1131,7 @@ void S9xToggleSoundChannel (int c)
 static void SoundTrigger ()
 {
     if (Settings.APUEnabled && !so.mute_sound)
-	S9xProcessSound (NULL);
+		S9xProcessSound (NULL);
 }
 
 void StopTimer ()
@@ -1312,10 +1316,9 @@ void S9xProcessEvents (bool8_32 block)
 				// MAINMENU
 				else if ( SDL_JoystickGetButton(keyssnes, sfc_key[QUIT]) )
 				{
-					S9xSetSoundMute(true);
+					S9xSetSoundMute (TRUE);
 					menu_loop();
-					S9xSetSoundMute(false);
-					//S9xSetMasterVolume(vol,vol);
+					S9xSetSoundMute(FALSE);
 				}
 				break;
 
@@ -1334,8 +1337,8 @@ void S9xProcessEvents (bool8_32 block)
 #ifdef PANDORA
 				if ( event.key.keysym.sym == SDLK_q )
 				{
-					S9xSetSoundMute(true);
-					exit ( 0 ); // just die
+					//exit ( 0 ); // just die
+					S9xExit();
 				}
 #endif //PANDORA
 				//QUIT Emulator
@@ -1412,21 +1415,65 @@ static long log2 (long num)
     return (n);
 }
 
-#ifndef _ZAURUS
-static long power (int num, int pow)
+uint32 S9xReadJoypad (int which1)
 {
-    long val = num;
-    int i;
-    
-    if (pow == 0)
-	return (1);
+	uint32 val=0x80000000;
 
-    for (i = 1; i < pow; i++)
-	val *= num;
+	if (which1 > 4)
+		return 0;
 
-    return (val);
-}
+#ifdef CAANOO
+	//player1
+	if (SDL_JoystickGetButton(keyssnes, sfc_key[L_1]))			val |= SNES_TL_MASK;
+	if (SDL_JoystickGetButton(keyssnes, sfc_key[R_1]))			val |= SNES_TR_MASK;
+	if (SDL_JoystickGetButton(keyssnes, sfc_key[X_1]))			val |= SNES_X_MASK;
+	if (SDL_JoystickGetButton(keyssnes, sfc_key[Y_1]))			val |= SNES_Y_MASK;
+	if (SDL_JoystickGetButton(keyssnes, sfc_key[B_1]))			val |= SNES_B_MASK;
+	if (SDL_JoystickGetButton(keyssnes, sfc_key[A_1]))			val |= SNES_A_MASK;
+	if (SDL_JoystickGetButton(keyssnes, sfc_key[START_1]))		val |= SNES_START_MASK;
+	if (SDL_JoystickGetButton(keyssnes, sfc_key[SELECT_1]))		val |= SNES_SELECT_MASK;
+	if (SDL_JoystickGetAxis(keyssnes, 1) < -20000)				val |= SNES_UP_MASK;
+	if (SDL_JoystickGetAxis(keyssnes, 1) > 20000)				val |= SNES_DOWN_MASK;
+	if (SDL_JoystickGetAxis(keyssnes, 0) < -20000)				val |= SNES_LEFT_MASK;
+	if (SDL_JoystickGetAxis(keyssnes, 0) > 20000)				val |= SNES_RIGHT_MASK;
+#else
+	//player1
+	if (keyssnes[sfc_key[L_1]] == SDL_PRESSED)		val |= SNES_TL_MASK;
+	if (keyssnes[sfc_key[R_1]] == SDL_PRESSED)		val |= SNES_TR_MASK;
+	if (keyssnes[sfc_key[X_1]] == SDL_PRESSED)		val |= SNES_X_MASK;
+	if (keyssnes[sfc_key[Y_1]] == SDL_PRESSED)		val |= SNES_Y_MASK;
+	if (keyssnes[sfc_key[B_1]] == SDL_PRESSED)		val |= SNES_B_MASK;
+	if (keyssnes[sfc_key[A_1]] == SDL_PRESSED)		val |= SNES_A_MASK;
+	if (keyssnes[sfc_key[START_1]] == SDL_PRESSED)	val |= SNES_START_MASK;
+	if (keyssnes[sfc_key[SELECT_1]] == SDL_PRESSED)	val |= SNES_SELECT_MASK;
+	if (keyssnes[sfc_key[UP_1]] == SDL_PRESSED)		val |= SNES_UP_MASK;
+	if (keyssnes[sfc_key[DOWN_1]] == SDL_PRESSED)	val |= SNES_DOWN_MASK;
+	if (keyssnes[sfc_key[LEFT_1]] == SDL_PRESSED)	val |= SNES_LEFT_MASK;
+	if (keyssnes[sfc_key[RIGHT_1]] == SDL_PRESSED)	val |= SNES_RIGHT_MASK;
+	//player2
+	/*
+	if (keyssnes[sfc_key[UP_2]] == SDL_PRESSED)		val |= SNES_UP_MASK;
+	if (keyssnes[sfc_key[DOWN_2]] == SDL_PRESSED)	val |= SNES_DOWN_MASK;
+	if (keyssnes[sfc_key[LEFT_2]] == SDL_PRESSED)	val |= SNES_LEFT_MASK;
+	if (keyssnes[sfc_key[RIGHT_2]] == SDL_PRESSED)	val |= SNES_RIGHT_MASK;
+	if (keyssnes[sfc_key[LU_2]] == SDL_PRESSED)	val |= SNES_LEFT_MASK | SNES_UP_MASK;
+	if (keyssnes[sfc_key[LD_2]] == SDL_PRESSED)	val |= SNES_LEFT_MASK | SNES_DOWN_MASK;
+	if (keyssnes[sfc_key[RU_2]] == SDL_PRESSED)	val |= SNES_RIGHT_MASK | SNES_UP_MASK;
+	if (keyssnes[sfc_key[RD_2]] == SDL_PRESSED)	val |= SNES_RIGHT_MASK | SNES_DOWN_MASK;
+	*/
 #endif
+
+#ifdef NETPLAY_SUPPORT
+    if (Settings.NetPlay)
+		return (S9xNPGetJoypad (which1));
+#endif
+
+	return(val);
+}
+
+//===============================================================================================
+// SOUND
+//===============================================================================================
 
 static int Rates[8] =
 {
@@ -1438,6 +1485,30 @@ static int BufferSizes [8] =
     0, 256, 256, 256, 512, 512, 1024, 1024
 };
 
+
+static uint8 Buf[MAX_BUFFER_SIZE] __attribute__((aligned(4)));
+
+#define FIXED_POINT 0x10000
+#define FIXED_POINT_SHIFT 16
+#define FIXED_POINT_REMAINDER 0xffff
+
+static volatile bool8 block_signal = FALSE;
+static volatile bool8 block_generate_sound = FALSE;
+static volatile bool8 pending_signal = FALSE;
+/*
+bool8_32 S9xOpenSoundDevice (int mode, bool8_32 stereo, int buffer_size)
+{
+}
+
+void S9xGenerateSound ()
+{
+}
+
+void *S9xProcessSound (void *)
+{
+}
+*/
+
 bool8_32 S9xOpenSoundDevice (int mode, bool8_32 stereo, int buffer_size)
 {
 #ifndef CYGWIN32
@@ -1445,8 +1516,8 @@ bool8_32 S9xOpenSoundDevice (int mode, bool8_32 stereo, int buffer_size)
 
     if ((so.sound_fd = open ("/dev/dsp", O_WRONLY|O_ASYNC)) < 0)
     {
-	perror ("/dev/dsp");
-	return (FALSE);
+		perror ("/dev/dsp");
+		return (FALSE);
     }
 
     mixerdev = open("/dev/mixer", O_RDWR);
@@ -1457,15 +1528,15 @@ bool8_32 S9xOpenSoundDevice (int mode, bool8_32 stereo, int buffer_size)
 //    J = AFMT_U8;
     if (ioctl (so.sound_fd, SNDCTL_DSP_SETFMT, &J) < 0)
     {
-	perror ("ioctl SNDCTL_DSP_SETFMT");
-	return (FALSE);
+		perror ("ioctl SNDCTL_DSP_SETFMT");
+		return (FALSE);
     }
 	so.sixteen_bit = TRUE;
     so.stereo = stereo;
     if (ioctl (so.sound_fd, SNDCTL_DSP_STEREO, &so.stereo) < 0)
     {
-	perror ("ioctl SNDCTL_DSP_STEREO");
-	return (FALSE);
+		perror ("ioctl SNDCTL_DSP_STEREO");
+		return (FALSE);
     }
     
     so.playback_rate = Rates[mode & 0x07];
@@ -1494,8 +1565,8 @@ bool8_32 S9xOpenSoundDevice (int mode, bool8_32 stereo, int buffer_size)
     J = K = power2 | (3 << 16);
     if (ioctl (so.sound_fd, SNDCTL_DSP_SETFRAGMENT, &J) < 0)
     {
-	perror ("ioctl SNDCTL_DSP_SETFRAGMENT");
-	return (FALSE);
+		perror ("ioctl SNDCTL_DSP_SETFRAGMENT");
+		return (FALSE);
     }
     
     printf ("Rate: %d, Buffer size: %d, 16-bit: %s, Stereo: %s, Encoded: %s\n",
@@ -1506,20 +1577,6 @@ bool8_32 S9xOpenSoundDevice (int mode, bool8_32 stereo, int buffer_size)
 #endif
     return (TRUE);
 }
-
-void S9xUnixProcessSound (void)
-{
-}
-
-static uint8 Buf[MAX_BUFFER_SIZE] __attribute__((aligned(4)));
-
-#define FIXED_POINT 0x10000
-#define FIXED_POINT_SHIFT 16
-#define FIXED_POINT_REMAINDER 0xffff
-
-static volatile bool8 block_signal = FALSE;
-static volatile bool8 block_generate_sound = FALSE;
-static volatile bool8 pending_signal = FALSE;
 
 void S9xGenerateSound ()
 {
@@ -1583,8 +1640,7 @@ void S9xGenerateSound ()
 //		if (so.sixteen_bit)
 		    sc >>= 1;
 	    }
-	    S9xMixSamplesO (Buf, sc,
-			    byte_offset & SOUND_BUFFER_SIZE_MASK);
+	    S9xMixSamplesO (Buf, sc, byte_offset & SOUND_BUFFER_SIZE_MASK);
 	    so.samples_mixed_so_far += sc;
 	    sample_count -= sc;
 	    bytes_so_far = (so.samples_mixed_so_far << 1);
@@ -1602,22 +1658,21 @@ void S9xGenerateSound ()
 #endif    
     if (pending_signal)
     {
-	S9xProcessSound (NULL);
-	pending_signal = FALSE;
+		S9xProcessSound (NULL);
+		pending_signal = FALSE;
     }
 }
 
 void *S9xProcessSound (void *)
 {
-/*    audio_buf_info info;
+//    audio_buf_info info;
+//    if (!Settings.ThreadSound &&
+//	(ioctl (so.sound_fd, SNDCTL_DSP_GETOSPACE, &info) == -1 ||
+//	 info.bytes < so.buffer_size))
+//    {
+//	return (NULL);
+//    }
 
-    if (!Settings.ThreadSound &&
-	(ioctl (so.sound_fd, SNDCTL_DSP_GETOSPACE, &info) == -1 ||
-	 info.bytes < so.buffer_size))
-    {
-	return (NULL);
-    }
-*/
 #ifdef USE_THREADS
     do
     {
@@ -1649,7 +1704,6 @@ void *S9xProcessSound (void *)
 //				      : so.samples_mixed_so_far);
 	byte_offset = so.play_position + (so.samples_mixed_so_far << 1);
 
-//printf ("%d:", sample_count - so.samples_mixed_so_far); fflush (stdout);
 	if (Settings.SoundSync == 2)
 	{
 	    memset (Buf + (byte_offset & SOUND_BUFFER_SIZE_MASK), 0,
@@ -1665,39 +1719,39 @@ void *S9xProcessSound (void *)
     
 //    if (!so.mute_sound)
     {
-	int I;
-	int J = so.buffer_size;
-
-	byte_offset = so.play_position;
-	so.play_position = (so.play_position + so.buffer_size) & SOUND_BUFFER_SIZE_MASK;
-
+		int I;
+		int J = so.buffer_size;
+	
+		byte_offset = so.play_position;
+		so.play_position = (so.play_position + so.buffer_size) & SOUND_BUFFER_SIZE_MASK;
+	
 #ifdef USE_THREADS
-//	if (Settings.ThreadSound)
-	    pthread_mutex_unlock (&mutex);
+	//	if (Settings.ThreadSound)
+		    pthread_mutex_unlock (&mutex);
 #endif
-	block_generate_sound = FALSE;
-	do
-	{
-	    if (byte_offset + J > SOUND_BUFFER_SIZE)
-	    {
-		I = write (so.sound_fd, (char *) Buf + byte_offset,
-			   SOUND_BUFFER_SIZE - byte_offset);
-		if (I > 0)
+		block_generate_sound = FALSE;
+		do
 		{
-		    J -= I;
-		    byte_offset = (byte_offset + I) & SOUND_BUFFER_SIZE_MASK;
-		}
-	    }
-	    else
-	    {
-		I = write (so.sound_fd, (char *) Buf + byte_offset, J);
-		if (I > 0)
-		{
-		    J -= I;
-		    byte_offset = (byte_offset + I) & SOUND_BUFFER_SIZE_MASK;
-		}
-	    }
-	} while ((I < 0 && errno == EINTR) || J > 0);
+		    if (byte_offset + J > SOUND_BUFFER_SIZE)
+		    {
+			I = write (so.sound_fd, (char *) Buf + byte_offset,
+				   SOUND_BUFFER_SIZE - byte_offset);
+			if (I > 0)
+			{
+			    J -= I;
+			    byte_offset = (byte_offset + I) & SOUND_BUFFER_SIZE_MASK;
+			}
+		    }
+		    else
+		    {
+			I = write (so.sound_fd, (char *) Buf + byte_offset, J);
+			if (I > 0)
+			{
+			    J -= I;
+			    byte_offset = (byte_offset + I) & SOUND_BUFFER_SIZE_MASK;
+			}
+		    }
+		} while ((I < 0 && errno == EINTR) || J > 0);
     }
 
 #ifdef USE_THREADS
@@ -1716,59 +1770,4 @@ void gp2x_sound_volume(int l, int r)
   	ioctl(mixerdev, SOUND_MIXER_WRITE_VOLUME, &l);
 }
 */
-
-uint32 S9xReadJoypad (int which1)
-{
-	uint32 val=0x80000000;
-
-	if (which1 > 4)
-		return 0;
-
-#ifdef CAANOO
-	//player1
-	if (SDL_JoystickGetButton(keyssnes, sfc_key[L_1]))			val |= SNES_TL_MASK;
-	if (SDL_JoystickGetButton(keyssnes, sfc_key[R_1]))			val |= SNES_TR_MASK;
-	if (SDL_JoystickGetButton(keyssnes, sfc_key[X_1]))			val |= SNES_X_MASK;
-	if (SDL_JoystickGetButton(keyssnes, sfc_key[Y_1]))			val |= SNES_Y_MASK;
-	if (SDL_JoystickGetButton(keyssnes, sfc_key[B_1]))			val |= SNES_B_MASK;
-	if (SDL_JoystickGetButton(keyssnes, sfc_key[A_1]))			val |= SNES_A_MASK;
-	if (SDL_JoystickGetButton(keyssnes, sfc_key[START_1]))		val |= SNES_START_MASK;
-	if (SDL_JoystickGetButton(keyssnes, sfc_key[SELECT_1]))		val |= SNES_SELECT_MASK;
-	if (SDL_JoystickGetAxis(keyssnes, 1) < -20000)				val |= SNES_UP_MASK;
-	if (SDL_JoystickGetAxis(keyssnes, 1) > 20000)				val |= SNES_DOWN_MASK;
-	if (SDL_JoystickGetAxis(keyssnes, 0) < -20000)				val |= SNES_LEFT_MASK;
-	if (SDL_JoystickGetAxis(keyssnes, 0) > 20000)				val |= SNES_RIGHT_MASK;
-#else
-	//player1
-	if (keyssnes[sfc_key[L_1]] == SDL_PRESSED)		val |= SNES_TL_MASK;
-	if (keyssnes[sfc_key[R_1]] == SDL_PRESSED)		val |= SNES_TR_MASK;
-	if (keyssnes[sfc_key[X_1]] == SDL_PRESSED)		val |= SNES_X_MASK;
-	if (keyssnes[sfc_key[Y_1]] == SDL_PRESSED)		val |= SNES_Y_MASK;
-	if (keyssnes[sfc_key[B_1]] == SDL_PRESSED)		val |= SNES_B_MASK;
-	if (keyssnes[sfc_key[A_1]] == SDL_PRESSED)		val |= SNES_A_MASK;
-	if (keyssnes[sfc_key[START_1]] == SDL_PRESSED)	val |= SNES_START_MASK;
-	if (keyssnes[sfc_key[SELECT_1]] == SDL_PRESSED)	val |= SNES_SELECT_MASK;
-	if (keyssnes[sfc_key[UP_1]] == SDL_PRESSED)		val |= SNES_UP_MASK;
-	if (keyssnes[sfc_key[DOWN_1]] == SDL_PRESSED)	val |= SNES_DOWN_MASK;
-	if (keyssnes[sfc_key[LEFT_1]] == SDL_PRESSED)	val |= SNES_LEFT_MASK;
-	if (keyssnes[sfc_key[RIGHT_1]] == SDL_PRESSED)	val |= SNES_RIGHT_MASK;
-	//player2
-	/*
-	if (keyssnes[sfc_key[UP_2]] == SDL_PRESSED)		val |= SNES_UP_MASK;
-	if (keyssnes[sfc_key[DOWN_2]] == SDL_PRESSED)	val |= SNES_DOWN_MASK;
-	if (keyssnes[sfc_key[LEFT_2]] == SDL_PRESSED)	val |= SNES_LEFT_MASK;
-	if (keyssnes[sfc_key[RIGHT_2]] == SDL_PRESSED)	val |= SNES_RIGHT_MASK;
-	if (keyssnes[sfc_key[LU_2]] == SDL_PRESSED)	val |= SNES_LEFT_MASK | SNES_UP_MASK;
-	if (keyssnes[sfc_key[LD_2]] == SDL_PRESSED)	val |= SNES_LEFT_MASK | SNES_DOWN_MASK;
-	if (keyssnes[sfc_key[RU_2]] == SDL_PRESSED)	val |= SNES_RIGHT_MASK | SNES_UP_MASK;
-	if (keyssnes[sfc_key[RD_2]] == SDL_PRESSED)	val |= SNES_RIGHT_MASK | SNES_DOWN_MASK;
-	*/
-#endif
-
-#ifdef NETPLAY_SUPPORT
-    if (Settings.NetPlay)
-		return (S9xNPGetJoypad (which1));
-#endif
-
-	return(val);
-}
+//===============================================================================================
