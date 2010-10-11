@@ -559,9 +559,14 @@ void S9xExit()
 {
 	S9xSetSoundMute(true);
 	
-	int status = pthread_cancel(thread);
-	if (status != 0)
-		perror ("Error pthread_cancel");
+#ifdef USE_THREADS
+    if (Settings.ThreadSound)
+    {
+		int status = pthread_cancel(thread);
+		if (status != 0)
+			perror ("Error pthread_cancel");
+	}
+#endif
 	
 #ifdef NETPLAY_SUPPORT
 	if (Settings.NetPlay)
@@ -750,11 +755,10 @@ const char *S9xGetROMDirectory ()
 {
     const char *roms;
     
-    if (!(roms = getenv ("SNES9X_ROM_DIR")) &&
-	!(roms = getenv ("SNES96_ROM_DIR")))
-	return ("." SLASH_STR "roms");
+    if (!(roms = getenv ("SNES9X_ROM_DIR")) && !(roms = getenv ("SNES96_ROM_DIR")))
+		return ("." SLASH_STR "roms");
     else
-	return (roms);
+		return (roms);
 }
 
 const char *S9xBasename (const char *f)
