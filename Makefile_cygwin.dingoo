@@ -116,10 +116,12 @@ STRIP	:= $(BINPATH)/mipsel-linux-uclibc-strip
 AS		:= $(BINPATH)/mipsel-linux-uclibc-as
 GASM	:= $(BINPATH)/mipsel-linux-uclibc-g++
 
-OPTIMISE= -D_ZAURUS -O3 -ffast-math -fstrict-aliasing -fomit-frame-pointer -ftree-vectorize -funroll-all-loops -fpeel-loops -ftracer -funswitch-loops -finline-functions -G 0 -march=mips32 -mno-mips16 -msoft-float 
+OPTIMISE= -O3 -march=mips32 -mno-mips16 -D_ZAURUS -DDINGOO
+#OPTIMISE += -ffast-math -fstrict-aliasing -fomit-frame-pointer -ftree-vectorize -funroll-all-loops -fpeel-loops -ftracer -funswitch-loops -finline-functions -msoft-float 
+OPTIMISE += -ffast-math -fexpensive-optimizations -finline -finline-functions -falign-functions=32 -falign-loops -falign-labels -falign-jumps -fomit-frame-pointer
 #-fprofile-generate
 #-fprofile-use
-#-mtune=r4600 -ftest-coverage
+#-G 0 -mtune=r4600
 
 CCFLAGS = $(OPTIMISE) \
 -I. \

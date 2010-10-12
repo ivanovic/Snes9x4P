@@ -118,10 +118,11 @@ STRIP	:= ${BINPATH}/$(ARCH)-strip
 AS		:= ${BINPATH}/$(ARCH)-as
 GASM	:= ${BINPATH}/$(ARCH)-g++
 
-OPTIMISE = -O3 -mcpu=arm926ej-s -mtune=arm926ej-s -D_ZAURUS -DCAANOO -DUSE_SA1 -DIS_LITTLE_ENDIAN
+OPTIMISE = -O3 -mcpu=arm926ej-s -mtune=arm926ej-s -D_ZAURUS -DCAANOO
 OPTIMISE += -ffast-math -fexpensive-optimizations -finline -finline-functions -falign-functions=32 -falign-loops -falign-labels -falign-jumps -fomit-frame-pointer
 #-fprofile-use
 #-fprofile-generate
+#-DIS_LITTLE_ENDIAN
 
 CCFLAGS = $(OPTIMISE) \
 -I. \

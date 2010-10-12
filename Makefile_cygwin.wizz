@@ -118,9 +118,10 @@ STRIP	:= ${BINPATH}/$(ARCH)-strip
 AS		:= ${BINPATH}/$(ARCH)-as
 GASM	:= ${BINPATH}/$(ARCH)-g++
 
-OPTIMISE = -mcpu=arm926ej-s -mtune=arm926ej-s -g -I. -I$(TOOLCHAINDIR)/arm-open2x-linux/include -O3 -D_ZAURUS -D__WIZ__ -DUSE_SA1
+OPTIMISE = -O3 -mcpu=arm926ej-s -mtune=arm926ej-s -g -I. -I$(TOOLCHAINDIR)/arm-open2x-linux/include -D_ZAURUS -DWIZZ
 OPTIMISE += -ffast-math -fexpensive-optimizations -finline -finline-functions -falign-functions=32 -falign-loops -falign-labels -falign-jumps -fomit-frame-pointer
-#-msoft-float
+#-fprofile-use
+#-fprofile-generate
 
 CCFLAGS = $(OPTIMISE) \
 -I. \
