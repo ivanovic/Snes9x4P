@@ -282,6 +282,8 @@ int main (int argc, char **argv)
 	//parse commandline arguments for ROM filename
 	rom_filename = S9xParseArgs (argv, argc);
 
+	//printf( "Playbackrate1: %02d\n",Settings.SoundPlaybackRate );
+
     Settings.HBlankStart = (256 * Settings.H_Max) / SNES_HCOUNTER_MAX;
 
     if (!Memory.Init () || !S9xInitAPU())
