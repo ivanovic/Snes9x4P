@@ -87,7 +87,12 @@ int FileDir(char *dir, const char *ext)
 	}
 	else
 	{
-		perror ("Couldn't open the directory..");
+		perror ("Couldn't open ./roms directory..try to create this directory");
+
+		mkdir (dir, 0777);
+		chown (dir, getuid (), getgid ());
+	
+		n = scandir (dir, &namelist, isFile, alphasort);
 	}
 		
 	return n;

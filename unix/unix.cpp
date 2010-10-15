@@ -243,7 +243,7 @@ int main (int argc, char **argv)
     ZeroMemory (&Settings, sizeof (Settings));
 
     Settings.JoystickEnabled = FALSE;	//unused
-    Settings.SoundPlaybackRate = 2;
+    Settings.SoundPlaybackRate = 7; //2
     Settings.Stereo = TRUE;
     Settings.SoundBufferSize = 512; //256
     Settings.CyclesPercentage = 100;
@@ -261,7 +261,7 @@ int main (int argc, char **argv)
     Settings.FrameTime = Settings.FrameTimeNTSC;
     Settings.DisableSampleCaching = FALSE;
     Settings.DisableMasterVolume = FALSE;
-    Settings.Mouse = TRUE;
+    Settings.Mouse = FALSE;	//TRUE
     Settings.SuperScope = FALSE;
     Settings.MultiPlayer5 = FALSE;
     Settings.ControllerOption = SNES_MULTIPLAYER5;
@@ -362,8 +362,6 @@ int main (int argc, char **argv)
     else
     {
 	    S9xExit();
-//		S9xReset ();
-//		Settings.Paused |= 2;
     }
     
     S9xInitDisplay (argc, argv);
@@ -1549,9 +1547,11 @@ bool8_32 S9xOpenSoundDevice (int mode, bool8_32 stereo, int buffer_size)
 
     S9xSetPlaybackRate (so.playback_rate);
 
-//    if (buffer_size == 0)
-	so.buffer_size = buffer_size = BufferSizes [mode & 7];
-//	buffer_size = so.buffer_size = 256;
+    //    if (buffer_size == 0)
+so.buffer_size = buffer_size;
+//	so.buffer_size = buffer_size = BufferSizes [mode & 7];
+
+	//	buffer_size = so.buffer_size = 256;
 		
     if (buffer_size > MAX_BUFFER_SIZE / 4)
 	buffer_size = MAX_BUFFER_SIZE / 4;
