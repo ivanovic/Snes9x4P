@@ -500,11 +500,11 @@ int main (int argc, char **argv)
 			S9xMainLoop();
 
 #ifdef NETPLAY_SUPPORT
-//		if (NP_Activated)
-//		{
+		if (NP_Activated)
+		{
 //			for (int J = 0; J < 8; J++)
 //				MovieSetJoypad(J, old_joypads[J]);
-//		}
+		}
 #endif
 
 #ifdef DEBUGGER
