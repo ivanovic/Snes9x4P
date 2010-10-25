@@ -1370,10 +1370,12 @@ void S9xProcessEvents (bool8_32 block)
 					sprintf(ext, ".00%d", SaveSlotNum);
 					strcpy(fname, S9xGetFilename (ext));
 					S9xFreezeGame (fname);
+#ifndef PANDORA
 					capt_screenshot();
 					sprintf(ext, ".s0%d", SaveSlotNum);
 					strcpy(fname, S9xGetFilename (ext));
 					save_screenshot(fname);
+#endif
 					S9xSetSoundMute(false);
 				}
 				//LOAD State

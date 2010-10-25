@@ -32,8 +32,6 @@ void capt_screenshot(void);
 void menu_dispupdate(void);
 int batt_level(void);
 int chk_hold(void);
-void set_lcd_backlight(int backlight);
-int get_lcd_backlight(void);
 void ShowCredit(void);
 
 int cursor = 3;
@@ -422,8 +420,9 @@ void menu_dispupdate(void)
 		load_screenshot(fname);
 		SaveSlotNum_old = SaveSlotNum;
 	}
+#ifndef PANDORA
 	show_screenshot();
-	
+#endif
 	S9xDeinitUpdate (320, 240);
 }
 
@@ -444,8 +443,10 @@ void menu_loop(void)
 	Scale_org = Scale;
 	highres_current=Settings.SupportHiRes;
 
+#ifndef PANDORA
 	capt_screenshot();
 	memcpy(snapscreen_tmp,snapscreen,17120);
+#endif
 
 	Scale = false;
 	Settings.SupportHiRes=FALSE;
@@ -596,14 +597,18 @@ void menu_loop(void)
 						case 3:
 							if (keyssnes[sfc_key[A_1]] == SDL_PRESSED)
 							{
+#ifndef PANDORA
 								memcpy(snapscreen,snapscreen_tmp,16050);
 								show_screenshot();
+#endif
 								strcpy(fname," Saving...");
 								S9xDisplayString (fname, GFX.Screen +280, 640,204);
 								S9xDeinitUpdate (320, 240);
+#ifndef PANDORA
 								sprintf(ext, ".s0%d", SaveSlotNum);
 								strcpy(fname, S9xGetFilename (ext));
 								save_screenshot(fname);
+#endif
 								sprintf(ext, ".00%d", SaveSlotNum);
 								strcpy(fname, S9xGetFilename (ext));
 								S9xFreezeGame (fname);
@@ -616,7 +621,9 @@ void menu_loop(void)
 							{
 								sprintf(ext, ".00%d", SaveSlotNum);
 								strcpy(fname, S9xGetFilename (ext));
+#ifndef PANDORA
 								S9xLoadSnapshot (fname);
+#endif
 								exit_loop = TRUE;
 							}
 						break;
@@ -813,28 +820,6 @@ int chk_hold(void)
 		return (1);
 	else
 		return (0);
-}
-
-int get_lcd_backlight(void)
-{
-	FILE *FP;
-	int backlight=0;
-	char buf[12];
-	FP = fopen("/proc/jz/lcd_backlight", "rb");
-	if (!FP) return(0);
-	fgets(buf, 12, FP);
-	fclose(FP);
- 	sscanf(buf, "%d", &backlight);
-	return (backlight);
-}
-
-void set_lcd_backlight(int bk)
-{
-
-	char buf[128];
-	sprintf(buf,"echo %d >/proc/jz/lcd_backlight",bk);
-	system(buf);
-	//sync();
 }
 
 void ShowCredit()
