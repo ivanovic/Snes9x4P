@@ -317,10 +317,12 @@ int main (int argc, char **argv)
 	    // just to init Font here for ROM selector    
 	    S9xReset ();
 
+#ifndef PANDORA
 	    do
 	    {
 			rom_filename = menu_romselector();
 		}while(rom_filename==NULL);
+#endif
 
 		S9xDeinitDisplay();
 		printf ("Romfile selected: %s\n", rom_filename);

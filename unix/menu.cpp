@@ -53,6 +53,8 @@ void sys_sleep(int us)
 }
 
 //------------------------------------------------------------------------------------------
+#ifndef PANDORA
+
 struct dirent **namelist;
 
 int isFile(const struct dirent *nombre) {
@@ -294,6 +296,7 @@ char* menu_romselector()
 	return (rom_filename);
 }
 
+#endif
 //------------------------------------------------------------------------------------------
 
 void menu_dispupdate(void)
@@ -612,7 +615,9 @@ void menu_loop(void)
 								sprintf(ext, ".00%d", SaveSlotNum);
 								strcpy(fname, S9xGetFilename (ext));
 								S9xFreezeGame (fname);
+#ifndef PANDORA
 								sync();
+#endif
 								exit_loop = TRUE;
 							}
 						break;
@@ -711,14 +716,17 @@ void menu_loop(void)
 	S9xInitDisplay(0, 0);
 }
 
-void save_screenshot(char *fname){
+void save_screenshot(char *fname)
+{
 	FILE  *fs = fopen (fname,"wb");
 	if(fs==NULL)
 		return;
 	
 	fwrite(snapscreen,17120,1,fs);
 	fclose (fs);
+#ifndef PANDORA
 	sync();
+#endif
 }
 
 void load_screenshot(char *fname)
