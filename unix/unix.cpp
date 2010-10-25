@@ -934,7 +934,9 @@ bool8_32 S9xDeinitUpdate ( int Width, int Height ) {
   }
 
   if (GFX.InfoString) {
-    S9xDisplayString (GFX.InfoString, (uint8 *)screen->pixels + 64, 800 * 2 * 2, 460 );
+	  //this function causes a segfault!
+	  //TODO: fix and allow the function back in, until them: comment it out!
+	  //S9xDisplayString (GFX.InfoString, (uint8 *)screen->pixels + 64, 800 * 2 * 2, 460 );
   }
 
   // SDL_UnlockSurface(screen);
@@ -1370,12 +1372,10 @@ void S9xProcessEvents (bool8_32 block)
 					sprintf(ext, ".00%d", SaveSlotNum);
 					strcpy(fname, S9xGetFilename (ext));
 					S9xFreezeGame (fname);
-#ifndef PANDORA
 					capt_screenshot();
 					sprintf(ext, ".s0%d", SaveSlotNum);
 					strcpy(fname, S9xGetFilename (ext));
 					save_screenshot(fname);
-#endif
 					S9xSetSoundMute(false);
 				}
 				//LOAD State

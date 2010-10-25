@@ -114,25 +114,29 @@ OPENGLDEPENDS=no_opengl
 OPENGLNO_DEPENDS=use_opengl
 endif
 
-CCC		= arm-none-linux-gnueabi-g++
-CC		= arm-none-linux-gnueabi-gcc
-STRIP	= arm-none-linux-gnueabi-strip
-NASM	=
-GASM	= arm-none-linux-gnueabi-g++
+TOOLCHAINDIR := /home/nils/pandora-dev/arm-2009q3
+BINPATH    := ${TOOLCHAINDIR}/bin
 
-DEFAULT_CFLAGS = `sdl-config --cflags` -I/usr/include ${ARCHDEFS}
-LDLIBS         =  -L/archive/devo/projects/pandora-image/current/usr/lib -lSDL -lts
+ARCH := arm-none-linux-gnueabi
+
+CCC	= ${BINPATH}/$(ARCH)-g++
+CC	= ${BINPATH}/$(ARCH)-gcc
+STRIP	= ${BINPATH}/$(ARCH)-strip
+AS	= ${BINPATH}/$(ARCH)-as
+GASM	= ${BINPATH}/$(ARCH)-g++
+
+#DEFAULT_CFLAGS = `sdl-config --cflags` -I/usr/include ${ARCHDEFS}
+#LDLIBS         =  -L/archive/devo/projects/pandora-image/current/usr/lib -lSDL -lts
 
 INCLUDES=
 
-OPTIMISE= -D_ZAURUS -O3 -ffast-math -fstrict-aliasing -fomit-frame-pointer -ftree-vectorize -funroll-all-loops -fpeel-loops -ftracer -funswitch-loops -finline-functions
+OPTIMISE = -D_ZAURUS -O3 -mcpu=cortex-a8 -mtune=cortex-a8 -ffast-math -fstrict-aliasing -fomit-frame-pointer -ftree-vectorize -funroll-all-loops -fpeel-loops -ftracer -funswitch-loops -finline-functions
 #-G 0 
 # -fprofile-use -ftest-coverage -fprofile-arcs
 
-CCFLAGS = $(DEFAULT_CFLAGS) $(OPTIMISE) \
+CCFLAGS = $(OPTIMISE) \
 -I. \
 -Iunzip \
--Isdl \
 -D__linux \
 -DZLIB \
 -DVAR_CYCLES \
@@ -148,11 +152,22 @@ $(GLIDEDEFINES) \
 $(OPENGLDEFINES) \
 $(GUIDEFINES) \
 $(KREEDDEFINES) \
+${ARCHDEFS} \
 
 #-DDEBUGGER
 #-DJOYSTICK_SUPPORT
 
-CFLAGS=$(CCFLAGS)
+CCFLAGS  += -I. -I$(TOOLCHAINDIR)/include \
+            -I$(TOOLCHAINDIR)/usr/include \
+            -I$(TOOLCHAINDIR)/$(ARCH)/include/c++/4.4.1 \
+            -I$(TOOLCHAINDIR)/$(ARCH)/libc/usr/include/ \
+             $(shell $(TOOLCHAINDIR)/usr/bin/sdl-config --cflags)
+            
+LDLIBS  = -L$(TOOLCHAINDIR)/lib \
+          -L$(TOOLCHAINDIR)/usr/lib \
+          -L$(TOOLCHAINDIR)/$(ARCH)/lib \
+          $(shell $(TOOLCHAINDIR)/usr/bin/sdl-config --libs)
+
 
 .SUFFIXES: .o .cpp .c .cc .h .m .i .S .asm .obj
 
@@ -186,35 +201,35 @@ $(OPENGLDEPENDS):
 	$(RM) $(OPENGLNO_DEPENDS)
 
 snes9x: $(OBJECTS) 
-	$(CC) $(INCLUDES) -o $@ $(OBJECTS) $(EXTRALIBS) $(LDLIBS) -lstdc++ -lz -lpthread -lm -lgcov
-	$(STRIP) snes9x
+	$(CC) -o $@ $(OBJECTS) $(EXTRALIBS) $(LDLIBS) -lstdc++ -lz -lpthread -lm -lgcov
+#	$(STRIP) snes9x
 	# build a pnd-file
-	cp snes9x pandora/pnd
-	cd pandora; ./make-pnd.sh
+#	cp snes9x pandora/pnd
+#	cd pandora; ./make-pnd.sh
 
 gsnes9x: $(OBJECTS) unix/x11.o unix/glide.o
-	$(CCC) $(INCLUDES) -o $@ $(OBJECTS) unix/x11.o unix/glide.o $(LDLIBS) $(GLIDELIBS) -lXext -lX11 -lXxf86dga -lXxf86vm $(EXTRALIBS) -lz -lm
+	$(CCC) -o $@ $(OBJECTS) unix/x11.o unix/glide.o $(LDLIBS) $(GLIDELIBS) -lXext -lX11 -lXxf86dga -lXxf86vm $(EXTRALIBS) -lz -lm
 
 osnes9x: $(OBJECTS) unix/x11.o $(OPENGLOBJS)
-	$(CCC) $(INCLUDES) -o $@ $(OBJECTS) unix/x11.o $(OPENGLOBJS) $(LDLIBS) $(OPENGLLIBS) -lXext -lX11 -lXxf86dga -lXxf86vm $(EXTRALIBS) -lz -lm
+	$(CCC) -o $@ $(OBJECTS) unix/x11.o $(OPENGLOBJS) $(LDLIBS) $(OPENGLLIBS) -lXext -lX11 -lXxf86dga -lXxf86vm $(EXTRALIBS) -lz -lm
 
 .cpp.o:
-	$(CCC) $(INCLUDES) -c $(CCFLAGS) $*.cpp -o $@
+	$(CCC) -c $(CCFLAGS) $*.cpp -o $@
 
 .c.o:
-	$(CC) $(INCLUDES) -c $(CCFLAGS) $*.c -o $@
+	$(CC) -c $(CCFLAGS) $*.c -o $@
 
 .cpp.S:
-	$(CCC) $(INCLUDES) -S $(CCFLAGS) $*.cpp -o $@
+	$(CCC) -S $(CCFLAGS) $*.cpp -o $@
 
 .cpp.i:
-	$(CCC) $(INCLUDES) -E $(CCFLAGS) $*.cpp -o $@
+	$(CCC) -E $(CCFLAGS) $*.cpp -o $@
 
 .S.o:
-	$(CCC) $(INCLUDES) -c $(CCFLAGS) $*.S -o $@
+	$(CCC) -c $(CCFLAGS) $*.S -o $@
 
 .S.i:
-	$(CCC) $(INCLUDES) -c -E $(CCFLAGS) $*.S -o $@
+	$(CCC) -c -E $(CCFLAGS) $*.S -o $@
 
 .asm.o:
 	$(NASM) -f elf $(FXDEFINES) -i . -i i386 -o $@ $*.asm
