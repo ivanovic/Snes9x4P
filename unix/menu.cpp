@@ -12,6 +12,7 @@
 #include "snapshot.h"
 #include "display.h"
 #include "gfx.h"
+#include "unistd.h"
 
 #ifdef PANDORA
 	#include "blitscale.h"
@@ -53,13 +54,11 @@ void sys_sleep(int us)
 }
 
 //------------------------------------------------------------------------------------------
-#ifndef PANDORA
-
 struct dirent **namelist;
 
 int isFile(const struct dirent *nombre) {
  int isFile = 0;
- char *extension = strrchr(nombre->d_name, '.');
+ char *extension = rindex( (char*) nombre->d_name, '.');
  if (strcmp(extension, ".sfc") == 0 ||
  	 strcmp(extension, ".smc") == 0 ||
  	 strcmp(extension, ".zip" ) == 0 )
@@ -296,7 +295,6 @@ char* menu_romselector()
 	return (rom_filename);
 }
 
-#endif
 //------------------------------------------------------------------------------------------
 
 void menu_dispupdate(void)
@@ -615,9 +613,7 @@ void menu_loop(void)
 								sprintf(ext, ".00%d", SaveSlotNum);
 								strcpy(fname, S9xGetFilename (ext));
 								S9xFreezeGame (fname);
-#ifndef PANDORA
 								sync();
-#endif
 								exit_loop = TRUE;
 							}
 						break;
@@ -626,9 +622,7 @@ void menu_loop(void)
 							{
 								sprintf(ext, ".00%d", SaveSlotNum);
 								strcpy(fname, S9xGetFilename (ext));
-#ifndef PANDORA
 								S9xLoadSnapshot (fname);
-#endif
 								exit_loop = TRUE;
 							}
 						break;
@@ -716,17 +710,14 @@ void menu_loop(void)
 	S9xInitDisplay(0, 0);
 }
 
-void save_screenshot(char *fname)
-{
+void save_screenshot(char *fname){
 	FILE  *fs = fopen (fname,"wb");
 	if(fs==NULL)
 		return;
 	
 	fwrite(snapscreen,17120,1,fs);
 	fclose (fs);
-#ifndef PANDORA
 	sync();
-#endif
 }
 
 void load_screenshot(char *fname)

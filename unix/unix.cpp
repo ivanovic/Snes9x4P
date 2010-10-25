@@ -317,12 +317,10 @@ int main (int argc, char **argv)
 	    // just to init Font here for ROM selector    
 	    S9xReset ();
 
-#ifndef PANDORA
 	    do
 	    {
 			rom_filename = menu_romselector();
 		}while(rom_filename==NULL);
-#endif
 
 		S9xDeinitDisplay();
 		printf ("Romfile selected: %s\n", rom_filename);
@@ -1093,11 +1091,11 @@ void _splitpath (const char *path, char *drive, char *dir, char *fname,
 {
     *drive = 0;
 
-    char *slash = strrchr (path, '/');
+    char *slash = strrchr ( (char*) path, '/');
     if (!slash)
-	slash = strrchr (path, '\\');
+	slash = strrchr ( (char*) path, '\\');
 
-    char *dot = strrchr (path, '.');
+    char *dot = strrchr ( (char*) path, '.');
 
     if (dot && slash && dot < slash)
 	dot = NULL;
