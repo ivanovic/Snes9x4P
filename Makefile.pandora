@@ -202,7 +202,7 @@ $(OPENGLDEPENDS):
 
 snes9x: $(OBJECTS) 
 	$(CC) -o $@ $(OBJECTS) $(EXTRALIBS) $(LDLIBS) -lstdc++ -lz -lpthread -lm -lgcov
-#	$(STRIP) snes9x
+	$(STRIP) snes9x
 	# build a pnd-file
 #	cp snes9x pandora/pnd
 #	cd pandora; ./make-pnd.sh
