@@ -865,79 +865,112 @@ bool8_32 S9xDeinitUpdate ( int Width, int Height ) {
     lp *= 2;
   }
 
-  if ( g_scale == bs_1to2_double ) {
-
-    for (register uint32 i = 0; i < Height; i++) {
-
-      // first scanline of doubled pair
-      register uint16 *dp16 = (uint16*)(screen -> pixels);
-      dp16 += ( i * screen -> pitch ); // pitch is in 1b increments, so is 2* what you think!
-      dp16 += ( screen -> w - ( Width * 2 ) ) / 2; // center horiz
-
-      register uint16 *sp16 = (uint16*)(GFX.Screen);
-      sp16 += ( i * 320 );
-
-      for (register uint32 j = 0; j < Width + 32/*256*/; j++, sp16++) {
-	*dp16++ = *sp16;
-	*dp16++ = *sp16;
-      }
-
-      if ( ! g_scanline ) {
-	// second scanline of doubled pair
-	dp16 = (uint16*)(screen -> pixels);
-	dp16 += ( i * screen -> pitch );
-	dp16 += ( screen -> pitch / 2 );
-	dp16 += ( screen -> w - ( Width * 2 ) ) / 2; // center horiz
-	sp16 = (uint16*)(GFX.Screen);
-	sp16 += ( i * 320 );
-	for (register uint32 j = 0; j < Width + 32/*256*/; j++, sp16++) {
-	  *dp16++ = *sp16;
-	  *dp16++ = *sp16;
+	//currently there is no scaling support for HiRes games!
+	if (Settings.SupportHiRes)
+	{
+		//fprintf (stderr, "width: %d, height: %d\n", Width, Height);
+		unsigned int effective_height = Height * 2;
+		if (Width > 256 ) {
+			for (register uint32 i = 0; i < effective_height; i++) {
+				register uint16 *dp16 = (uint16*)(screen -> pixels);
+				dp16 += ( i * screen -> pitch / 2 ); // pitch is in 1b increments, so is 2* what you think!
+				dp16 += ( screen -> w - Width ) / 2; // center horiz
+				
+				register uint32 *sp32 = (uint32 *)(GFX.Screen);
+				sp32 += ( i/2 * 256 );
+				for (register uint32 j = 0; j < Width/2; j++) {
+					*dp16++ = *sp32++;
+					*dp16++ = *sp32;
+				}
+			}
+		}
+		else
+		{
+			for (register uint32 i = 0; i < effective_height; i++) {
+				register uint16 *dp16 = (uint16*)(screen -> pixels);
+				dp16 += ( i * screen -> pitch / 2 ); // pitch is in 1b increments, so is 2* what you think!
+				dp16 += ( screen -> w - ( Width * 2 ) ) / 2; // center horiz
+				
+				register uint16 *sp16 = (uint16*)(GFX.Screen);
+				sp16 += ( i/2 * 512 );
+				for (register uint32 j = 0; j < Width; j++, *sp16++) {
+					*dp16++ = *sp16;
+					*dp16++ = *sp16;
+				}
+			}
+		}
 	}
-      } // scanline
-
-    } // for each height unit
-
-  } else if ( g_scale == bs_1to32_multiplied ) {
-
-    unsigned int effective_height = Height * 2;
-    for (register uint32 i = 0; i < effective_height; i++) {
-
-      // first scanline of doubled pair
-      register uint16 *dp16 = (uint16*)(screen -> pixels);
-      dp16 += ( i * ( screen -> pitch / 2 ) ); // pitch is in 1b increments, so is 2* what you think!
-
-      dp16 += 20; // center-ish X :)
-      dp16 += ( 5 * screen -> pitch ); // center-ish Y
-
-      register uint16 *sp16 = (uint16*)(GFX.Screen);
-      sp16 += ( ( i / 2 ) * 320 );
-
-      for (register uint32 j = 0; j < Width + 32/*256*/; j++, sp16++) {
-	*dp16++ = *sp16;
-	*dp16++ = *sp16; // doubled
-	*dp16++ = *sp16; // tripled
-      }
-
-    } // for each height unit
-
-  } else {
-
-    // code error; unknown scaler
-    fprintf ( stderr, "invalid scaler option handed to render code; fix me!\n" );
-    exit ( 0 );
-
-  } // scaled?
+	else if ( g_scale == bs_1to2_double ) {
+		//fprintf (stderr, "width: %d, height: %d\n", Width, Height);
+		for (register uint32 i = 0; i < Height; i++) {
+			
+			// first scanline of doubled pair
+			register uint16 *dp16 = (uint16*)(screen -> pixels);
+			dp16 += ( i * screen -> pitch ); // pitch is in 1b increments, so is 2* what you think!
+			dp16 += ( screen -> w - ( Width * 2 ) ) / 2; // center horiz
+			
+			register uint16 *sp16 = (uint16*)(GFX.Screen);
+			sp16 += ( i * 320 );
+			
+			for (register uint32 j = 0; j < Width /*256*/; j++, sp16++) {
+				*dp16++ = *sp16;
+				*dp16++ = *sp16;
+			}
+			
+			if ( ! g_scanline ) {
+				// second scanline of doubled pair
+				dp16 = (uint16*)(screen -> pixels);
+				dp16 += ( i * screen -> pitch );
+				dp16 += ( screen -> pitch / 2 );
+				dp16 += ( screen -> w - ( Width * 2 ) ) / 2; // center horiz
+				sp16 = (uint16*)(GFX.Screen);
+				sp16 += ( i * 320 );
+				for (register uint32 j = 0; j < Width /*256*/; j++, sp16++) {
+					*dp16++ = *sp16;
+					*dp16++ = *sp16;
+				}
+			} // scanline
+			
+		} // for each height unit
+	
+	} else if ( g_scale == bs_1to32_multiplied ) {
+		
+		unsigned int effective_height = Height * 2;
+		for (register uint32 i = 0; i < effective_height; i++) {
+			
+			// first scanline of doubled pair
+			register uint16 *dp16 = (uint16*)(screen -> pixels);
+			dp16 += ( i * ( screen -> pitch / 2 ) ); // pitch is in 1b increments, so is 2* what you think!
+			
+			dp16 += 20; // center-ish X :)
+			dp16 += ( 5 * screen -> pitch ); // center-ish Y
+			
+			register uint16 *sp16 = (uint16*)(GFX.Screen);
+			sp16 += ( ( i / 2 ) * 320 );
+			
+			for (register uint32 j = 0; j < Width /*256*/; j++, sp16++) {
+				*dp16++ = *sp16;
+				*dp16++ = *sp16; // doubled
+				*dp16++ = *sp16; // tripled
+			}
+			
+		} // for each height unit
+		
+	} else {
+		// code error; unknown scaler
+		fprintf ( stderr, "invalid scaler option handed to render code; fix me!\n" );
+		exit ( 0 );
+	} // scaled?
 
   if (Settings.DisplayFrameRate) {
     S9xDisplayFrameRate ((uint8 *)screen->pixels + 64, 800 * 2 * 2 );
   }
 
-  if (GFX.InfoString) {
-	  //this function causes a segfault!
-	  //TODO: fix and allow the function back in, until them: comment it out!
-	  //S9xDisplayString (GFX.InfoString, (uint8 *)screen->pixels + 64, 800 * 2 * 2, 460 );
-  }
+//the following part was once the cause of a segfault with savestates, this is no longer the case
+//sadly it is not removed correctly in every screen mode, so commenting it out for the moment
+//  if (GFX.InfoString) {
+//    S9xDisplayString (GFX.InfoString, (uint8 *)screen->pixels + 64, 800 * 2 * 2, 0 );
+//  }
 
   // SDL_UnlockSurface(screen);
 
@@ -1489,7 +1522,8 @@ uint32 S9xReadJoypad (int which1)
 
 static int Rates[8] =
 {
-    0, 8192, 11025, 16000, 22050, 29300, 36600, 44000
+//    0, 8192, 11025, 16000, 22050, 29300, 36600, 44000
+	0, 8192, 11025, 16000, 22050, 32000, 44100, 48000
 };
 
 static int BufferSizes [8] =
