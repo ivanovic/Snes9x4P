@@ -70,7 +70,7 @@ OBJECTS=$(CPUOBJ) $(FXOBJ) $(C4OBJ) $(CHEAT) \
 	$(KREEDOBJ)
 
 ifdef NETPLAY
-OBJECTS += netplay.o server.o
+OBJECTS += netplay.o #server.o
 NETPLAYDEFINES=-DNETPLAY_SUPPORT
 endif
 
