@@ -1,0 +1,18 @@
+# Global Settings
+filepath=/media/
+
+# Extension Settings
+[sfc]
+exepath=./snes.sh
+arg=,%filename%
+[smc]
+exepath=./snes.sh
+arg=,%filename%
+[7z]
+exepath=./snes.sh
+arg=,%filename%
+[zip]
+exepath=./snes.sh
+arg=,%filename%
+
+# Custom Entries Settings

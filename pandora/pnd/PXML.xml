@@ -4,21 +4,22 @@
 
   <application id="snes9x.skeezix.alpha">
 
-    <title lang="en_US">Snes9x4D4P</title>
+    <title lang="en_US">Snes9x4P</title>
  
-    <exec command="./runsnes9x-parag0n.sh"/>
+    <exec command="./run.sh"/>
     <icon src="icon.png"/>
 
     <previewpics>
       <pic src="snes.png"/>
     </previewpics>
 
+    <info name="Snes9x4P Dokumentation" type="text" src="README_Snes9x4X.txt"/>
+
     <description lang="en_US">Super Nintendo (SNES) emulator; derived from Snes9x4d (Dingoo) port.</description>
  
     <author name="snes9x team / SiENcE / skeezix" website="http://www.codejedi.com/"/>
  
-    <version major="1" minor="1" release="1" build="1"/><!--This programs version-->
-    <osversion major="1" minor="0" release="0" build="0"/><!--The minimum OS version required-->
+    <version major="1" minor="39ff" release="20101026" build="1"/><!--This programs version-->
  
     <categories>
       <category name="Game"><!--category like "Games", "Graphics", "Internet" etc-->
@@ -26,7 +27,7 @@
       </category>
     </categories>
  
-    <!--clockspeed frequency="600"/--><!--Frequency in Hz-->
+    <clockspeed frequency="600"><!--Frequency in Hz-->
 
   </application>
 

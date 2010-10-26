@@ -1,0 +1,78 @@
+# Settings
+screenwidth=800
+screenheight=480
+screendepth=16
+refreshdelay=10
+fullscreen=1
+showext=0
+showhidden=0
+showpointer=0
+showlabels=0
+unusedkeyslaunch=0
+unusedbuttonslaunch=0
+reloadlauncher=1
+fontsizesmall=16
+fontsizemedium=24
+fontsizelarge=28
+maxentries=10
+# Paths
+fontpath=Dotmatrx.ttf
+image_background=images/background.png
+image_pointer=images/pointer.png
+image_upone=images/button_oneup.png
+image_downone=images/button_onedn.png
+image_pageup=images/button_pageup.png
+image_pagedown=images/button_pagedn.png
+image_dirup=images/button_dirup.png
+image_dirdown=images/button_dirdn.png
+image_save=images/button_dirdn.png
+image_edit=images/button_edit.png
+image_config=images/button_options.png
+image_launch=images/button_launch.png
+image_quit=images/button_quit.png
+# Colors
+    # 0 white
+    # 1 yellow
+    # 2 fushsia
+    # 3 red
+    # 4 silver
+    # 5 gray
+    # 6 olive
+    # 7 purple
+    # 8 maroon
+    # 9 aqua
+    # 10 lime
+    # 11 teal
+    # 12 green
+    # 13 blue
+    # 14 navy
+    # 15 black
+color_buttons=13
+color_fontbuttons=0
+color_background=0
+color_fontfiles=15
+color_fontfolders=14
+# Controls
+key_up=273
+key_down=274
+key_left=276
+key_right=275
+key_dirup=281
+key_dirdown=278
+key_launch=279
+key_save=49
+key_edit=50
+key_config=0
+key_quit=27
+button_up=0
+button_down=1
+button_left=2
+button_right=3
+button_dirup=4
+button_dirdown=5
+button_save=6
+button_edit=7
+button_config=0
+button_launch=6
+button_quit=7
+deadzone=10000
