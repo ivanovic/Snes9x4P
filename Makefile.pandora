@@ -64,6 +64,9 @@ endif
 ifdef CHEATS
 CHEAT=cheats.o cheats2.o
 CHEATDEFINES=-DCHEATS
+else
+CHEAT=
+CHEATDEFINES=
 endif
 
 OBJECTS=$(CPUOBJ) $(FXOBJ) $(C4OBJ) $(CHEAT) \
@@ -129,9 +132,7 @@ GASM	= ${BINPATH}/$(ARCH)-g++
 
 INCLUDES=
 
-OPTIMISE = -D_ZAURUS -O3 -mcpu=cortex-a8 -mfpu=neon -ftree-vectorize -mfloat-abi=softfp -ffast-math -fsingle-precision-constant -finline-functions -fstrict-aliasing -funroll-all-loops -fpeel-loops -funswitch-loops
-#-G 0 
-# -fprofile-use -ftest-coverage -fprofile-arcs
+OPTIMISE = -D_ZAURUS -O3 -march=armv7-a -mcpu=cortex-a8 -mfpu=neon -mfloat-abi=softfp -msoft-float -ffast-math -fsingle-precision-constant
 
 CCFLAGS = $(OPTIMISE) \
 -I. \
@@ -201,7 +202,7 @@ $(OPENGLDEPENDS):
 	$(RM) $(OPENGLNO_DEPENDS)
 
 snes9x: $(OBJECTS) 
-	$(CC) -o $@ $(OBJECTS) $(EXTRALIBS) $(LDLIBS) -lstdc++ -lz -lpthread -lm -lgcov
+	$(CCC) -o $@ $(OBJECTS) $(EXTRALIBS) $(LDLIBS) -lstdc++ -lz -lpthread -lm -lgcov
 	$(STRIP) snes9x
 	# build a pnd-file
 #	cp snes9x pandora/pnd

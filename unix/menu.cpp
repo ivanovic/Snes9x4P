@@ -311,7 +311,7 @@ void menu_dispupdate(void)
 #if CAANOO
 	strcpy(disptxt[0],"Snes9x4C v20101010");
 #elif PANDORA
-	strcpy(disptxt[0],"Snes9x4P v20101025");
+	strcpy(disptxt[0],"Snes9x4P v20101026");
 #elif CYGWIN32
 	strcpy(disptxt[0],"Snes9x4W v20101010");
 #else
