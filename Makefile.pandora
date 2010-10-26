@@ -130,7 +130,7 @@ GASM	= ${BINPATH}/$(ARCH)-g++
 
 INCLUDES=
 
-OPTIMISE = -D_ZAURUS -O3 -mcpu=cortex-a8 -mtune=cortex-a8 -ffast-math -fstrict-aliasing -fomit-frame-pointer -ftree-vectorize -funroll-all-loops -fpeel-loops -ftracer -funswitch-loops -finline-functions
+OPTIMISE = -D_ZAURUS -O3 -mcpu=cortex-a8 -mfpu=neon -ftree-vectorize -mfloat-abi=softfp -ffast-math -fsingle-precision-constant -finline-functions -fstrict-aliasing -funroll-all-loops -fpeel-loops -funswitch-loops
 #-G 0 
 # -fprofile-use -ftest-coverage -fprofile-arcs
 

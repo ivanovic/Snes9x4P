@@ -243,7 +243,7 @@ int main (int argc, char **argv)
     ZeroMemory (&Settings, sizeof (Settings));
 
     Settings.JoystickEnabled = FALSE;	//unused
-    Settings.SoundPlaybackRate = 7; //2
+    Settings.SoundPlaybackRate = 5; //default would be '2', use 32000Hz as the genuine hardware does
     Settings.Stereo = TRUE;
     Settings.SoundBufferSize = 512; //256
     Settings.CyclesPercentage = 100;
@@ -860,40 +860,46 @@ bool8_32 S9xDeinitUpdate ( int Width, int Height ) {
 
   // NEEDS WORK, THIS IS JUST TO GET WORKING
 
-  register uint32 lp = (xs > 256) ? 16 : 0;
-  if (Width > 256 ) {
-    lp *= 2;
-  }
-
+	//get the pitch only once...
+	// pitch is in 1b increments, so is 2* what you think!
+	uint16 screen_pitch = screen -> pitch;
+	uint16 screen_pitch_half = screen_pitch / 2;
+	
+	//used for horizontal centering
+	uint16 screen_w_largewidth = ( screen -> w - Width ) / 2;
+	uint16 screen_w_smallwidth = ( screen -> w - ( Width * 2 ) ) / 2; 
+	
+	//pointer to the screen
+	uint16* screen_pixels = (uint16*)(screen -> pixels);
+	
+	//doubled heigth used to go over all lines and not get any scanlines
+	unsigned int height_doubled = Height * 2;
+	
 	//currently there is no scaling support for HiRes games!
 	if (Settings.SupportHiRes)
 	{
 		//fprintf (stderr, "width: %d, height: %d\n", Width, Height);
-		unsigned int effective_height = Height * 2;
 		if (Width > 256 ) {
-			for (register uint32 i = 0; i < effective_height; i++) {
-				register uint16 *dp16 = (uint16*)(screen -> pixels);
-				dp16 += ( i * screen -> pitch / 2 ); // pitch is in 1b increments, so is 2* what you think!
-				dp16 += ( screen -> w - Width ) / 2; // center horiz
+			int Width_half = Width/2;
+			for (register uint16 i = 0; i < height_doubled; ++i) {
+				register uint16 *dp16 = screen_pixels + ( i * screen_pitch_half ) + screen_w_largewidth;
 				
 				register uint32 *sp32 = (uint32 *)(GFX.Screen);
-				sp32 += ( i/2 * 256 );
-				for (register uint32 j = 0; j < Width/2; j++) {
-					*dp16++ = *sp32++;
+				sp32 += ( ( i >> 1 ) << 8 ); // i/2 * 256 = i/2 * 2^8; i/2 as to stay or "deinterlacing" will be broken!
+				for (register uint32 j = 0; j < Width_half; ++j, ++sp32) {
+					*dp16++ = *sp32;
 					*dp16++ = *sp32;
 				}
 			}
 		}
 		else
 		{
-			for (register uint32 i = 0; i < effective_height; i++) {
-				register uint16 *dp16 = (uint16*)(screen -> pixels);
-				dp16 += ( i * screen -> pitch / 2 ); // pitch is in 1b increments, so is 2* what you think!
-				dp16 += ( screen -> w - ( Width * 2 ) ) / 2; // center horiz
+			for (register uint32 i = 0; i < height_doubled; ++i) {
+				register uint16 *dp16 = screen_pixels + ( i * screen_pitch_half ) + screen_w_smallwidth;
 				
 				register uint16 *sp16 = (uint16*)(GFX.Screen);
-				sp16 += ( i/2 * 512 );
-				for (register uint32 j = 0; j < Width; j++, *sp16++) {
+				sp16 += ( ( i >> 1 ) << 9 ); // i/2 * 512 = i/2 * 2^9; i/2 as to stay or "deinterlacing" will be broken!
+				for (register uint16 j = 0; j < Width; ++j, ++sp16) {
 					*dp16++ = *sp16;
 					*dp16++ = *sp16;
 				}
@@ -902,30 +908,26 @@ bool8_32 S9xDeinitUpdate ( int Width, int Height ) {
 	}
 	else if ( g_scale == bs_1to2_double ) {
 		//fprintf (stderr, "width: %d, height: %d\n", Width, Height);
-		for (register uint32 i = 0; i < Height; i++) {
+		for (register uint16 i = 0; i < Height; ++i) {
 			
 			// first scanline of doubled pair
-			register uint16 *dp16 = (uint16*)(screen -> pixels);
-			dp16 += ( i * screen -> pitch ); // pitch is in 1b increments, so is 2* what you think!
-			dp16 += ( screen -> w - ( Width * 2 ) ) / 2; // center horiz
+			register uint16 *dp16 = screen_pixels  + ( i * screen_pitch ) + screen_w_smallwidth;
 			
 			register uint16 *sp16 = (uint16*)(GFX.Screen);
 			sp16 += ( i * 320 );
 			
-			for (register uint32 j = 0; j < Width /*256*/; j++, sp16++) {
+			for (register uint16 j = 0; j < Width /*256*/; ++j, ++sp16) {
 				*dp16++ = *sp16;
 				*dp16++ = *sp16;
 			}
 			
 			if ( ! g_scanline ) {
 				// second scanline of doubled pair
-				dp16 = (uint16*)(screen -> pixels);
-				dp16 += ( i * screen -> pitch );
-				dp16 += ( screen -> pitch / 2 );
-				dp16 += ( screen -> w - ( Width * 2 ) ) / 2; // center horiz
+				dp16 = screen_pixels + ( i * screen_pitch ) + screen_pitch_half + screen_w_smallwidth;
+				
 				sp16 = (uint16*)(GFX.Screen);
 				sp16 += ( i * 320 );
-				for (register uint32 j = 0; j < Width /*256*/; j++, sp16++) {
+				for (register uint16 j = 0; j < Width /*256*/; ++j, ++sp16) {
 					*dp16++ = *sp16;
 					*dp16++ = *sp16;
 				}
@@ -935,20 +937,19 @@ bool8_32 S9xDeinitUpdate ( int Width, int Height ) {
 	
 	} else if ( g_scale == bs_1to32_multiplied ) {
 		
-		unsigned int effective_height = Height * 2;
-		for (register uint32 i = 0; i < effective_height; i++) {
+		for (register uint16 i = 0; i < height_doubled; ++i) {
 			
 			// first scanline of doubled pair
-			register uint16 *dp16 = (uint16*)(screen -> pixels);
-			dp16 += ( i * ( screen -> pitch / 2 ) ); // pitch is in 1b increments, so is 2* what you think!
+			register uint16 *dp16 = screen_pixels;
+			dp16 += ( i * screen_pitch_half );
 			
 			dp16 += 20; // center-ish X :)
-			dp16 += ( 5 * screen -> pitch ); // center-ish Y
+			dp16 += ( 5 * screen_pitch ); // center-ish Y
 			
 			register uint16 *sp16 = (uint16*)(GFX.Screen);
-			sp16 += ( ( i / 2 ) * 320 );
+			sp16 += ( ( i >> 1 ) * 320 );
 			
-			for (register uint32 j = 0; j < Width /*256*/; j++, sp16++) {
+			for (register uint16 j = 0; j < Width /*256*/; ++j, ++sp16) {
 				*dp16++ = *sp16;
 				*dp16++ = *sp16; // doubled
 				*dp16++ = *sp16; // tripled
