@@ -1,5 +1,5 @@
 Snes9x4X v20101010
-=====================
+====================
 (c)^SiENcE^2010.10.10
 
 I renamed Snes9x4D to Snes9x4X. Every System gets his own Name extension.
