@@ -875,37 +875,80 @@ bool8_32 S9xDeinitUpdate ( int Width, int Height ) {
 	//doubled heigth used to go over all lines and not get any scanlines
 	unsigned int height_doubled = Height * 2;
 	
-	//currently there is no scaling support for HiRes games!
+	//hires modules come with two modes, one with 512 width, one with 256
 	if (Settings.SupportHiRes)
 	{
+		// moving the image in y direction is required for both, wide and normal when using a hires rom
+		uint16 widescreen_center_y = screen_pitch_half * 16; // screen_pitch_half * (480-448)/2
+		
 		//fprintf (stderr, "width: %d, height: %d\n", Width, Height);
-		if (Width > 256 ) {
-			int Width_half = Width/2;
-			for (register uint16 i = 0; i < height_doubled; ++i) {
-				register uint16 *dp16 = screen_pixels + ( i * screen_pitch_half ) + screen_w_largewidth;
-				
-				register uint32 *sp32 = (uint32 *)(GFX.Screen);
-				sp32 += ( ( i >> 1 ) << 8 ); // i/2 * 256 = i/2 * 2^8; i/2 as to stay or "deinterlacing" will be broken!
-				for (register uint32 j = 0; j < Width_half; ++j, ++sp32) {
-					*dp16++ = *sp32;
-					*dp16++ = *sp32;
+		if ( g_scale == bs_1to2_double ) {
+			if (Width > 256 ) {
+				int Width_half = Width/2;
+				for (register uint16 i = 0; i < height_doubled; ++i) {
+					register uint16 *dp16 = screen_pixels + ( i * screen_pitch_half ) + screen_w_largewidth + widescreen_center_y;
+					
+					register uint32 *sp32 = (uint32 *)(GFX.Screen);
+					sp32 += ( ( i >> 1 ) << 8 ); // i/2 * 256 = i/2 * 2^8; i/2 as to stay or "deinterlacing" will be broken!
+					for (register uint32 j = 0; j < Width_half; ++j, ++sp32) {
+						*dp16++ = *sp32;
+						*dp16++ = *sp32; // doubled
+					}
 				}
 			}
-		}
-		else
-		{
-			for (register uint32 i = 0; i < height_doubled; ++i) {
-				register uint16 *dp16 = screen_pixels + ( i * screen_pitch_half ) + screen_w_smallwidth;
-				
-				register uint16 *sp16 = (uint16*)(GFX.Screen);
-				sp16 += ( ( i >> 1 ) << 9 ); // i/2 * 512 = i/2 * 2^9; i/2 as to stay or "deinterlacing" will be broken!
-				for (register uint16 j = 0; j < Width; ++j, ++sp16) {
-					*dp16++ = *sp16;
-					*dp16++ = *sp16;
+			else
+			{
+				for (register uint32 i = 0; i < height_doubled; ++i) {
+					register uint16 *dp16 = screen_pixels + ( i * screen_pitch_half ) + screen_w_smallwidth + widescreen_center_y;
+					
+					register uint16 *sp16 = (uint16*)(GFX.Screen);
+					sp16 += ( ( i >> 1 ) << 9 ); // i/2 * 512 = i/2 * 2^9; i/2 as to stay or "deinterlacing" will be broken!
+					for (register uint16 j = 0; j < Width; ++j, ++sp16) {
+						*dp16++ = *sp16;
+						*dp16++ = *sp16; // doubled
+					}
 				}
 			}
+		} else if ( g_scale == bs_1to32_multiplied ) {
+			uint16 widescreen_center_x = 16; // screen_pitch_half - 3*256
+			//combine the two in one var
+			uint16 centering = widescreen_center_x + widescreen_center_y;
+			
+			if (Width > 256 ) {
+				int Width_half = Width/2;
+				for (register uint16 i = 0; i < height_doubled; ++i) {
+					register uint16 *dp16 = screen_pixels + ( i * screen_pitch_half ) + centering;
+					
+					register uint32 *sp32 = (uint32 *)(GFX.Screen);
+					sp32 += ( ( i >> 1 ) << 8 ); // i/2 * 256 = i/2 * 2^8; i/2 as to stay or "deinterlacing" will be broken!
+					for (register uint32 j = 0; j < Width_half; ++j, ++sp32) {
+						*dp16++ = *sp32;
+						*dp16++ = *sp32; // doubled
+						*dp16++ = *sp32; // tripled
+					}
+				}
+			}
+			else
+			{
+				for (register uint32 i = 0; i < height_doubled; ++i) {
+					register uint16 *dp16 = screen_pixels + ( i * screen_pitch_half ) + centering;
+					
+					register uint16 *sp16 = (uint16*)(GFX.Screen);
+					sp16 += ( ( i >> 1 ) << 9 ); // i/2 * 512 = i/2 * 2^9; i/2 as to stay or "deinterlacing" will be broken!
+					for (register uint16 j = 0; j < Width; ++j, ++sp16) {
+						*dp16++ = *sp16;
+						*dp16++ = *sp16; // doubled
+						*dp16++ = *sp16; // tripled
+					}
+				}
+			} 
+		} else {
+				// code error; unknown scaler
+				fprintf ( stderr, "invalid scaler option handed to render code; fix me!\n" );
+				exit ( 0 );
 		}
 	}
+	//if not in hires mode we are most likely in lowres...
 	else if ( g_scale == bs_1to2_double ) {
 		//fprintf (stderr, "width: %d, height: %d\n", Width, Height);
 		for (register uint16 i = 0; i < Height; ++i) {
@@ -918,7 +961,7 @@ bool8_32 S9xDeinitUpdate ( int Width, int Height ) {
 			
 			for (register uint16 j = 0; j < Width /*256*/; ++j, ++sp16) {
 				*dp16++ = *sp16;
-				*dp16++ = *sp16;
+				*dp16++ = *sp16; // doubled
 			}
 			
 			if ( ! g_scanline ) {
@@ -929,22 +972,19 @@ bool8_32 S9xDeinitUpdate ( int Width, int Height ) {
 				sp16 += ( i * 320 );
 				for (register uint16 j = 0; j < Width /*256*/; ++j, ++sp16) {
 					*dp16++ = *sp16;
-					*dp16++ = *sp16;
+					*dp16++ = *sp16; // doubled
 				}
 			} // scanline
 			
 		} // for each height unit
 	
 	} else if ( g_scale == bs_1to32_multiplied ) {
+		uint16 widescreen_center_x = 16; // screen_pitch_half - 3*256
 		
 		for (register uint16 i = 0; i < height_doubled; ++i) {
 			
-			// first scanline of doubled pair
-			register uint16 *dp16 = screen_pixels;
-			dp16 += ( i * screen_pitch_half );
-			
-			dp16 += 20; // center-ish X :)
-			dp16 += ( 5 * screen_pitch ); // center-ish Y
+			// seems to not require and centering in y dimension!
+			register uint16 *dp16 = screen_pixels + ( i * screen_pitch_half ) + widescreen_center_x;
 			
 			register uint16 *sp16 = (uint16*)(GFX.Screen);
 			sp16 += ( ( i >> 1 ) * 320 );
