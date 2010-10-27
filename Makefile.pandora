@@ -204,9 +204,9 @@ $(OPENGLDEPENDS):
 snes9x: $(OBJECTS) 
 	$(CCC) -o $@ $(OBJECTS) $(EXTRALIBS) $(LDLIBS) -lstdc++ -lz -lpthread -lm -lgcov
 	$(STRIP) snes9x
-	# build a pnd-file
-#	cp snes9x pandora/pnd
-#	cd pandora; ./make-pnd.sh
+
+pnd: snes9x
+	cd pandora; ./package_snes9x4p.sh
 
 gsnes9x: $(OBJECTS) unix/x11.o unix/glide.o
 	$(CCC) -o $@ $(OBJECTS) unix/x11.o unix/glide.o $(LDLIBS) $(GLIDELIBS) -lXext -lX11 -lXxf86dga -lXxf86vm $(EXTRALIBS) -lz -lm
@@ -236,7 +236,7 @@ osnes9x: $(OBJECTS) unix/x11.o $(OPENGLOBJS)
 	$(NASM) -f elf $(FXDEFINES) -i . -i i386 -o $@ $*.asm
 
 clean:
-	rm -f $(OBJECTS) offsets.o unix/unix.o unix/svga.o pandora/snes*pnd pandora/pnd/snes9x snes9x
+	rm -f $(OBJECTS) offsets.o unix/unix.o unix/svga.o pandora/snes*pnd snes9x pandora/snes9x4p_*pnd
 	find . -name "*~*" -exec rm {} \; -print
 
 #release: CCFLAGS += -DNO_DEBUGGER
