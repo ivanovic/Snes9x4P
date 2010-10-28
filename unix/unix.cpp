@@ -890,7 +890,7 @@ bool8_32 S9xDeinitUpdate ( int Width, int Height ) {
 					
 					register uint32 *sp32 = (uint32 *)(GFX.Screen);
 					sp32 += ( ( i >> 1 ) << 8 ); // i/2 * 256 = i/2 * 2^8; i/2 as to stay or "deinterlacing" will be broken!
-					for (register uint32 j = 0; j < Width_half; ++j, ++sp32) {
+					for (register uint16 j = 0; j < Width_half; ++j, ++sp32) {
 						*dp16++ = *sp32;
 						*dp16++ = *sp32; // doubled
 					}
@@ -898,7 +898,7 @@ bool8_32 S9xDeinitUpdate ( int Width, int Height ) {
 			}
 			else
 			{
-				for (register uint32 i = 0; i < height_doubled; ++i) {
+				for (register uint16 i = 0; i < height_doubled; ++i) {
 					register uint16 *dp16 = screen_pixels + ( i * screen_pitch_half ) + screen_w_smallwidth + widescreen_center_y;
 					
 					register uint16 *sp16 = (uint16*)(GFX.Screen);
@@ -921,7 +921,7 @@ bool8_32 S9xDeinitUpdate ( int Width, int Height ) {
 					
 					register uint32 *sp32 = (uint32 *)(GFX.Screen);
 					sp32 += ( ( i >> 1 ) << 8 ); // i/2 * 256 = i/2 * 2^8; i/2 as to stay or "deinterlacing" will be broken!
-					for (register uint32 j = 0; j < Width_half; ++j, ++sp32) {
+					for (register uint16 j = 0; j < Width_half; ++j, ++sp32) {
 						*dp16++ = *sp32;
 						*dp16++ = *sp32; // doubled
 						*dp16++ = *sp32; // tripled
@@ -930,7 +930,7 @@ bool8_32 S9xDeinitUpdate ( int Width, int Height ) {
 			}
 			else
 			{
-				for (register uint32 i = 0; i < height_doubled; ++i) {
+				for (register uint16 i = 0; i < height_doubled; ++i) {
 					register uint16 *dp16 = screen_pixels + ( i * screen_pitch_half ) + centering;
 					
 					register uint16 *sp16 = (uint16*)(GFX.Screen);
