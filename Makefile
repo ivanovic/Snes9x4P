@@ -68,7 +68,7 @@ OBJECTS=$(CPUOBJ) $(FXOBJ) $(C4OBJ) \
 	$(SOUNDOBJ) unix/svga.o \
 	sdd1.o sdd1emu.o dsp1.o sa1.o sa1cpu.o obc1.o \
     snes9x.o snapshot.o data.o globals.o \
-	$(KREEDOBJ)
+	$(KREEDOBJ) $(CHEATS)
 
 ifdef NETPLAY
 OBJECTS += netplay.o server.o
@@ -211,8 +211,10 @@ osnes9x: $(OBJECTS) unix/x11.o $(OPENGLOBJS)
 .asm.o:
 	$(NASM) -f elf $(FXDEFINES) -i . -i i386 -o $@ $*.asm
 
+#adding the pandora output files to "normal" make clean so that i don't have to call "make -f Makefiles.pandora clean" every time...
 clean:
-	rm -f $(OBJECTS) offsets.o unix/unix.o unix/svga.o
+	rm -f $(OBJECTS) offsets.o unix/unix.o unix/svga.o snes9x pandora/snes9x*pnd
+	find . -name "*~*" -exec rm {} \; -print
 #release: CCFLAGS += -DNO_DEBUGGER
 
 release: clean all
