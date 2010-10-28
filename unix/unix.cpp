@@ -863,30 +863,32 @@ bool8_32 S9xDeinitUpdate ( int Width, int Height ) {
 	//get the pitch only once...
 	// pitch is in 1b increments, so is 2* what you think!
 	uint16 screen_pitch = screen -> pitch;
-	uint16 screen_pitch_half = screen_pitch / 2;
-	
-	//used for horizontal centering
-	uint16 screen_w_largewidth = ( screen -> w - Width ) / 2;
-	uint16 screen_w_smallwidth = ( screen -> w - ( Width * 2 ) ) / 2; 
+	uint16 screen_pitch_half = screen_pitch >> 1; 
 	
 	//pointer to the screen
 	uint16* screen_pixels = (uint16*)(screen -> pixels);
 	
 	//doubled heigth used to go over all lines and not get any scanlines
-	unsigned int height_doubled = Height * 2;
+	unsigned int height_doubled = Height << 1;
+	
+	// screen_pitch_half * (480-Heigth)/2; due to shifting no "div by zero" not possible
+	// heigth is usually 224, 239 or 240!
+	uint16 widescreen_center_y = screen_pitch_half * ( ( 480 - ( Height << 1 ) ) >> 1 );
+	
+	//fprintf (stderr, "width: %d, height: %d\n", Width, Height);
 	
 	//hires modules come with two modes, one with 512 width, one with 256
 	if (Settings.SupportHiRes)
 	{
-		// moving the image in y direction is required for both, wide and normal when using a hires rom
-		uint16 widescreen_center_y = screen_pitch_half * 16; // screen_pitch_half * (480-448)/2
-		
-		//fprintf (stderr, "width: %d, height: %d\n", Width, Height);
 		if ( g_scale == bs_1to2_double ) {
 			if (Width > 256 ) {
-				int Width_half = Width/2;
+				uint16 widescreen_center_x = ( screen -> w - Width ) >> 1; // ( screen -> w - Width ) / 2
+				// destination pointer address: pointer to screen_pixels plus moving for centering
+				uint16* destination_pointer_address = screen_pixels + widescreen_center_x + widescreen_center_y;
+				
+				int Width_half = Width >> 1; // Width/2
 				for (register uint16 i = 0; i < height_doubled; ++i) {
-					register uint16 *dp16 = screen_pixels + ( i * screen_pitch_half ) + screen_w_largewidth + widescreen_center_y;
+					register uint16 *dp16 = destination_pointer_address + ( i * screen_pitch_half );
 					
 					register uint32 *sp32 = (uint32 *)(GFX.Screen);
 					sp32 += ( ( i >> 1 ) << 8 ); // i/2 * 256 = i/2 * 2^8; i/2 as to stay or "deinterlacing" will be broken!
@@ -898,8 +900,12 @@ bool8_32 S9xDeinitUpdate ( int Width, int Height ) {
 			}
 			else
 			{
+				uint16 widescreen_center_x = ( screen -> w - ( Width << 1 ) ) >> 1; // ( screen -> w - ( Width * 2 ) ) / 2
+				// destination pointer address: pointer to screen_pixels plus moving for centering
+				uint16* destination_pointer_address = screen_pixels + widescreen_center_x + widescreen_center_y;
+				
 				for (register uint16 i = 0; i < height_doubled; ++i) {
-					register uint16 *dp16 = screen_pixels + ( i * screen_pitch_half ) + screen_w_smallwidth + widescreen_center_y;
+					register uint16 *dp16 = destination_pointer_address + ( i * screen_pitch_half );
 					
 					register uint16 *sp16 = (uint16*)(GFX.Screen);
 					sp16 += ( ( i >> 1 ) << 9 ); // i/2 * 512 = i/2 * 2^9; i/2 as to stay or "deinterlacing" will be broken!
@@ -910,14 +916,14 @@ bool8_32 S9xDeinitUpdate ( int Width, int Height ) {
 				}
 			}
 		} else if ( g_scale == bs_1to32_multiplied ) {
-			uint16 widescreen_center_x = 16; // screen_pitch_half - 3*256
-			//combine the two in one var
-			uint16 centering = widescreen_center_x + widescreen_center_y;
+			//uint16 widescreen_center_x = 16; // screen_pitch_half - 3*256
+			// destination pointer address: pointer to screen_pixels plus moving for centering
+			uint16* destination_pointer_address = screen_pixels + 16 + widescreen_center_y;
 			
 			if (Width > 256 ) {
 				int Width_half = Width/2;
 				for (register uint16 i = 0; i < height_doubled; ++i) {
-					register uint16 *dp16 = screen_pixels + ( i * screen_pitch_half ) + centering;
+					register uint16 *dp16 = destination_pointer_address + ( i * screen_pitch_half );
 					
 					register uint32 *sp32 = (uint32 *)(GFX.Screen);
 					sp32 += ( ( i >> 1 ) << 8 ); // i/2 * 256 = i/2 * 2^8; i/2 as to stay or "deinterlacing" will be broken!
@@ -931,7 +937,7 @@ bool8_32 S9xDeinitUpdate ( int Width, int Height ) {
 			else
 			{
 				for (register uint16 i = 0; i < height_doubled; ++i) {
-					register uint16 *dp16 = screen_pixels + ( i * screen_pitch_half ) + centering;
+					register uint16 *dp16 = destination_pointer_address + ( i * screen_pitch_half );
 					
 					register uint16 *sp16 = (uint16*)(GFX.Screen);
 					sp16 += ( ( i >> 1 ) << 9 ); // i/2 * 512 = i/2 * 2^9; i/2 as to stay or "deinterlacing" will be broken!
@@ -950,41 +956,56 @@ bool8_32 S9xDeinitUpdate ( int Width, int Height ) {
 	}
 	//if not in hires mode we are most likely in lowres...
 	else if ( g_scale == bs_1to2_double ) {
-		//fprintf (stderr, "width: %d, height: %d\n", Width, Height);
-		for (register uint16 i = 0; i < Height; ++i) {
-			
-			// first scanline of doubled pair
-			register uint16 *dp16 = screen_pixels  + ( i * screen_pitch ) + screen_w_smallwidth;
+		uint16 widescreen_center_x = ( screen -> w - ( Width << 1 ) ) >> 1; // ( screen -> w - ( Width * 2 ) ) / 2 
+		// destination pointer address: pointer to screen_pixels plus moving for centering
+		uint16* destination_pointer_address = screen_pixels + widescreen_center_x + widescreen_center_y;
+		
+//The part below is the version that should be used when you want scanline support.
+//if you don't want scanlines, the other system should be faster.
+// 		for (register uint16 i = 0; i < Height; ++i) {
+// 			// first scanline of doubled pair
+// 			register uint16 *dp16 = destination_pointer_address + ( i * screen_pitch );
+// 			
+// 			register uint16 *sp16 = (uint16*)(GFX.Screen);
+// 			sp16 += ( i * 320 );
+// 			
+// 			for (register uint16 j = 0; j < Width /*256*/; ++j, ++sp16) {
+// 				*dp16++ = *sp16;
+// 				*dp16++ = *sp16; // doubled
+// 			}
+// 			
+// 			if ( ! g_scanline ) {
+// 				// second scanline of doubled pair
+// 				dp16 = destination_pointer_address + ( i * screen_pitch ) + screen_pitch_half;
+// 				
+// 				sp16 = (uint16*)(GFX.Screen);
+// 				sp16 += ( i * 320 );
+// 				for (register uint16 j = 0; j < Width /*256*/; ++j, ++sp16) {
+// 					*dp16++ = *sp16;
+// 					*dp16++ = *sp16; // doubled
+// 				}
+// 			} // scanline
+// 		} // for each height unit
+		for (register uint16 i = 0; i < height_doubled; ++i) {
+			// seems to not require and centering in y dimension!
+			register uint16 *dp16 = destination_pointer_address + ( i * screen_pitch_half );
 			
 			register uint16 *sp16 = (uint16*)(GFX.Screen);
-			sp16 += ( i * 320 );
+			sp16 += ( ( i >> 1 ) * 320 );
 			
 			for (register uint16 j = 0; j < Width /*256*/; ++j, ++sp16) {
 				*dp16++ = *sp16;
 				*dp16++ = *sp16; // doubled
 			}
-			
-			if ( ! g_scanline ) {
-				// second scanline of doubled pair
-				dp16 = screen_pixels + ( i * screen_pitch ) + screen_pitch_half + screen_w_smallwidth;
-				
-				sp16 = (uint16*)(GFX.Screen);
-				sp16 += ( i * 320 );
-				for (register uint16 j = 0; j < Width /*256*/; ++j, ++sp16) {
-					*dp16++ = *sp16;
-					*dp16++ = *sp16; // doubled
-				}
-			} // scanline
-			
 		} // for each height unit
-	
 	} else if ( g_scale == bs_1to32_multiplied ) {
-		uint16 widescreen_center_x = 16; // screen_pitch_half - 3*256
+		//uint16 widescreen_center_x = 16; // screen_pitch_half - 3*256
+		// destination pointer address: pointer to screen_pixels plus moving for centering
+		uint16* destination_pointer_address = screen_pixels + 16 + widescreen_center_y;
 		
 		for (register uint16 i = 0; i < height_doubled; ++i) {
-			
 			// seems to not require and centering in y dimension!
-			register uint16 *dp16 = screen_pixels + ( i * screen_pitch_half ) + widescreen_center_x;
+			register uint16 *dp16 = destination_pointer_address + ( i * screen_pitch_half );
 			
 			register uint16 *sp16 = (uint16*)(GFX.Screen);
 			sp16 += ( ( i >> 1 ) * 320 );
@@ -994,7 +1015,6 @@ bool8_32 S9xDeinitUpdate ( int Width, int Height ) {
 				*dp16++ = *sp16; // doubled
 				*dp16++ = *sp16; // tripled
 			}
-			
 		} // for each height unit
 		
 	} else {
@@ -1010,7 +1030,7 @@ bool8_32 S9xDeinitUpdate ( int Width, int Height ) {
 //the following part was once the cause of a segfault with savestates, this is no longer the case
 //sadly it is not removed correctly in every screen mode, so commenting it out for the moment
 //  if (GFX.InfoString) {
-//    S9xDisplayString (GFX.InfoString, (uint8 *)screen->pixels + 64, 800 * 2 * 2, 0 );
+//    S9xDisplayString (GFX.InfoString, (uint8 *)screen->pixels + 64, 800 * 2 * 2, 240 );
 //  }
 
   // SDL_UnlockSurface(screen);
