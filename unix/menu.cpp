@@ -311,7 +311,7 @@ void menu_dispupdate(void)
 #if CAANOO
 	strcpy(disptxt[0],"Snes9x4C v20101010");
 #elif PANDORA
-	strcpy(disptxt[0],"Snes9x4P v20101028");
+	strcpy(disptxt[0],"Snes9x4P v20101106");
 #elif CYGWIN32
 	strcpy(disptxt[0],"Snes9x4W v20101010");
 #else
@@ -636,9 +636,20 @@ void menu_loop(void)
 						case 7:
 #ifdef PANDORA
 						  // rotate through scalers
-						  do {
-						    g_scale = (blit_scaler_e) ( ( g_scale + 1 ) % bs_max );
-						  } while ( blit_scalers [ g_scale ].valid == bs_invalid );
+							if (keyssnes[sfc_key[RIGHT_1]] == SDL_PRESSED)
+							{
+								do
+								{
+									g_scale = (blit_scaler_e) ( ( g_scale + 1 ) % bs_max );
+								} while ( blit_scalers [ g_scale ].valid == bs_invalid );
+							} else if (keyssnes[sfc_key[LEFT_1]] == SDL_PRESSED)
+							{
+								do
+								{
+									g_scale = (blit_scaler_e) ( g_scale - 1 );
+									if (g_scale < 1) g_scale = (blit_scaler_e)(bs_max-1);
+								} while ( blit_scalers [ g_scale ].valid == bs_invalid );
+							}
 #else
 							Scale_org = !Scale_org;
 #endif

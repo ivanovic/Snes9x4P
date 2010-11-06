@@ -69,13 +69,15 @@ CHEAT=
 CHEATDEFINES=
 endif
 
+PANDORA_FILES=unix/hqx_init.o unix/hq2x_16.o
+
 OBJECTS=$(CPUOBJ) $(FXOBJ) $(C4OBJ) $(CHEAT) \
 	cpu.o tile.o gfx.o clip.o \
 	memmap.o ppu.o dma.o unix/menu.o unix/unix.o \
 	$(SOUNDOBJ) unix/svga.o \
 	sdd1.o sdd1emu.o dsp1.o sa1.o sa1cpu.o obc1.o \
-    snes9x.o snapshot.o data.o globals.o \
-	$(KREEDOBJ)
+	snes9x.o snapshot.o data.o globals.o \
+	$(KREEDOBJ) $(PANDORA_FILES)
 
 ifdef NETPLAY
 OBJECTS += netplay.o #server.o

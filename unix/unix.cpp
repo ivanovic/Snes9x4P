@@ -4,7 +4,7 @@
  * (c) Copyright 1996 - 2001 Gary Henderson (gary.henderson@ntlworld.com) and
  *                           Jerremy Koot (jkoot@snes9x.com)
  *
- * Super FX C emulator code 
+ * Super FX C emulator code
  * (c) Copyright 1997 - 1999 Ivar (ivar@snes9x.com) and
  *                           Gary Henderson.
  * Super FX assembler emulator code (c) Copyright 1998 zsKnight and _Demo_.
@@ -67,6 +67,9 @@
 
 #ifdef PANDORA
 #include <linux/fb.h>
+extern "C" {
+#include "hqx.h"
+}
 #ifndef FBIO_WAITFORVSYNC
 #define FBIO_WAITFORVSYNC _IOW('F', 0x20, __u32)
 #endif
@@ -109,7 +112,7 @@ pthread_mutex_t mutex;
 	  { bs_error,                bs_invalid, 0, 0,       "Error" },
 	  { bs_1to1,                 bs_invalid, 1, 1,       "1 to 1" },
 	  { bs_1to2_double,          bs_valid,   2, 2,       "2x2 no-AA" },
-	  { bs_1to2_smooth,          bs_invalid, 2, 2,       "2x2 Smoothed" },
+	  { bs_1to2_smooth,          bs_valid,   2, 2,       "2x2 Smoothed" },
 	  { bs_1to32_multiplied,     bs_valid,   3, 2,       "3x2 no-AA" },
 	  { bs_1to32_smooth,         bs_invalid, 3, 2,       "3x2 Smoothed" },
 	  { bs_fs_aspect_multiplied, bs_invalid, 0xFF, 0xFF, "Fullscreen (aspect) (unsmoothed)" },
@@ -117,7 +120,7 @@ pthread_mutex_t mutex;
 	  { bs_fs_always_multiplied, bs_invalid, 0xFF, 0xFF, "Fullscreen (unsmoothed)" },
 	  { bs_fs_always_smooth,     bs_invalid, 0xFF, 0xFF, "Fullscreen (smoothed)" },
 	};
-	
+
 	blit_scaler_e g_scale = bs_1to2_double;
 	//blit_scaler_e g_scale = bs_1to32_multiplied;
 	unsigned char g_fullscreen = 1;
@@ -313,8 +316,8 @@ int main (int argc, char **argv)
 			OutOfMemory ();
 		}
 	    S9xInitInputDevices ();
-	
-	    // just to init Font here for ROM selector    
+
+	    // just to init Font here for ROM selector
 	    S9xReset ();
 
 	    do
@@ -335,14 +338,14 @@ int main (int argc, char **argv)
 		    char name [_MAX_FNAME + 1];
 		    char ext [_MAX_EXT + 1];
 		    char fname [_MAX_PATH + 1];
-	
+
 		    _splitpath (rom_filename, drive, dir, name, ext);
 		    _makepath (fname, drive, dir, name, ext);
-	
+
 		    strcpy (fname, S9xGetROMDirectory ());
 		    strcat (fname, SLASH_STR);
 		    strcat (fname, name);
-		    
+
 		    if (ext [0])
 		    {
 				strcat (fname, ".");
@@ -350,7 +353,7 @@ int main (int argc, char **argv)
 		    }
 		    _splitpath (fname, drive, dir, name, ext);
 		    _makepath (fname, drive, dir, name, ext);
-		    
+
 		    if (!Memory.LoadROM (fname))
 		    {
 				printf ("Error opening: %s\n", rom_filename);
@@ -363,17 +366,18 @@ int main (int argc, char **argv)
     {
 	    S9xExit();
     }
-    
+
     S9xInitDisplay (argc, argv);
     if (!S9xGraphicsInit ())
     {
 		OutOfMemory ();
 	}
+    hqxInit();
     S9xInitInputDevices ();
 
     CPU.Flags = saved_flags;
     Settings.StopEmulation = FALSE;
-    
+
 #ifdef DEBUGGER
 	struct sigaction sa;
 	sa.sa_handler = sigbrkhandler;
@@ -553,14 +557,14 @@ void OutOfMemory()
     Memory.Deinit ();
     S9xDeinitAPU ();
     S9xDeinitDisplay();
-    
+
     exit (1);
 }
 
 void S9xExit()
 {
 	S9xSetSoundMute(true);
-	
+
 #ifdef USE_THREADS
     if (Settings.ThreadSound)
     {
@@ -569,7 +573,7 @@ void S9xExit()
 			perror ("Error pthread_cancel");
 	}
 #endif
-	
+
 #ifdef NETPLAY_SUPPORT
 	if (Settings.NetPlay)
 		S9xNPDisconnect();
@@ -581,7 +585,7 @@ void S9xExit()
     Memory.Deinit ();
     S9xDeinitAPU ();
     S9xDeinitDisplay ();
-    
+
     SDL_ShowCursor(SDL_ENABLE);
     SDL_Quit();
 
@@ -719,7 +723,7 @@ const char *S9xGetSnapshotDirectory ()
 {
     static char filename [PATH_MAX];
     const char *snapshot;
-    
+
     if (!(snapshot = getenv ("SNES9X_SNAPSHOT_DIR")) &&
 	!(snapshot = getenv ("SNES96_SNAPSHOT_DIR")))
     {
@@ -756,7 +760,7 @@ const char *S9xGetFilename (const char *ex)
 const char *S9xGetROMDirectory ()
 {
     const char *roms;
-    
+
     if (!(roms = getenv ("SNES9X_ROM_DIR")) && !(roms = getenv ("SNES96_ROM_DIR")))
 		return ("." SLASH_STR "roms");
     else
@@ -797,7 +801,7 @@ bool8 S9xOpenSnapshotFile (const char *fname, bool8 read_only, STREAM *file)
 	if (!*ext)
 	    strcat (filename, ".s96");
     }
-    
+
 #ifdef ZLIB
     if (read_only)
     {
@@ -814,7 +818,7 @@ bool8 S9xOpenSnapshotFile (const char *fname, bool8 read_only, STREAM *file)
     }
 #else
     char command [PATH_MAX];
-    
+
     if (read_only)
     {
 	sprintf (command, "gzip -d <\"%s\"", filename);
@@ -863,7 +867,7 @@ bool8_32 S9xDeinitUpdate ( int Width, int Height ) {
 	//get the pitch only once...
 	// pitch is in 1b increments, so is 2* what you think!
 	uint16 screen_pitch = screen -> pitch;
-	uint16 screen_pitch_half = screen_pitch >> 1; 
+	uint16 screen_pitch_half = screen_pitch >> 1;
 	
 	//pointer to the screen
 	uint16* screen_pixels = (uint16*)(screen -> pixels);
@@ -880,7 +884,11 @@ bool8_32 S9xDeinitUpdate ( int Width, int Height ) {
 	//hires modules come with two modes, one with 512 width, one with 256
 	if (Settings.SupportHiRes)
 	{
-		if ( g_scale == bs_1to2_double ) {
+		/* 
+		 * we are in hires mode, for hires games no smooth scaling is required, so use the same function for
+		 * 1to2_double and 1to2_smooth
+		 */
+		if ( g_scale == bs_1to2_double || g_scale == bs_1to2_smooth ) {
 			if (Width > 256 ) {
 				uint16 widescreen_center_x = ( screen -> w - Width ) >> 1; // ( screen -> w - Width ) / 2
 				// destination pointer address: pointer to screen_pixels plus moving for centering
@@ -891,15 +899,14 @@ bool8_32 S9xDeinitUpdate ( int Width, int Height ) {
 					register uint16 *dp16 = destination_pointer_address + ( i * screen_pitch_half );
 					
 					register uint32 *sp32 = (uint32 *)(GFX.Screen);
-					sp32 += ( ( i >> 1 ) << 8 ); // i/2 * 256 = i/2 * 2^8; i/2 as to stay or "deinterlacing" will be broken!
+					sp32 += ( ( i >> 1 ) << 8 ); // i/2 * 256 = i/2 * 2^8; i/2 has to stay or "deinterlacing" will be broken!
 					for (register uint16 j = 0; j < Width_half; ++j, ++sp32) {
 						*dp16++ = *sp32;
 						*dp16++ = *sp32; // doubled
 					}
 				}
 			}
-			else
-			{
+			else {
 				uint16 widescreen_center_x = ( screen -> w - ( Width << 1 ) ) >> 1; // ( screen -> w - ( Width * 2 ) ) / 2
 				// destination pointer address: pointer to screen_pixels plus moving for centering
 				uint16* destination_pointer_address = screen_pixels + widescreen_center_x + widescreen_center_y;
@@ -908,7 +915,7 @@ bool8_32 S9xDeinitUpdate ( int Width, int Height ) {
 					register uint16 *dp16 = destination_pointer_address + ( i * screen_pitch_half );
 					
 					register uint16 *sp16 = (uint16*)(GFX.Screen);
-					sp16 += ( ( i >> 1 ) << 9 ); // i/2 * 512 = i/2 * 2^9; i/2 as to stay or "deinterlacing" will be broken!
+					sp16 += ( ( i >> 1 ) << 9 ); // i/2 * 512 = i/2 * 2^9; i/2 has to stay or "deinterlacing" will be broken!
 					for (register uint16 j = 0; j < Width; ++j, ++sp16) {
 						*dp16++ = *sp16;
 						*dp16++ = *sp16; // doubled
@@ -926,7 +933,7 @@ bool8_32 S9xDeinitUpdate ( int Width, int Height ) {
 					register uint16 *dp16 = destination_pointer_address + ( i * screen_pitch_half );
 					
 					register uint32 *sp32 = (uint32 *)(GFX.Screen);
-					sp32 += ( ( i >> 1 ) << 8 ); // i/2 * 256 = i/2 * 2^8; i/2 as to stay or "deinterlacing" will be broken!
+					sp32 += ( ( i >> 1 ) << 8 ); // i/2 * 256 = i/2 * 2^8; i/2 has to stay or "deinterlacing" will be broken!
 					for (register uint16 j = 0; j < Width_half; ++j, ++sp32) {
 						*dp16++ = *sp32;
 						*dp16++ = *sp32; // doubled
@@ -934,20 +941,19 @@ bool8_32 S9xDeinitUpdate ( int Width, int Height ) {
 					}
 				}
 			}
-			else
-			{
+			else {
 				for (register uint16 i = 0; i < height_doubled; ++i) {
 					register uint16 *dp16 = destination_pointer_address + ( i * screen_pitch_half );
 					
 					register uint16 *sp16 = (uint16*)(GFX.Screen);
-					sp16 += ( ( i >> 1 ) << 9 ); // i/2 * 512 = i/2 * 2^9; i/2 as to stay or "deinterlacing" will be broken!
+					sp16 += ( ( i >> 1 ) << 9 ); // i/2 * 512 = i/2 * 2^9; i/2 has to stay or "deinterlacing" will be broken!
 					for (register uint16 j = 0; j < Width; ++j, ++sp16) {
 						*dp16++ = *sp16;
 						*dp16++ = *sp16; // doubled
 						*dp16++ = *sp16; // tripled
 					}
 				}
-			} 
+			}
 		} else {
 				// code error; unknown scaler
 				fprintf ( stderr, "invalid scaler option handed to render code; fix me!\n" );
@@ -956,10 +962,10 @@ bool8_32 S9xDeinitUpdate ( int Width, int Height ) {
 	}
 	//if not in hires mode we are most likely in lowres...
 	else if ( g_scale == bs_1to2_double ) {
-		uint16 widescreen_center_x = ( screen -> w - ( Width << 1 ) ) >> 1; // ( screen -> w - ( Width * 2 ) ) / 2 
+		uint16 widescreen_center_x = ( screen -> w - ( Width << 1 ) ) >> 1; // ( screen -> w - ( Width * 2 ) ) / 2
 		// destination pointer address: pointer to screen_pixels plus moving for centering
 		uint16* destination_pointer_address = screen_pixels + widescreen_center_x + widescreen_center_y;
-		
+
 //The part below is the version that should be used when you want scanline support.
 //if you don't want scanlines, the other system should be faster.
 // 		for (register uint16 i = 0; i < Height; ++i) {
@@ -998,25 +1004,26 @@ bool8_32 S9xDeinitUpdate ( int Width, int Height ) {
 				*dp16++ = *sp16; // doubled
 			}
 		} // for each height unit
+	} else if ( g_scale == bs_1to2_smooth ) {
+		hq2x_16((uint16*)(GFX.Screen), screen_pixels, Width, Height, screen->w, screen->h);
 	} else if ( g_scale == bs_1to32_multiplied ) {
 		//uint16 widescreen_center_x = 16; // screen_pitch_half - 3*256
 		// destination pointer address: pointer to screen_pixels plus moving for centering
 		uint16* destination_pointer_address = screen_pixels + 16 + widescreen_center_y;
 		
 		for (register uint16 i = 0; i < height_doubled; ++i) {
-			// seems to not require and centering in y dimension!
+			// seems to not require any centering in y dimension!
 			register uint16 *dp16 = destination_pointer_address + ( i * screen_pitch_half );
 			
 			register uint16 *sp16 = (uint16*)(GFX.Screen);
 			sp16 += ( ( i >> 1 ) * 320 );
 			
-			for (register uint16 j = 0; j < Width /*256*/; ++j, ++sp16) {
+			for (register uint16 j = 0; j < Width ; ++j, ++sp16) {
 				*dp16++ = *sp16;
 				*dp16++ = *sp16; // doubled
 				*dp16++ = *sp16; // tripled
 			}
 		} // for each height unit
-		
 	} else {
 		// code error; unknown scaler
 		fprintf ( stderr, "invalid scaler option handed to render code; fix me!\n" );
@@ -1105,9 +1112,9 @@ bool8_32 S9xDeinitUpdate (int Width, int Height)
 			static uint32 x_fraction=52428;
 		 	char temp[512];
 			register uint8 *d;
-			//x_fraction = (SNES_WIDTH * 0x10000) / 320;		
-			//x_fraction = 52428;		
-		
+			//x_fraction = (SNES_WIDTH * 0x10000) / 320;
+			//x_fraction = 52428;
+
 			for (y = Height-1;y >= 0; y--)
 			{
 			    d = GFX.Screen + y * 640;
@@ -1115,11 +1122,11 @@ bool8_32 S9xDeinitUpdate (int Width, int Height)
 			    d += yoffset*640;
 			    x_error = x_fraction;
 			    s=0;
-	
+
 			    for (x = 0; x < 320; x++)
 			    {
 					x_error += x_fraction;
-	
+
 					if(x_error >= 0x10000)
 					{
 					    *d++ = temp[s++];
@@ -1256,7 +1263,7 @@ void InitTimer ()
 {
     struct itimerval timeout;
     struct sigaction sa;
-    
+
 #ifdef USE_THREADS
     if (Settings.ThreadSound)
     {
@@ -1276,7 +1283,7 @@ void InitTimer ()
 
     sigemptyset (&sa.sa_mask);
     sigaction (SIGALRM, &sa, NULL);
-    
+
     timeout.it_interval.tv_sec = 0;
     timeout.it_interval.tv_usec = 10000;
     timeout.it_value.tv_sec = 0;
@@ -1343,14 +1350,14 @@ void S9xSyncSpeed ()
     {
 		static struct timeval next1 = {0, 0};
 		struct timeval now;
-	
+
 		while (gettimeofday (&now, NULL) < 0) ;
 		if (next1.tv_sec == 0)
 		{
 		    next1 = now;
 		    next1.tv_usec++;
 		}
-	
+
 		if (timercmp(&next1, &now, >))
 		{
 		    if (IPPU.SkippedFrames == 0)
@@ -1446,6 +1453,19 @@ void S9xProcessEvents (bool8_32 block)
 					//exit ( 0 ); // just die
 					S9xExit();
 				}
+				if ( event.key.keysym.sym == SDLK_s )
+				{
+					//exit ( 0 ); // just die
+					//S9xExit();
+					if (g_scale == bs_1to2_double)
+					{
+						g_scale = bs_1to2_smooth;
+					} else
+					{
+						g_scale = bs_1to2_double;
+					}
+				}
+
 #endif //PANDORA
 				//QUIT Emulator
 				if ( (keyssnes[sfc_key[SELECT_1]] == SDL_PRESSED) &&(keyssnes[sfc_key[START_1]] == SDL_PRESSED) && (keyssnes[sfc_key[X_1]] == SDL_PRESSED) )
@@ -1632,7 +1652,7 @@ bool8_32 S9xOpenSoundDevice (int mode, bool8_32 stereo, int buffer_size)
 		perror ("ioctl SNDCTL_DSP_STEREO");
 		return (FALSE);
     }
-    
+
     so.playback_rate = Rates[mode & 0x07];
  //   so.playback_rate = 16000;
 
@@ -1649,14 +1669,14 @@ so.buffer_size = buffer_size;
 //	so.buffer_size = buffer_size = BufferSizes [mode & 7];
 
 	//	buffer_size = so.buffer_size = 256;
-		
+
     if (buffer_size > MAX_BUFFER_SIZE / 4)
 	buffer_size = MAX_BUFFER_SIZE / 4;
 //    if (so.sixteen_bit)
 	buffer_size *= 2;
     if (so.stereo)
 	buffer_size *= 2;
-	
+
     int power2 = log2 (buffer_size);
     J = K = power2 | (3 << 16);
     if (ioctl (so.sound_fd, SNDCTL_DSP_SETFRAGMENT, &J) < 0)
@@ -1664,7 +1684,7 @@ so.buffer_size = buffer_size;
 		perror ("ioctl SNDCTL_DSP_SETFRAGMENT");
 		return (FALSE);
     }
-    
+
     printf ("Rate: %d, Buffer size: %d, 16-bit: %s, Stereo: %s, Encoded: %s\n",
 	    so.playback_rate, so.buffer_size, so.sixteen_bit ? "yes" : "no",
 	    so.stereo ? "yes" : "no", so.encoded ? "yes" : "no");
@@ -1712,14 +1732,14 @@ void S9xGenerateSound ()
 	if (so.stereo)
 	    sample_count <<= 1;
 	byte_offset = bytes_so_far + so.play_position;
-	    
+
 	do
 	{
 	    int sc = sample_count;
 	    byte_count = sample_count;
 //	    if (so.sixteen_bit)
 		byte_count <<= 1;
-	    
+
 	    if ((byte_offset & SOUND_BUFFER_SIZE_MASK) + byte_count > SOUND_BUFFER_SIZE)
 	    {
 		sc = SOUND_BUFFER_SIZE - (byte_offset & SOUND_BUFFER_SIZE_MASK);
@@ -1751,7 +1771,7 @@ void S9xGenerateSound ()
     if (Settings.ThreadSound)
 		pthread_mutex_unlock (&mutex);
     else
-#endif    
+#endif
     if (pending_signal)
     {
 		S9xProcessSound (NULL);
@@ -1779,7 +1799,7 @@ void *S9xProcessSound (void *)
 
 //    if (so.sixteen_bit)
 	sample_count >>= 1;
- 
+
 #ifdef USE_THREADS
 //    if (Settings.ThreadSound)
 	pthread_mutex_lock (&mutex);
@@ -1795,11 +1815,11 @@ void *S9xProcessSound (void *)
 
     if (so.samples_mixed_so_far < sample_count)
     {
-	//	byte_offset = so.play_position + 
+	//	byte_offset = so.play_position +
 	//		      (so.sixteen_bit ? (so.samples_mixed_so_far << 1)
 	//				      : so.samples_mixed_so_far);
 		byte_offset = so.play_position + (so.samples_mixed_so_far << 1);
-	
+
 		if (Settings.SoundSync == 2)
 		{
 		    memset (Buf + (byte_offset & SOUND_BUFFER_SIZE_MASK), 0, sample_count - so.samples_mixed_so_far);
@@ -1808,22 +1828,22 @@ void *S9xProcessSound (void *)
 		{
 		    S9xMixSamplesO (Buf, sample_count - so.samples_mixed_so_far, byte_offset & SOUND_BUFFER_SIZE_MASK);
 	    }
-	
+
 		so.samples_mixed_so_far = 0;
     }
     else
     {
 		so.samples_mixed_so_far -= sample_count;
 	}
-    
+
 //    if (!so.mute_sound)
     {
 		int I;
 		int J = so.buffer_size;
-	
+
 		byte_offset = so.play_position;
 		so.play_position = (so.play_position + so.buffer_size) & SOUND_BUFFER_SIZE_MASK;
-	
+
 #ifdef USE_THREADS
 	//	if (Settings.ThreadSound)
 		    pthread_mutex_unlock (&mutex);
