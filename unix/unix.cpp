@@ -372,7 +372,11 @@ int main (int argc, char **argv)
     {
 		OutOfMemory ();
 	}
+
+#ifdef PANDORA
     hqxInit();
+#endif
+
     S9xInitInputDevices ();
 
     CPU.Flags = saved_flags;
