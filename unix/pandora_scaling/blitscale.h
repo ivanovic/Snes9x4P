@@ -6,8 +6,8 @@ typedef enum {
   bs_error,             // fail!
   bs_1to1,              // identity 1:1
   bs_1to2_double,       // 1:2 doubling (no AA/etc)
-  bs_1to2_smooth,       // 1:2 with smoothing
   bs_1to2_scale2x,      // 1:2 doubling filter
+  bs_1to2_smooth,       // 1:2 with smoothing
   bs_1to32_multiplied,  // 1:(3x2) 'doubled' (no AA,etc)
   bs_1to32_smooth,      // 1:(3x2) smoothed
   bs_fs_aspect_multiplied, // scale fullscreen, limited to aspect correct, unsmoothed

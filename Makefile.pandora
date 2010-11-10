@@ -69,7 +69,8 @@ CHEAT=
 CHEATDEFINES=
 endif
 
-PANDORA_FILES=unix/pandora_scaling/hqx/hqx_init.o \
+PANDORA_FILES=unix/pandora_scaling/simple_noAA_scaler.o \
+              unix/pandora_scaling/hqx/hqx_init.o \
               unix/pandora_scaling/hqx/hq2x_16.o \
               unix/pandora_scaling/scale2x/getopt.o \
               unix/pandora_scaling/scale2x/pixel.o \

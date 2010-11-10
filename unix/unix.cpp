@@ -67,6 +67,7 @@
 
 #ifdef PANDORA
 #include <linux/fb.h>
+#include "unix/pandora_scaling/simple_noAA_scaler.h"
 extern "C" {
 #include "unix/pandora_scaling/hqx/hqx.h"
 #include "unix/pandora_scaling/scale2x/scalebit.h"
@@ -113,8 +114,8 @@ pthread_mutex_t mutex;
 		{ bs_error,                bs_invalid, 0, 0,       "Error" },
 		{ bs_1to1,                 bs_invalid, 1, 1,       "1 to 1" },
 		{ bs_1to2_double,          bs_valid,   2, 2,       "2x2 no-AA" },
-		{ bs_1to2_smooth,          bs_valid,   2, 2,       "2x2 Smoothed" },
 		{ bs_1to2_scale2x,         bs_valid,   2, 2,       "2x2 Scale2x" },
+		{ bs_1to2_smooth,          bs_valid,   2, 2,       "2x2 Smoothed" },
 		{ bs_1to32_multiplied,     bs_valid,   3, 2,       "3x2 no-AA" },
 		{ bs_1to32_smooth,         bs_invalid, 3, 2,       "3x2 Smoothed" },
 		{ bs_fs_aspect_multiplied, bs_invalid, 0xFF, 0xFF, "Fullscreen (aspect) (unsmoothed)" },
@@ -870,170 +871,91 @@ bool8_32 S9xDeinitUpdate ( int Width, int Height ) {
 
   // NEEDS WORK, THIS IS JUST TO GET WORKING
 
-	//get the pitch only once...
+	// get the pitch only once...
 	// pitch is in 1b increments, so is 2* what you think!
-	uint16 screen_pitch = screen -> pitch;
-	uint16 screen_pitch_half = screen_pitch >> 1;
+	uint16 screen_pitch_half = (screen -> pitch) >> 1;
 	
 	//pointer to the screen
 	uint16* screen_pixels = (uint16*)(screen -> pixels);
 	
-	//doubled heigth used to go over all lines and not get any scanlines
-	unsigned int height_doubled = Height << 1;
-	
-	// screen_pitch_half * (480-Heigth)/2; due to shifting no "div by zero" not possible
+	// this line for centering in Y direction always assumes that Height<=240 and double scaling in Y is wanted (interlacing!)
+	// screen_pitch_half * (480-(Heigth*2))/2; due to shifting no "div by zero" not possible
 	// heigth is usually 224, 239 or 240!
 	uint16 widescreen_center_y = screen_pitch_half * ( ( 480 - ( Height << 1 ) ) >> 1 );
+	// centering in X direction depends on the scaling type used and is defined at the according places
 	uint16 widescreen_center_x;
+	// destination pointer address: pointer to screen_pixels plus moving for centering
 	uint16* destination_pointer_address;
 	
 	//fprintf (stderr, "width: %d, height: %d\n", Width, Height);
 	
-	//hires modules come with two modes, one with 512 width, one with 256
+	uint16 source_panewidth = 320; // LoRes games are rendered into a 320 wide SDL screen
 	if (Settings.SupportHiRes)
-	{
-		switch (g_scale) {
-			case bs_1to2_double:
-				if (Width > 256 ) {
-					widescreen_center_x = ( screen -> w - Width ) >> 1; // ( screen -> w - Width ) / 2
-					// destination pointer address: pointer to screen_pixels plus moving for centering
-					destination_pointer_address = screen_pixels + widescreen_center_x + widescreen_center_y;
-					
-					int Width_half = Width >> 1; // Width/2
-					for (register uint16 i = 0; i < height_doubled; ++i) {
-						register uint16 *dp16 = destination_pointer_address + ( i * screen_pitch_half );
-						
-						register uint32 *sp32 = (uint32 *)(GFX.Screen);
-						sp32 += ( ( i >> 1 ) << 8 ); // i/2 * 256 = i/2 * 2^8; i/2 has to stay or "deinterlacing" will be broken!
-						for (register uint16 j = 0; j < Width_half; ++j, ++sp32) {
-							*dp16++ = *sp32;
-							*dp16++ = *sp32; // doubled
-						}
-					}
-				}
-				else {
-					widescreen_center_x = ( screen -> w - ( Width << 1 ) ) >> 1; // ( screen -> w - ( Width * 2 ) ) / 2
-					// destination pointer address: pointer to screen_pixels plus moving for centering
-					destination_pointer_address = screen_pixels + widescreen_center_x + widescreen_center_y;
-					
-					for (register uint16 i = 0; i < height_doubled; ++i) {
-						register uint16 *dp16 = destination_pointer_address + ( i * screen_pitch_half );
-						
-						register uint16 *sp16 = (uint16*)(GFX.Screen);
-						sp16 += ( ( i >> 1 ) << 9 ); // i/2 * 512 = i/2 * 2^9; i/2 has to stay or "deinterlacing" will be broken!
-						for (register uint16 j = 0; j < Width; ++j, ++sp16) {
-							*dp16++ = *sp16;
-							*dp16++ = *sp16; // doubled
-						}
-					}
-				}
-				break;
-			case bs_1to32_multiplied:
-				//widescreen_center_x = 16; // screen_pitch_half - 3*256
-				// destination pointer address: pointer to screen_pixels plus moving for centering
-				destination_pointer_address = screen_pixels + 16 + widescreen_center_y;
+		source_panewidth = 512; // HiRes games are rendered into a 512 wide SDL screen
+	
+	switch (g_scale) {
+		case bs_1to2_double:
+			// the pandora screen has a width of 800px, so everything above should be handled differently
+			// only some scenes in hires roms use 512px width, otherwise the max is 320px in the menu!
+			// hires modules themselves come with two modes, one with 512 width, one with 256
+			if (Width > 400 ) {
+				widescreen_center_x = ( screen -> w - Width ) >> 1; // ( screen -> w - Width ) / 2
+				destination_pointer_address = screen_pixels + widescreen_center_x + widescreen_center_y;
 				
-				if (Width > 256 ) {
-					int Width_half = Width/2;
-					for (register uint16 i = 0; i < height_doubled; ++i) {
-						register uint16 *dp16 = destination_pointer_address + ( i * screen_pitch_half );
-						
-						register uint32 *sp32 = (uint32 *)(GFX.Screen);
-						sp32 += ( ( i >> 1 ) << 8 ); // i/2 * 256 = i/2 * 2^8; i/2 has to stay or "deinterlacing" will be broken!
-						for (register uint16 j = 0; j < Width_half; ++j, ++sp32) {
-							*dp16++ = *sp32;
-							*dp16++ = *sp32; // doubled
-							*dp16++ = *sp32; // tripled
-						}
-					}
-				}
-				else {
-					for (register uint16 i = 0; i < height_doubled; ++i) {
-						register uint16 *dp16 = destination_pointer_address + ( i * screen_pitch_half );
-						
-						register uint16 *sp16 = (uint16*)(GFX.Screen);
-						sp16 += ( ( i >> 1 ) << 9 ); // i/2 * 512 = i/2 * 2^9; i/2 has to stay or "deinterlacing" will be broken!
-						for (register uint16 j = 0; j < Width; ++j, ++sp16) {
-							*dp16++ = *sp16;
-							*dp16++ = *sp16; // doubled
-							*dp16++ = *sp16; // tripled
-						}
-					}
-				}
-				break;
-			case bs_1to2_smooth:
-				fprintf ( stderr, "hiq2x not enabled for hires mode!\n" );
-				g_scale = bs_1to2_double;
-				break;
-			case bs_1to2_scale2x:
-				fprintf ( stderr, "scale2x not enabled for hires mode!\n" );
-				g_scale = bs_1to2_double;
-				break;
-			default:
-				// code error; unknown scaler
-				fprintf ( stderr, "invalid scaler option handed to render code; fix me!\n" );
-				exit ( 0 );
-		}
-	}
-	else {
-		switch (g_scale) {
-			case bs_1to2_double:
+				render_x_single(destination_pointer_address, screen_pitch_half,
+				                (uint16*)(GFX.Screen), source_panewidth, Width, Height);
+			}
+			else {
 				widescreen_center_x = ( screen -> w - ( Width << 1 ) ) >> 1; // ( screen -> w - ( Width * 2 ) ) / 2
 				// destination pointer address: pointer to screen_pixels plus moving for centering
 				destination_pointer_address = screen_pixels + widescreen_center_x + widescreen_center_y;
 				
-				for (register uint16 i = 0; i < height_doubled; ++i) {
-					// seems to not require and centering in y dimension!
-					register uint16 *dp16 = destination_pointer_address + ( i * screen_pitch_half );
-					register uint16 *sp16 = (uint16*)(GFX.Screen);
-					sp16 += ( ( i >> 1 ) * 320 );
-					
-					for (register uint16 j = 0; j < Width /*256*/; ++j, ++sp16) {
-						*dp16++ = *sp16;
-						*dp16++ = *sp16; // doubled
-					}
-				} // for each height unit
-				break;
-			case bs_1to32_multiplied:
-				//widescreen_center_x = 16; // screen_pitch_half - 3*256
-				// destination pointer address: pointer to screen_pixels plus moving for centering
-				destination_pointer_address = screen_pixels + 16 + widescreen_center_y;
-				
-				for (register uint16 i = 0; i < height_doubled; ++i) {
-					// seems to not require any centering in y dimension!
-					register uint16 *dp16 = destination_pointer_address + ( i * screen_pitch_half );
-					
-					register uint16 *sp16 = (uint16*)(GFX.Screen);
-					sp16 += ( ( i >> 1 ) * 320 );
-					
-					for (register uint16 j = 0; j < Width ; ++j, ++sp16) {
-						*dp16++ = *sp16;
-						*dp16++ = *sp16; // doubled
-						*dp16++ = *sp16; // tripled
-					}
-				} // for each height unit
-				break;
-			case bs_1to2_smooth:
+				render_x_double(destination_pointer_address, screen_pitch_half,
+				                (uint16*)(GFX.Screen), source_panewidth, Width, Height);
+			}
+			break;
+		case bs_1to32_multiplied:
+			//widescreen_center_x = 16; // screen -> w - 3*Width
+			// destination pointer address: pointer to screen_pixels plus moving for centering
+			destination_pointer_address = screen_pixels + 16 + widescreen_center_y;
+			
+			// the pandora screen has a width of 800px, so everything above should be handled differently
+			// only some scenes in hires roms use 512px width, otherwise the max is 320px in the menu!
+			// hires modules themselves come with two modes, one with 512 width, one with 256
+			if (Width > 400 ) {
+				render_x_oneandhalf(destination_pointer_address, screen_pitch_half,
+				                (uint16*)(GFX.Screen), source_panewidth, Width, Height);
+			}
+			else {
+				render_x_triple(destination_pointer_address, screen_pitch_half,
+				                (uint16*)(GFX.Screen), source_panewidth, Width, Height);
+			}
+			break;
+		case bs_1to2_smooth:
+			if (Settings.SupportHiRes) { 
+				fprintf ( stderr, "Smoothed not enabled for hires mode!\n" );
+				g_scale = bs_1to2_double;
+			} else {
 				hq2x_16((uint16*)(GFX.Screen), screen_pixels, Width, Height, screen->w, screen->h);
-				break;
-			case bs_1to2_scale2x:
-				if ( Width <= 400 && Height <= 240 ) {
-					widescreen_center_x = ( screen -> w - ( Width << 1 ) ) >> 1; // ( screen -> w - ( Width * 2 ) ) / 2
-					// destination pointer address: pointer to screen_pixels plus moving for centering
-					destination_pointer_address = screen_pixels + widescreen_center_x + widescreen_center_y;                  
-					
-					scale(2, (uint16*)destination_pointer_address, screen->w*2, (uint16*)GFX.Screen, 320*2, 2, Width, Height);
-				} else {
-					fprintf ( stderr, "screen is too big for scale2x!\n" );
-					g_scale = bs_1to2_double;                  
-				}
-				break;
-			default:
-				// code error; unknown scaler
-				fprintf ( stderr, "invalid scaler option handed to render code; fix me!\n" );
-				exit ( 0 );
-		}
+			}
+			break;
+		case bs_1to2_scale2x:
+			if (Settings.SupportHiRes) { 
+				fprintf ( stderr, "Scale2x not enabled for hires mode!\n" );
+				g_scale = bs_1to2_double;
+			} else {
+				widescreen_center_x = ( screen -> w - ( Width << 1 ) ) >> 1; // ( screen -> w - ( Width * 2 ) ) / 2
+				destination_pointer_address = screen_pixels + widescreen_center_x + widescreen_center_y;
+				
+				scale(2, (uint16*)destination_pointer_address, screen->w*2, (uint16*)GFX.Screen, 320*2, 2, Width, Height);
+			}
+			break;
+		default:
+			// code error; unknown scaler
+			fprintf ( stderr, "invalid scaler option handed to render code; fix me!\n" );
+			exit ( 0 );
 	}
+
 
 //The part below is the version that should be used when you want scanline support.
 //if you don't want scanlines, the other system should be faster.
@@ -1491,10 +1413,10 @@ void S9xProcessEvents (bool8_32 block)
 					//S9xExit();
 					if (g_scale == bs_1to2_double)
 					{
-						g_scale = bs_1to2_smooth;
-					} else if (g_scale == bs_1to2_smooth)
-					{
 						g_scale = bs_1to2_scale2x;
+					} else if (g_scale == bs_1to2_scale2x)
+					{
+						g_scale = bs_1to2_smooth;
 					} else
 					{
 						g_scale = bs_1to2_double;
