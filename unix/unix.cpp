@@ -68,7 +68,8 @@
 #ifdef PANDORA
 #include <linux/fb.h>
 extern "C" {
-#include "hqx.h"
+#include "unix/pandora_scaling/hqx/hqx.h"
+#include "unix/pandora_scaling/scale2x/scalebit.h"
 }
 #ifndef FBIO_WAITFORVSYNC
 #define FBIO_WAITFORVSYNC _IOW('F', 0x20, __u32)
@@ -106,19 +107,20 @@ pthread_mutex_t mutex;
 #include "spc700.h"
 
 #ifdef PANDORA
-	#include "blitscale.h"
+	#include "pandora_scaling/blitscale.h"
 	blit_scaler_option_t blit_scalers[] = {
-	  // KEEP IN SYNC TO BLIT_SCALER_E or Earth Crashes Into The Sun
-	  { bs_error,                bs_invalid, 0, 0,       "Error" },
-	  { bs_1to1,                 bs_invalid, 1, 1,       "1 to 1" },
-	  { bs_1to2_double,          bs_valid,   2, 2,       "2x2 no-AA" },
-	  { bs_1to2_smooth,          bs_valid,   2, 2,       "2x2 Smoothed" },
-	  { bs_1to32_multiplied,     bs_valid,   3, 2,       "3x2 no-AA" },
-	  { bs_1to32_smooth,         bs_invalid, 3, 2,       "3x2 Smoothed" },
-	  { bs_fs_aspect_multiplied, bs_invalid, 0xFF, 0xFF, "Fullscreen (aspect) (unsmoothed)" },
-	  { bs_fs_aspect_smooth,     bs_invalid, 0xFF, 0xFF, "Fullscreen (aspect) (smoothed)" },
-	  { bs_fs_always_multiplied, bs_invalid, 0xFF, 0xFF, "Fullscreen (unsmoothed)" },
-	  { bs_fs_always_smooth,     bs_invalid, 0xFF, 0xFF, "Fullscreen (smoothed)" },
+		// KEEP IN SYNC TO BLIT_SCALER_E or Earth Crashes Into The Sun
+		{ bs_error,                bs_invalid, 0, 0,       "Error" },
+		{ bs_1to1,                 bs_invalid, 1, 1,       "1 to 1" },
+		{ bs_1to2_double,          bs_valid,   2, 2,       "2x2 no-AA" },
+		{ bs_1to2_smooth,          bs_valid,   2, 2,       "2x2 Smoothed" },
+		{ bs_1to2_scale2x,         bs_valid,   2, 2,       "2x2 Scale2x" },
+		{ bs_1to32_multiplied,     bs_valid,   3, 2,       "3x2 no-AA" },
+		{ bs_1to32_smooth,         bs_invalid, 3, 2,       "3x2 Smoothed" },
+		{ bs_fs_aspect_multiplied, bs_invalid, 0xFF, 0xFF, "Fullscreen (aspect) (unsmoothed)" },
+		{ bs_fs_aspect_smooth,     bs_invalid, 0xFF, 0xFF, "Fullscreen (aspect) (smoothed)" },
+		{ bs_fs_always_multiplied, bs_invalid, 0xFF, 0xFF, "Fullscreen (unsmoothed)" },
+		{ bs_fs_always_smooth,     bs_invalid, 0xFF, 0xFF, "Fullscreen (smoothed)" },
 	};
 
 	blit_scaler_e g_scale = bs_1to2_double;
@@ -958,6 +960,9 @@ bool8_32 S9xDeinitUpdate ( int Width, int Height ) {
 					}
 				}
 			}
+		} else if ( g_scale == bs_1to2_scale2x ) {
+			fprintf ( stderr, "scale2x not enabled for hires mode!\n" );
+			g_scale = bs_1to1;
 		} else {
 				// code error; unknown scaler
 				fprintf ( stderr, "invalid scaler option handed to render code; fix me!\n" );
@@ -1028,6 +1033,17 @@ bool8_32 S9xDeinitUpdate ( int Width, int Height ) {
 				*dp16++ = *sp16; // tripled
 			}
 		} // for each height unit
+		} else if ( g_scale == bs_1to2_scale2x ) {
+			if ( Width <= 400 && Height <= 240 ) {
+				uint16 widescreen_center_x = ( screen -> w - ( Width << 1 ) ) >> 1; // ( screen -> w - ( Width * 2 ) ) / 2
+				// destination pointer address: pointer to screen_pixels plus moving for centering
+				uint16* destination_pointer_address = screen_pixels + widescreen_center_x + widescreen_center_y;                  
+				
+				scale(2, (uint16*)destination_pointer_address, screen->w*2, (uint16*)GFX.Screen, 320*2, 2, Width, Height);
+			} else {
+				fprintf ( stderr, "screen is too big for scale2x!\n" );
+				g_scale = bs_1to1;                  
+			}
 	} else {
 		// code error; unknown scaler
 		fprintf ( stderr, "invalid scaler option handed to render code; fix me!\n" );
@@ -1155,7 +1171,7 @@ bool8_32 S9xDeinitUpdate (int Width, int Height)
 	    SDL_UpdateRect(screen,0,yoffset,320,Height+yoffset);
 	}
 
-//Bei Fullscreen kann man alles blitten	-- HighRes Sachn müssen aber angepasst werden!
+//Bei Fullscreen kann man alles blitten	-- HighRes Sachn mï¿½ssen aber angepasst werden!
 //	SDL_BlitSurface(gfxscreen,NULL,screen,NULL);
 //	SDL_Flip(screen);
 	return(TRUE);
@@ -1464,6 +1480,9 @@ void S9xProcessEvents (bool8_32 block)
 					if (g_scale == bs_1to2_double)
 					{
 						g_scale = bs_1to2_smooth;
+					} else if (g_scale == bs_1to2_smooth)
+					{
+						g_scale = bs_1to2_scale2x;
 					} else
 					{
 						g_scale = bs_1to2_double;

@@ -15,7 +15,7 @@
 #include "unistd.h"
 
 #ifdef PANDORA
-	#include "blitscale.h"
+	#include "pandora_scaling/blitscale.h"
 	extern blit_scaler_option_t blit_scalers[];
 	extern blit_scaler_e g_scale;
 #endif

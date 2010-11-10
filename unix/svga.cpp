@@ -73,7 +73,7 @@ extern uint32 xs, ys, cl, cs;
 extern bool8_32 Scale;
 
 #ifdef PANDORA
-	#include "blitscale.h"
+	#include "pandora_scaling/blitscale.h"
 	extern blit_scaler_e g_scale;
 	extern unsigned char g_fullscreen;
 #endif

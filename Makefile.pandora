@@ -69,7 +69,13 @@ CHEAT=
 CHEATDEFINES=
 endif
 
-PANDORA_FILES=unix/hqx_init.o unix/hq2x_16.o
+PANDORA_FILES=unix/pandora_scaling/hqx/hqx_init.o \
+              unix/pandora_scaling/hqx/hq2x_16.o \
+              unix/pandora_scaling/scale2x/getopt.o \
+              unix/pandora_scaling/scale2x/pixel.o \
+              unix/pandora_scaling/scale2x/scale2x.o \
+              unix/pandora_scaling/scale2x/scale3x.o \
+              unix/pandora_scaling/scale2x/scalebit.o
 
 OBJECTS=$(CPUOBJ) $(FXOBJ) $(C4OBJ) $(CHEAT) \
 	cpu.o tile.o gfx.o clip.o \
