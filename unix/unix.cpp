@@ -257,7 +257,9 @@ int main (int argc, char **argv)
     Settings.APUEnabled = Settings.NextAPUEnabled = TRUE;
     Settings.H_Max = SNES_CYCLES_PER_SCANLINE;
 #ifdef PANDORA
-    Settings.SkipFrames = 1;
+    //use auto framerate for the moment...
+    //Settings.SkipFrames = 1;
+    Settings.SkipFrames = AUTO_FRAMERATE;
 #else
     Settings.SkipFrames = AUTO_FRAMERATE;
 #endif
