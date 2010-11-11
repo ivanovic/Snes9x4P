@@ -2,12 +2,14 @@
 
 void render_x_single(uint16* destination_pointer_address, uint16 screen_pitch_half,
                      uint16* gfx_screen, uint16 source_panewidth, int Width, int Height) {
-	uint16 height_desired = Height * 2;
+	uint16 height_desired = Height << 1; // height_desired = Height * 2
 	for (register uint16 i = 0; i < height_desired; ++i) {
+		// dp is the pointer to a pixel in the "real" screen
 		register uint16 *dp16 = destination_pointer_address + ( i * screen_pitch_half );
 		
+		// sp is the pointer to a pixel in the SDL screen
 		register uint16 *sp16 = gfx_screen;
-		sp16 += ( ( i / 2 ) * source_panewidth );
+		sp16 += ( ( i >> 1 ) * source_panewidth ); // ( i / 2 ) * source_panewidth; "i/2" for doubling lines, aka "deinterlacing"
 		
 		for (register uint16 j = 0; j < Width ; ++j, ++sp16) {
 			*dp16++ = *sp16;
@@ -17,12 +19,14 @@ void render_x_single(uint16* destination_pointer_address, uint16 screen_pitch_ha
 
 void render_x_double(uint16* destination_pointer_address, uint16 screen_pitch_half,
                      uint16* gfx_screen, uint16 source_panewidth, int Width, int Height) {
-	uint16 height_desired = Height * 2;
+	uint16 height_desired = Height << 1; // height_desired = Height * 2
 	for (register uint16 i = 0; i < height_desired; ++i) {
+		// dp is pointer to destination in "real" screen
 		register uint16 *dp16 = destination_pointer_address + ( i * screen_pitch_half );
 		
+		// sp is the pointer to a pixel in the SDL screen
 		register uint16 *sp16 = gfx_screen;
-		sp16 += ( ( i / 2 ) * source_panewidth );
+		sp16 += ( ( i >> 1 ) * source_panewidth ); // ( i / 2 ) * source_panewidth; "i/2" for doubling lines, aka "deinterlacing"
 		
 		for (register uint16 j = 0; j < Width ; ++j, ++sp16) {
 			*dp16++ = *sp16;
@@ -33,12 +37,14 @@ void render_x_double(uint16* destination_pointer_address, uint16 screen_pitch_ha
 
 void render_x_triple(uint16* destination_pointer_address, uint16 screen_pitch_half,
                      uint16* gfx_screen, uint16 source_panewidth, int Width, int Height) {
-	uint16 height_desired = Height * 2;
+	uint16 height_desired = Height << 1; // height_desired = Height * 2
 	for (register uint16 i = 0; i < height_desired; ++i) {
+		// dp is pointer to destination in "real" screen
 		register uint16 *dp16 = destination_pointer_address + ( i * screen_pitch_half );
 		
+		// sp is the pointer to a pixel in the SDL screen
 		register uint16 *sp16 = gfx_screen;
-		sp16 += ( ( i / 2 ) * source_panewidth );
+		sp16 += ( ( i >> 1 ) * source_panewidth ); // ( i / 2 ) * source_panewidth; "i/2" for doubling lines, aka "deinterlacing"
 		
 		for (register uint16 j = 0; j < Width ; ++j, ++sp16) {
 			*dp16++ = *sp16;
@@ -50,15 +56,17 @@ void render_x_triple(uint16* destination_pointer_address, uint16 screen_pitch_ha
 
 void render_x_oneandhalf(uint16* destination_pointer_address, uint16 screen_pitch_half,
                          uint16* gfx_screen, uint16 source_panewidth, int Width, int Height) {
-	uint16 height_desired = Height * 2;
-	uint16 Width_half = Width >> 1;
+	uint16 height_desired = Height << 1; // height_desired = Height * 2
+	uint16 Width_half = Width >> 1;  // Width_half = Width / 2
 	for (register uint16 i = 0; i < height_desired; ++i) {
+		// dp is pointer to destination in "real" screen
 		register uint16 *dp16 = destination_pointer_address + ( i * screen_pitch_half );
 		
+		// sp is the pointer to a pixel in the SDL screen
 		register uint16 *sp16 = gfx_screen;
-		sp16 += ( ( i / 2 ) * source_panewidth );
+		sp16 += ( ( i >> 1 ) * source_panewidth ); // ( i / 2 ) * source_panewidth; "i/2" for doubling lines, aka "deinterlacing"
 		
-		//only use every 2nd pixel but paint it thrice -> very simple 1.5x scaling
+		//only use every 2nd pixel but paint it thrice -> very simple 1.5x scaling for every pixel in X direction
 		for (register uint16 j = 0; j < Width_half; ++j, ++(++sp16)) {
 			*dp16++ = *sp16;
 			*dp16++ = *sp16; // doubled
