@@ -15,10 +15,12 @@ KNOW ISSUES:
 -No Fullscreen support for HighRes Games
 -known Games having issues:
 FX1
-*Stunt Race FX
-*Vortex
+*Stunt Race FX (Wild Trax) (graphic glitches)
+*Dirt Racer (don't work)
+*Vortex (don't work)
 FX2
-*Dirt Racer FX
+*Star Fox 2 final (graphic glitches)
+*Doom (slow as hell)
 
 ver 20101010
 ------------
