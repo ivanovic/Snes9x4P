@@ -58,8 +58,10 @@ endif
 
 ifdef CHEATS
 CHEAT=cheats.o cheats2.o
+CHEATDEFINES=-DCHEATS
 else
 CHEAT=
+CHEATDEFINES=
 endif
 	
 OBJECTS=$(CPUOBJ) $(FXOBJ) $(C4OBJ) $(CHEAT) \
@@ -145,10 +147,8 @@ $(GLIDEDEFINES) \
 $(OPENGLDEFINES) \
 $(GUIDEFINES) \
 $(KREEDDEFINES) \
+$(CHEATDEFINES) \
 $(shell /opt/mipsel-linux-uclibc/usr/bin/sdl-config --cflags)
-
-#-DDEBUGGER
-#-DJOYSTICK_SUPPORT
 
 CFLAGS=$(CCFLAGS)
 
