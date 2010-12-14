@@ -323,20 +323,21 @@ void menu_dispupdate(void)
 	strcpy(disptxt[4],"Load State           ");
 	strcpy(disptxt[5],"State Slot              No.");
 	strcpy(disptxt[6],"Display Frame Rate     ");
+	strcpy(disptxt[7],"Transparency           ");
 #ifdef PANDORA
-	strcpy(disptxt[7],"Display mode        ");
+	strcpy(disptxt[8],"Display mode        ");
 #else
-	strcpy(disptxt[7],"Full Screen         ");
+	strcpy(disptxt[8],"Full Screen         ");
 #endif
-	strcpy(disptxt[8],"Frameskip              ");
-	strcpy(disptxt[9],"Sound Volume           ");
-	strcpy(disptxt[10],"Credit              ");
-	strcpy(disptxt[11],"Exit");
-	strcpy(disptxt[12],"--------------");
-	strcpy(disptxt[13],"BATT:");
-	strcpy(disptxt[14],"     ");
-	strcpy(disptxt[15],"MHZ :");
-	strcpy(disptxt[16],"BACKLIGHT:");
+	strcpy(disptxt[9],"Frameskip              ");
+	strcpy(disptxt[10],"Sound Volume           ");
+	strcpy(disptxt[11],"Credit              ");
+	strcpy(disptxt[12],"Exit");
+//	strcpy(disptxt[13],"--------------");
+//	strcpy(disptxt[14],"BATT:");
+//	strcpy(disptxt[15],"     ");
+//	strcpy(disptxt[16],"MHZ :");
+//	strcpy(disptxt[17],"BACKLIGHT:");
 
 	sprintf(temp,"%s%d",disptxt[5],SaveSlotNum);
 	strcpy(disptxt[5],temp);
@@ -346,59 +347,65 @@ void menu_dispupdate(void)
 	else
 		sprintf(temp,"%sFalse",disptxt[6]);
 	strcpy(disptxt[6],temp);
+	
+	if(Settings.Transparency)
+		sprintf(temp,"%s   On",disptxt[7]);
+	else
+		sprintf(temp,"%s  Off",disptxt[7]);
+	strcpy(disptxt[7],temp);
 
 #ifdef PANDORA
 	{
-	  sprintf ( temp, "%s%s", disptxt [ 7 ], blit_scalers [ g_scale ].desc_en );
-	  strcpy ( disptxt[7], temp );
+	  sprintf ( temp, "%s%s", disptxt [ 8 ], blit_scalers [ g_scale ].desc_en );
+	  strcpy ( disptxt[8], temp );
 	}
 #else
 	if (highres_current==false)
 	{
 		if(Scale_org)
-			sprintf(temp,"%s    True",disptxt[7]);
+			sprintf(temp,"%s    True",disptxt[8]);
 		else
-			sprintf(temp,"%s   False",disptxt[7]);
-		strcpy(disptxt[7],temp);
+			sprintf(temp,"%s   False",disptxt[8]);
+		strcpy(disptxt[8],temp);
 	}
 	else
 	{
-		sprintf(temp,"%sinactive",disptxt[7]);
-		strcpy(disptxt[7],temp);
+		sprintf(temp,"%sinactive",disptxt[8]);
+		strcpy(disptxt[8],temp);
 	}
 #endif
 
 	if (Settings.SkipFrames == AUTO_FRAMERATE)
 	{
-		sprintf(temp,"%s Auto",disptxt[8]);
-		strcpy(disptxt[8],temp);
+		sprintf(temp,"%s Auto",disptxt[9]);
+		strcpy(disptxt[9],temp);
 	}
 	else
 	{
-		sprintf(temp,"%s %02d/%d",disptxt[8],(int) Memory.ROMFramesPerSecond, Settings.SkipFrames);
-		strcpy(disptxt[8],temp);
+		sprintf(temp,"%s %02d/%d",disptxt[9],(int) Memory.ROMFramesPerSecond, Settings.SkipFrames);
+		strcpy(disptxt[9],temp);
 	}
 
-	sprintf(temp,"%s %3d%%",disptxt[9],vol);
-	strcpy(disptxt[9],temp);
-
+	sprintf(temp,"%s %3d%%",disptxt[10],vol);
+	strcpy(disptxt[10],temp);
+/*
 	if      (batt_level() >= 3739)
-		sprintf(temp,"%s  (#####)",disptxt[13]);
+		sprintf(temp,"%s  (#####)",disptxt[14]);
 	else if (batt_level() >= 3707)
-		sprintf(temp,"%s  ( ####)",disptxt[13]);
+		sprintf(temp,"%s  ( ####)",disptxt[14]);
 	else if (batt_level() >= 3675)
-		sprintf(temp,"%s  (  ###)",disptxt[13]);
+		sprintf(temp,"%s  (  ###)",disptxt[14]);
     	else if (batt_level() >= 3643)
-		sprintf(temp,"%s  (   ##)",disptxt[13]);
+		sprintf(temp,"%s  (   ##)",disptxt[14]);
 	else if (batt_level() >= 3611)
-		sprintf(temp,"%s  (    #)",disptxt[13]);
-   	else   sprintf(temp,"%s  (     )",disptxt[13]);
-	strcpy(disptxt[13],temp);
+		sprintf(temp,"%s  (    #)",disptxt[14]);
+   	else   sprintf(temp,"%s  (     )",disptxt[14]);
+	strcpy(disptxt[14],temp);
 
-	sprintf(temp,"%s  (%5d)",disptxt[14],(batt_level()/10)*10);
-	strcpy(disptxt[14],temp);	
-
-	for(int i=0;i<=14;i++) //15
+	sprintf(temp,"%s  (%5d)",disptxt[15],(batt_level()/10)*10);
+	strcpy(disptxt[15],temp);	
+*/
+	for(int i=0;i<=12;i++) //14
 	{
 		if(i==cursor)
 			sprintf(temp," >%s",disptxt[i]);
@@ -413,7 +420,7 @@ void menu_dispupdate(void)
 	if(SaveSlotNum_old != SaveSlotNum)
 	{
 		strcpy(temp,"Loading...");
-		S9xDisplayString (temp, GFX.Screen +280, 640,204);
+		S9xDisplayString (temp, GFX.Screen +280, 640,210/*204*/);
 		S9xDeinitUpdate (320, 240);
 		char fname[256], ext[8];
 		sprintf(ext, ".s0%d", SaveSlotNum);
@@ -457,9 +464,6 @@ void menu_loop(void)
 
 	do
 	{
-		menu_dispupdate();
-		sys_sleep(100);
-	
 		while(SDL_PollEvent(&event)==1)
 		{
 #ifdef CAANOO
@@ -525,9 +529,12 @@ void menu_loop(void)
 							Settings.DisplayFrameRate = !Settings.DisplayFrameRate;
 						break;
 						case 7:
-							Scale_org = !Scale_org;
+							Settings.Transparency = !Settings.Transparency;
 						break;
 						case 8:
+							Scale_org = !Scale_org;
+						break;
+						case 9:
 							if (Settings.SkipFrames == AUTO_FRAMERATE)
 								Settings.SkipFrames = 10;
 	
@@ -541,7 +548,7 @@ void menu_loop(void)
 							else if (Settings.SkipFrames<=1)
 								Settings.SkipFrames = 1;
 						break;
-						case 9:
+						case 10:
 							if ( SDL_JoystickGetAxis(keyssnes, 0) < -16384 )
 								vol -= 10;
 							else if (SDL_JoystickGetAxis(keyssnes, 0) > 16384)
@@ -556,23 +563,19 @@ void menu_loop(void)
 								vol = 0;
 							}
 						break;
-						case 10:
+						case 11:
 							if ( SDL_JoystickGetButton(keyssnes, sfc_key[A_1]) )
 								ShowCredit();
 						break;
-						case 11:
+						case 12:
 							if ( SDL_JoystickGetButton(keyssnes, sfc_key[A_1]) )
 								S9xExit();
 						break;
 					}
 				}
 #else
-			//PANDORA & DINGOO & WIN32 -----------------------------------------------------
-			keyssnes = SDL_GetKeyState(NULL);
-			switch(event.type)
-			{
-				case SDL_KEYDOWN:
-					keyssnes = SDL_GetKeyState(NULL);
+				//PANDORA & DINGOO & WIN32 -----------------------------------------------------
+				keyssnes = SDL_GetKeyState(NULL);
 
 				if(keyssnes[sfc_key[UP_1]] == SDL_PRESSED)
 					cursor--;
@@ -634,6 +637,9 @@ void menu_loop(void)
 							Settings.DisplayFrameRate = !Settings.DisplayFrameRate;
 						break;
 						case 7:
+							Settings.Transparency = !Settings.Transparency;
+						break;
+						case 8:
 #ifdef PANDORA
 						  // rotate through scalers
 							if (keyssnes[sfc_key[RIGHT_1]] == SDL_PRESSED)
@@ -654,7 +660,7 @@ void menu_loop(void)
 							Scale_org = !Scale_org;
 #endif
 						break;
-						case 8:
+						case 9:
 							if (Settings.SkipFrames == AUTO_FRAMERATE)
 								Settings.SkipFrames = 10;
 	
@@ -668,7 +674,7 @@ void menu_loop(void)
 							else if (Settings.SkipFrames<=1)
 								Settings.SkipFrames = 1;
 						break;
-						case 9:
+						case 10:
 							if (keyssnes[sfc_key[LEFT_1]] == SDL_PRESSED)
 								vol -= 10;
 							else
@@ -680,26 +686,28 @@ void menu_loop(void)
 							else if (vol<=0)
 								vol = 0;
 						break;
-						case 10:
+						case 11:
 							if (keyssnes[sfc_key[A_1]] == SDL_PRESSED)
 								ShowCredit();
 						break;
-						case 11:
+						case 12:
 							if (keyssnes[sfc_key[A_1]] == SDL_PRESSED)
 								S9xExit();
 						break;
 					}
 				}
-			}
 #endif
 
-			if(cursor==1)
-				cursor=11;
-			else if(cursor==12)
-				cursor=2;
-			break;
-		}
+				if(cursor==1)
+					cursor=12;	//11
+				else if(cursor==13)	//12
+					cursor=2;
+				
+				menu_dispupdate();
+				sys_sleep(1000);
 
+				break;
+		}
 	}
 #ifdef CAANOO
 	while( exit_loop!=TRUE && SDL_JoystickGetButton(keyssnes, sfc_key[QUIT])!=TRUE );

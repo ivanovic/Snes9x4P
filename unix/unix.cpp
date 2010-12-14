@@ -261,6 +261,7 @@ int main (int argc, char **argv)
 #else
     Settings.SkipFrames = AUTO_FRAMERATE;
 #endif
+Settings.DisplayFrameRate = TRUE;
     Settings.ShutdownMaster = TRUE;
     Settings.FrameTimePAL = 20000;
     Settings.FrameTimeNTSC = 16667;
