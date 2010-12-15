@@ -794,7 +794,8 @@ void capt_screenshot() //107px*80px
 void show_screenshot()
 {
 	int s=0;
-	for(int y=126;y<126+80;y++){
+//	for(int y=126;y<126+80;y++){
+	for(int y=132;y<130+80;y++){
 		for(int x=248; x<248+107*2; x+=2){
 			uint8 *d = GFX.Screen + y*320*2 + x;
 			*d++ = snapscreen[s++];

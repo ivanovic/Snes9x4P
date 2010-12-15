@@ -163,7 +163,11 @@ extern void S9xDisplayString (const char *string, uint8 *, uint32, int);
 extern SDL_Surface *screen,*gfxscreen;
 
 static uint32 ffc = 0;
-uint32 xs = 320, ys = 240, cl = 0, cs = 0, mfs = 10;
+uint32 xs = 320; //width
+uint32 ys = 240; //height
+uint32 cl = 12; //ypos in highres mode
+uint32 cs = 0;
+uint32 mfs = 10; //skippedframes?
 
 char *rom_filename = NULL;
 char *snapshot_filename = NULL;
@@ -1011,6 +1015,8 @@ bool8_32 S9xDeinitUpdate ( int Width, int Height ) {
 #else
 bool8_32 S9xDeinitUpdate (int Width, int Height)
 {
+	//printf("Width=%d, Height=%d\n",Width,Height);
+
 	register uint32 lp = (xs > 256) ? 16 : 0;
 
 	if (Width > 256)
@@ -1057,9 +1063,9 @@ bool8_32 S9xDeinitUpdate (int Width, int Height)
 	}
 	else
 	{
-		//put here also scaling for non highres
-		//start stretch
-		int yoffset = 8*(Height == 224);
+		int yoffset = 0;
+
+		//scaling for non highres
 		if(Scale)
 		{
 			int x,y,s;
@@ -1067,8 +1073,9 @@ bool8_32 S9xDeinitUpdate (int Width, int Height)
 			static uint32 x_fraction=52428;
 		 	char temp[512];
 			register uint8 *d;
-			//x_fraction = (SNES_WIDTH * 0x10000) / 320;
-			//x_fraction = 52428;
+
+			//center ypos if ysize is only 224px
+			yoffset = 8*(Height == 224);
 
 			for (y = Height-1;y >= 0; y--)
 			{
@@ -1096,6 +1103,11 @@ bool8_32 S9xDeinitUpdate (int Width, int Height)
 			    }
 			}
 		}
+		else
+		{
+			//center ypos if ysize is only 224px
+			yoffset = 12*(Height == 224);
+		}
 		//end stretch
 
 		if (GFX.InfoString)
@@ -1103,17 +1115,13 @@ bool8_32 S9xDeinitUpdate (int Width, int Height)
 		else if (Settings.DisplayFrameRate)
 		    S9xDisplayFrameRate ((uint8 *)screen->pixels + 64, 640);
 
-	    SDL_UpdateRect(screen,0,yoffset,320,Height+yoffset);
+	    SDL_UpdateRect(screen,0,yoffset,320,Height);
 	}
 
-//Bei Fullscreen kann man alles blitten	-- HighRes Sachn m�ssen aber angepasst werden!
-//	SDL_BlitSurface(gfxscreen,NULL,screen,NULL);
-//	SDL_Flip(screen);
 	return(TRUE);
 }
 #endif
 
-#ifndef _ZAURUS
 static unsigned long now ()
 {
     static unsigned long seconds_base = 0;
@@ -1124,7 +1132,6 @@ static unsigned long now ()
 
     return ((tp.tv_sec - seconds_base) * 1000 + tp.tv_usec / 1000);
 }
-#endif
 
 void _makepath (char *path, const char *, const char *dir,
 		const char *fname, const char *ext)
@@ -1300,7 +1307,8 @@ void S9xSyncSpeed ()
 		return;
 	}
 #endif
-
+//SiENcE:testing
+/*
     if (!Settings.TurboMode && Settings.SkipFrames == AUTO_FRAMERATE)
     {
 		static struct timeval next1 = {0, 0};
@@ -1361,6 +1369,103 @@ void S9xSyncSpeed ()
 		    IPPU.SkippedFrames++;
 		    IPPU.RenderThisFrame = FALSE;
 		}
+    }
+*/
+//SiENcE:testing other sync routine
+    if (Settings.TurboMode)
+    {
+        if(++IPPU.FrameSkip >= Settings.TurboSkipFrames)
+        {
+            IPPU.FrameSkip = 0;
+            IPPU.SkippedFrames = 0;
+            IPPU.RenderThisFrame = TRUE;
+        }
+        else
+        {
+            ++IPPU.SkippedFrames;
+            IPPU.RenderThisFrame = FALSE;
+        }
+        return;
+    }
+    
+#ifdef __sgi
+    /* BS: saves on CPU usage */
+    sginap(1);
+#endif
+
+    /* Check events */
+    
+    static struct timeval next1 = {0, 0};
+    struct timeval now;
+
+    CHECK_SOUND(); S9xProcessEvents(FALSE);
+
+    while (gettimeofday (&now, NULL) < 0) ;
+    
+    /* If there is no known "next" frame, initialize it now */
+    if (next1.tv_sec == 0) { next1 = now; ++next1.tv_usec; }
+
+    /* If we're on AUTO_FRAMERATE, we'll display frames always
+     * only if there's excess time.
+     * Otherwise we'll display the defined amount of frames.
+     */
+    unsigned limit = Settings.SkipFrames == AUTO_FRAMERATE
+                     ? (timercmp(&next1, &now, <) ? 10 : 1)
+                     : Settings.SkipFrames;
+    
+    IPPU.RenderThisFrame = ++IPPU.SkippedFrames >= limit;
+    if(IPPU.RenderThisFrame)
+    {
+        IPPU.SkippedFrames = 0;
+    }
+    else
+    {
+        /* If we were behind the schedule, check how much it is */
+        if(timercmp(&next1, &now, <))
+        {
+            unsigned lag =
+                (now.tv_sec - next1.tv_sec) * 1000000
+               + now.tv_usec - next1.tv_usec;
+            if(lag >= 1000000)
+            {
+                /* More than a second behind means probably
+                 * pause. The next line prevents the magic
+                 * fast-forward effect.
+                 */
+                next1 = now;
+            }
+        }
+    }
+    
+    /* Delay until we're completed this frame */
+
+    /* Can't use setitimer because the sound code already could
+     * be using it. We don't actually need it either.
+     */
+
+    while(timercmp(&next1, &now, >))
+    {
+        /* If we're ahead of time, sleep a while */
+        unsigned timeleft =
+            (next1.tv_sec - now.tv_sec) * 1000000
+           + next1.tv_usec - now.tv_usec;
+        //fprintf(stderr, "<%u>", timeleft);
+        usleep(timeleft);
+
+        CHECK_SOUND(); S9xProcessEvents(FALSE);
+
+        while (gettimeofday (&now, NULL) < 0) ;
+        /* Continue with a while-loop because usleep()
+         * could be interrupted by a signal
+         */
+    }
+
+    /* Calculate the timestamp of the next frame. */
+    next1.tv_usec += Settings.FrameTime;
+    if (next1.tv_usec >= 1000000)
+    {
+        next1.tv_sec += next1.tv_usec / 1000000;
+        next1.tv_usec %= 1000000;
     }
 }
 
