@@ -95,7 +95,7 @@ void S9xTextMode ()
 
 
 void S9xInitDisplay (int /*argc*/, char ** /*argv*/)
-{
+{	
 #ifdef CAANOO
 	if (SDL_Init(SDL_INIT_VIDEO|SDL_INIT_JOYSTICK/*|(Settings.NextAPUEnabled ? SDL_INIT_AUDIO : 0)*/) < 0 )
 #else
@@ -159,23 +159,25 @@ void S9xInitDisplay (int /*argc*/, char ** /*argv*/)
 	else
 	{
 #ifdef PANDORA
-	  if ( g_scale > bs_1to1 ) {
-	    GFX.Screen = (uint8*) malloc ( ( 512 * 480 * 2 ) + 64 );
-	    GFX.Pitch = 320 * 2;
-	  } else {
-	    GFX.Screen = (uint8 *)screen->pixels + 64;
-	    GFX.Pitch = 320 * 2;
-	  }
+		if ( g_scale > bs_1to1 )
+		{
+			GFX.Screen = (uint8*) malloc ( ( 512 * 480 * 2 ) + 64 );
+			GFX.Pitch = 320 * 2;
+	    } else {
+	    	GFX.Screen = (uint8 *)screen->pixels + 64;
+	    	GFX.Pitch = 320 * 2;
+	    }
 #else
 		if(Scale)
 		{
 			GFX.Screen = (uint8 *)screen->pixels;
+			GFX.Pitch = 320 * 2;
 		}
 		else
 		{
-			GFX.Screen = (uint8 *)screen->pixels + 64;
+			GFX.Screen = (uint8 *)screen->pixels + 64;	//center screen
+			GFX.Pitch = 320 * 2;
 		}
-		GFX.Pitch = 320 * 2;
 #endif
 	}
 

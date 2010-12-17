@@ -958,14 +958,12 @@ void CMemory::InitROM (bool8_32 Interleaved)
 
     if (remainder)
     {
-//#ifndef _ZAURUS
 	//for Tengai makyou
 	if (CalculatedSize == 0x500000 && Memory.HiROM && 
 	    strncmp ((const char *)&ROM[0xffb0], "18AZ", 4) == 0 &&
 	    !memcmp(&ROM[0xffd5], "\x3a\xf9\x0d\x03\x00\x33\x00", 7))
 	    sum1 += sum2;
 	else
-//#endif
 	    sum1 += sum2 * (size / remainder);
     }
 

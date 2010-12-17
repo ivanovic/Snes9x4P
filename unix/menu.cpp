@@ -756,8 +756,8 @@ void capt_screenshot() //107px*80px
 		snapscreen[i] = 0x00;
 	}
 
-//	if(ippu->RenderedScreenHeight == 224)
-//		yoffset = 8;
+	if(ippu->RenderedScreenHeight == 224)
+		yoffset = 8;
 
 	if (highres_current==true)
 	{

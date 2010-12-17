@@ -146,7 +146,7 @@ pthread_mutex_t mutex;
 // SaveSlotNumber
 char SaveSlotNum = 0;
 
-bool8_32 Scale = FALSE;
+bool8_32 Scale = TRUE;
 char msg[256];
 short vol=50;
 static int mixerdev = 0;
@@ -1015,7 +1015,7 @@ bool8_32 S9xDeinitUpdate ( int Width, int Height ) {
 #else
 bool8_32 S9xDeinitUpdate (int Width, int Height)
 {
-	//printf("Width=%d, Height=%d\n",Width,Height);
+//printf("Width=%d, Height=%d\n",Width,Height);
 
 	register uint32 lp = (xs > 256) ? 16 : 0;
 
@@ -1031,6 +1031,7 @@ bool8_32 S9xDeinitUpdate (int Width, int Height)
 //	else
 	if (Settings.SupportHiRes)
 	{
+		SDL_LockSurface(screen);
 		if (Width > 256)
 		{
 			//Wenn SupportHiRes activ und HighRes Frame
@@ -1059,12 +1060,12 @@ bool8_32 S9xDeinitUpdate (int Width, int Height)
 		else if (Settings.DisplayFrameRate)
 		    S9xDisplayFrameRate ((uint8 *)screen->pixels + 64, 640);
 
-		SDL_UpdateRect(screen,32,0,256,Height);
+		SDL_UnlockSurface(screen);
+//		SDL_UpdateRect(screen,32,0,256,Height);
+		SDL_Flip(screen);
 	}
 	else
 	{
-		int yoffset = 0;
-
 		//scaling for non highres
 		if(Scale)
 		{
@@ -1075,8 +1076,9 @@ bool8_32 S9xDeinitUpdate (int Width, int Height)
 			register uint8 *d;
 
 			//center ypos if ysize is only 224px
-			yoffset = 8*(Height == 224);
+			int yoffset = 8*(Height == 224);
 
+			SDL_LockSurface(screen);
 			for (y = Height-1;y >= 0; y--)
 			{
 			    d = GFX.Screen + y * 640;
@@ -1102,20 +1104,30 @@ bool8_32 S9xDeinitUpdate (int Width, int Height)
 					}
 			    }
 			}
+			if (GFX.InfoString)
+			    S9xDisplayString (GFX.InfoString, (uint8 *)screen->pixels + 64, 640,0);
+			else if (Settings.DisplayFrameRate)
+			    S9xDisplayFrameRate ((uint8 *)screen->pixels + 64, 640);
+	
+			SDL_UnlockSurface(screen);
+			SDL_UpdateRect(screen,0,yoffset,320,Height);
+//			SDL_Flip(screen);
 		}
 		else
 		{
 			//center ypos if ysize is only 224px
-			yoffset = 12*(Height == 224);
+//			int yoffset = 8*(Height == 224);
+			
+			SDL_LockSurface(screen);
+			if (GFX.InfoString)
+			    S9xDisplayString (GFX.InfoString, (uint8 *)screen->pixels + 64, 640,0);
+			else if (Settings.DisplayFrameRate)
+			    S9xDisplayFrameRate ((uint8 *)screen->pixels + 64, 640);
+	
+			SDL_UnlockSurface(screen);
+//		    SDL_UpdateRect(screen,0,yoffset,320,Height);
+			SDL_Flip(screen);
 		}
-		//end stretch
-
-		if (GFX.InfoString)
-		    S9xDisplayString (GFX.InfoString, (uint8 *)screen->pixels + 64, 640,0);
-		else if (Settings.DisplayFrameRate)
-		    S9xDisplayFrameRate ((uint8 *)screen->pixels + 64, 640);
-
-	    SDL_UpdateRect(screen,0,yoffset,320,Height);
 	}
 
 	return(TRUE);
