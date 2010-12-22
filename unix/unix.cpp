@@ -146,7 +146,7 @@ pthread_mutex_t mutex;
 // SaveSlotNumber
 char SaveSlotNum = 0;
 
-bool8_32 Scale = TRUE;
+bool8_32 Scale = FALSE; //TRUE;
 char msg[256];
 short vol=50;
 static int mixerdev = 0;
@@ -156,7 +156,10 @@ int OldSkipFrame;
 void InitTimer ();
 void *S9xProcessSound (void *);
 void OutOfMemory();
-//void gp2x_sound_volume(int l, int r);
+
+#ifdef DINGOO
+	void gp2x_sound_volume(int l, int r);
+#endif
 
 extern void S9xDisplayFrameRate (uint8 *, uint32);
 extern void S9xDisplayString (const char *string, uint8 *, uint32, int);
@@ -253,9 +256,13 @@ int main (int argc, char **argv)
     ZeroMemory (&Settings, sizeof (Settings));
 
     Settings.JoystickEnabled = FALSE;	//unused
+#ifdef DINGOO
+    Settings.SoundPlaybackRate = 2;
+#else
     Settings.SoundPlaybackRate = 5; //default would be '2', use 32000Hz as the genuine hardware does
+#endif
     Settings.Stereo = TRUE;
-    Settings.SoundBufferSize = 512; //256
+	Settings.SoundBufferSize = 512; //256 //2048
     Settings.CyclesPercentage = 100;
     Settings.DisableSoundEcho = FALSE;
     Settings.APUEnabled = Settings.NextAPUEnabled = TRUE;
@@ -277,7 +284,7 @@ Settings.DisplayFrameRate = TRUE;
     Settings.MultiPlayer5 = FALSE;
     Settings.ControllerOption = SNES_MULTIPLAYER5;
     Settings.ControllerOption = 0;
-    Settings.Transparency = TRUE;
+    Settings.Transparency = FALSE; //TRUE;
     Settings.SixteenBit = TRUE;
     Settings.SupportHiRes = FALSE; //autodetected for known highres roms
     Settings.NetPlay = FALSE;
@@ -315,6 +322,7 @@ Settings.DisplayFrameRate = TRUE;
     S9xSetRenderPixelFormat (RGB565);
 #endif
 
+#ifndef DINGOO
     // ROM selector if no rom filename is available!!!!!!!!!!!!!!
     if (!rom_filename)
     {
@@ -336,6 +344,7 @@ Settings.DisplayFrameRate = TRUE;
 		S9xDeinitDisplay();
 		printf ("Romfile selected: %s\n", rom_filename);
 	}
+#endif
 
     if (rom_filename)
     {
@@ -1031,7 +1040,7 @@ bool8_32 S9xDeinitUpdate (int Width, int Height)
 //	else
 	if (Settings.SupportHiRes)
 	{
-		SDL_LockSurface(screen);
+//		SDL_LockSurface(screen);
 		if (Width > 256)
 		{
 			//Wenn SupportHiRes activ und HighRes Frame
@@ -1060,9 +1069,9 @@ bool8_32 S9xDeinitUpdate (int Width, int Height)
 		else if (Settings.DisplayFrameRate)
 		    S9xDisplayFrameRate ((uint8 *)screen->pixels + 64, 640);
 
-		SDL_UnlockSurface(screen);
-//		SDL_UpdateRect(screen,32,0,256,Height);
-		SDL_Flip(screen);
+//		SDL_UnlockSurface(screen);
+		SDL_UpdateRect(screen,32,0,256,Height);
+//		SDL_Flip(screen);
 	}
 	else
 	{
@@ -1078,7 +1087,7 @@ bool8_32 S9xDeinitUpdate (int Width, int Height)
 			//center ypos if ysize is only 224px
 			int yoffset = 8*(Height == 224);
 
-			SDL_LockSurface(screen);
+//			SDL_LockSurface(screen);
 			for (y = Height-1;y >= 0; y--)
 			{
 			    d = GFX.Screen + y * 640;
@@ -1109,7 +1118,7 @@ bool8_32 S9xDeinitUpdate (int Width, int Height)
 			else if (Settings.DisplayFrameRate)
 			    S9xDisplayFrameRate ((uint8 *)screen->pixels + 64, 640);
 	
-			SDL_UnlockSurface(screen);
+//			SDL_UnlockSurface(screen);
 			SDL_UpdateRect(screen,0,yoffset,320,Height);
 //			SDL_Flip(screen);
 		}
@@ -1118,15 +1127,16 @@ bool8_32 S9xDeinitUpdate (int Width, int Height)
 			//center ypos if ysize is only 224px
 //			int yoffset = 8*(Height == 224);
 			
-			SDL_LockSurface(screen);
+//			SDL_LockSurface(screen);
 			if (GFX.InfoString)
 			    S9xDisplayString (GFX.InfoString, (uint8 *)screen->pixels + 64, 640,0);
 			else if (Settings.DisplayFrameRate)
 			    S9xDisplayFrameRate ((uint8 *)screen->pixels + 64, 640);
 	
-			SDL_UnlockSurface(screen);
+//			SDL_UnlockSurface(screen);
 //		    SDL_UpdateRect(screen,0,yoffset,320,Height);
-			SDL_Flip(screen);
+		    SDL_UpdateRect(screen,32,0,256,Height);
+//			SDL_Flip(screen);
 		}
 	}
 
@@ -1134,7 +1144,7 @@ bool8_32 S9xDeinitUpdate (int Width, int Height)
 }
 #endif
 
-/*
+#ifndef _ZAURUS
 static unsigned long now ()
 {
     static unsigned long seconds_base = 0;
@@ -1145,7 +1155,7 @@ static unsigned long now ()
 
     return ((tp.tv_sec - seconds_base) * 1000 + tp.tv_usec / 1000);
 }
-*/
+#endif
 
 void _makepath (char *path, const char *, const char *dir,
 		const char *fname, const char *ext)
@@ -1486,7 +1496,11 @@ void S9xProcessEvents (bool8_32 block)
 					S9xSetSoundMute(true);
 					menu_loop();
 					S9xSetSoundMute(false);
+#ifdef DINGOO
 					//S9xSetMasterVolume (vol, vol);
+					gp2x_sound_volume(vol, vol);
+#endif
+
 #ifdef PANDORA
 				}
 				// another shortcut I'm afraid
@@ -1667,7 +1681,10 @@ so.buffer_size = buffer_size;
 	    so.playback_rate, so.buffer_size, so.sixteen_bit ? "yes" : "no",
 	    so.stereo ? "yes" : "no", so.encoded ? "yes" : "no");
 
-//    gp2x_sound_volume(vol,vol);
+#ifdef DINGOO
+    gp2x_sound_volume(vol,vol);
+#endif //DINGOO
+
 #endif
     return (TRUE);
 }
@@ -1859,12 +1876,13 @@ void *S9xProcessSound (void *)
     return (NULL);
 }
 
-/*
+#ifdef DINGOO
 void gp2x_sound_volume(int l, int r)
 {
  	l=l<0?0:l; l=l>255?255:l; r=r<0?0:r; r=r>255?255:r;
  	l<<=8; l|=r;
   	ioctl(mixerdev, SOUND_MIXER_WRITE_VOLUME, &l);
 }
-*/
+#endif
+
 //===============================================================================================

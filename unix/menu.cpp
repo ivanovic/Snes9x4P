@@ -3,6 +3,7 @@
 #include <fcntl.h>
 #include <dirent.h>
 #include <sys/mman.h>
+#include <strings.h>
 #include "keydef.h"
 #include "dingoo.h"
 
@@ -20,6 +21,11 @@
 	extern blit_scaler_e g_scale;
 #endif
 
+#ifdef DINGOO
+	int batt_level(void);
+	int chk_hold(void);
+#endif
+
 extern Uint16 sfc_key[256];
 extern bool8_32 Scale;
 extern char SaveSlotNum;
@@ -31,12 +37,10 @@ void load_screenshot(char *fname);
 void show_screenshot(void);
 void capt_screenshot(void);
 void menu_dispupdate(void);
-int batt_level(void);
-int chk_hold(void);
 void ShowCredit(void);
 
 int cursor = 3;
-int loadcursor = 0;	//1
+int loadcursor = 0;
 int romcount_maxrows = 16;
 
 char SaveSlotNum_old=255;
@@ -53,6 +57,7 @@ void sys_sleep(int us)
 		SDL_Delay(us/100);
 }
 
+#ifndef DINGOO
 //------------------------------------------------------------------------------------------
 struct dirent **namelist;
 
@@ -296,6 +301,7 @@ char* menu_romselector()
 }
 
 //------------------------------------------------------------------------------------------
+#endif // DINGOO
 
 void menu_dispupdate(void)
 {
@@ -333,11 +339,13 @@ void menu_dispupdate(void)
 	strcpy(disptxt[10],"Sound Volume           ");
 	strcpy(disptxt[11],"Credit              ");
 	strcpy(disptxt[12],"Exit");
-//	strcpy(disptxt[13],"--------------");
-//	strcpy(disptxt[14],"BATT:");
+#ifdef DINGOO
+	strcpy(disptxt[13],"--------------");
+	strcpy(disptxt[14],"BATT:");
 //	strcpy(disptxt[15],"     ");
 //	strcpy(disptxt[16],"MHZ :");
 //	strcpy(disptxt[17],"BACKLIGHT:");
+#endif
 
 	sprintf(temp,"%s%d",disptxt[5],SaveSlotNum);
 	strcpy(disptxt[5],temp);
@@ -388,7 +396,8 @@ void menu_dispupdate(void)
 
 	sprintf(temp,"%s %3d%%",disptxt[10],vol);
 	strcpy(disptxt[10],temp);
-/*
+
+#ifdef DINGOO
 	if      (batt_level() >= 3739)
 		sprintf(temp,"%s  (#####)",disptxt[14]);
 	else if (batt_level() >= 3707)
@@ -402,10 +411,11 @@ void menu_dispupdate(void)
    	else   sprintf(temp,"%s  (     )",disptxt[14]);
 	strcpy(disptxt[14],temp);
 
-	sprintf(temp,"%s  (%5d)",disptxt[15],(batt_level()/10)*10);
-	strcpy(disptxt[15],temp);	
-*/
-	for(int i=0;i<=12;i++) //14
+//	sprintf(temp,"%s  (%5d)",disptxt[15],(batt_level()/10)*10);
+//	strcpy(disptxt[15],temp);	
+#endif
+
+	for(int i=0;i<=14;i++) //12 //14
 	{
 		if(i==cursor)
 			sprintf(temp," >%s",disptxt[i]);
@@ -804,6 +814,7 @@ void show_screenshot()
 	}
 }
 
+#ifdef DINGOO
 int batt_level(void)
 {
 	FILE *FP;
@@ -832,6 +843,7 @@ int chk_hold(void)
 	else
 		return (0);
 }
+#endif
 
 void ShowCredit()
 {
