@@ -146,7 +146,7 @@ pthread_mutex_t mutex;
 // SaveSlotNumber
 char SaveSlotNum = 0;
 
-bool8_32 Scale = FALSE; //TRUE;
+bool8_32 Scale = FALSE;
 char msg[256];
 short vol=50;
 static int mixerdev = 0;
@@ -1031,16 +1031,8 @@ bool8_32 S9xDeinitUpdate (int Width, int Height)
 	if (Width > 256)
 		lp *= 2;
 
-	// ffc, what is it for?
-//	if (ffc < 5)
-//	{
-//		SDL_UpdateRect(screen,0,0,0,0);
-//		++ffc;
-//	}
-//	else
 	if (Settings.SupportHiRes)
 	{
-//		SDL_LockSurface(screen);
 		if (Width > 256)
 		{
 			//Wenn SupportHiRes activ und HighRes Frame
@@ -1069,13 +1061,11 @@ bool8_32 S9xDeinitUpdate (int Width, int Height)
 		else if (Settings.DisplayFrameRate)
 		    S9xDisplayFrameRate ((uint8 *)screen->pixels + 64, 640);
 
-//		SDL_UnlockSurface(screen);
 		SDL_UpdateRect(screen,32,0,256,Height);
-//		SDL_Flip(screen);
 	}
 	else
 	{
-		//scaling for non highres
+		// if scaling for non-highres (is centered)
 		if(Scale)
 		{
 			int x,y,s;
@@ -1087,7 +1077,6 @@ bool8_32 S9xDeinitUpdate (int Width, int Height)
 			//center ypos if ysize is only 224px
 			int yoffset = 8*(Height == 224);
 
-//			SDL_LockSurface(screen);
 			for (y = Height-1;y >= 0; y--)
 			{
 			    d = GFX.Screen + y * 640;
@@ -1118,25 +1107,20 @@ bool8_32 S9xDeinitUpdate (int Width, int Height)
 			else if (Settings.DisplayFrameRate)
 			    S9xDisplayFrameRate ((uint8 *)screen->pixels + 64, 640);
 	
-//			SDL_UnlockSurface(screen);
 			SDL_UpdateRect(screen,0,yoffset,320,Height);
-//			SDL_Flip(screen);
 		}
 		else
 		{
 			//center ypos if ysize is only 224px
 //			int yoffset = 8*(Height == 224);
 			
-//			SDL_LockSurface(screen);
 			if (GFX.InfoString)
 			    S9xDisplayString (GFX.InfoString, (uint8 *)screen->pixels + 64, 640,0);
 			else if (Settings.DisplayFrameRate)
 			    S9xDisplayFrameRate ((uint8 *)screen->pixels + 64, 640);
 	
-//			SDL_UnlockSurface(screen);
 //		    SDL_UpdateRect(screen,0,yoffset,320,Height);
 		    SDL_UpdateRect(screen,32,0,256,Height);
-//			SDL_Flip(screen);
 		}
 	}
 

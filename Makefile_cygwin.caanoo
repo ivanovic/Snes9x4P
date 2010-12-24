@@ -123,9 +123,10 @@ GASM	:= ${BINPATH}/$(ARCH)-g++
 
 OPTIMISE = -O3 -mcpu=arm926ej-s -mtune=arm926ej-s -D_ZAURUS -DCAANOO
 OPTIMISE += -ffast-math -fexpensive-optimizations -finline -finline-functions -falign-functions=32 -falign-loops -falign-labels -falign-jumps -fomit-frame-pointer
-#OPTIMISE += -fstrict-aliasing -ftree-vectorize -funroll-all-loops -fpeel-loops -ftracer -funswitch-loops -G 0 -msoft-float 
+OPTIMISE += -fstrict-aliasing -ftree-vectorize -funroll-all-loops -fpeel-loops -ftracer -funswitch-loops
+# -msoft-float 
 #OPTIMISE += -fprofile-generate
-#OPTIMISE += -fprofile-use
+OPTIMISE += -fprofile-use
 
 CCFLAGS = $(OPTIMISE) \
 -I. \
