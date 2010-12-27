@@ -415,7 +415,11 @@ void menu_dispupdate(void)
 //	strcpy(disptxt[15],temp);	
 #endif
 
-	for(int i=0;i<=14;i++) //12 //14
+#ifdef DINGOO
+	for(int i=0;i<=14;i++)
+#else
+	for(int i=0;i<=12;i++)
+#endif
 	{
 		if(i==cursor)
 			sprintf(temp," >%s",disptxt[i]);
