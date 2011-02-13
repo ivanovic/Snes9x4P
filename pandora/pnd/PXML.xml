@@ -7,23 +7,24 @@
     <title lang="en_US">Snes9x4P</title>
  
     <exec command="./run.sh"/>
-    <icon src="icon.png"/>
 
     <previewpics>
       <pic src="snes.png"/>
     </previewpics>
 
+    <icon src="icon.png"/>
+
     <info name="Snes9x4P Dokumentation" type="text" src="README_Snes9x4X.txt"/>
 
     <description lang="en_US">Super Nintendo (SNES) emulator; derived from Snes9x4d (Dingoo) port.</description>
  
-    <author name="snes9x team / SiENcE / skeezix" website="http://www.codejedi.com/"/>
+    <author name="snes9x team / SiENcE / skeezix / ivanovic" website="http://www.codejedi.com/"/>
  
     <version major="1" minor="39ff" release="20110213" build="1"/><!--This programs version-->
  
     <categories>
       <category name="Game"><!--category like "Games", "Graphics", "Internet" etc-->
-	<subcategory name="Emulator"/><!--subcategory, like "Board Games", "Strategy", "First Person Shooters"-->
+        <subcategory name="Emulator"/><!--subcategory, like "Board Games", "Strategy", "First Person Shooters"-->
       </category>
     </categories>
  
