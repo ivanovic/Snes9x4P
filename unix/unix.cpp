@@ -269,10 +269,12 @@ int main (int argc, char **argv)
     Settings.H_Max = SNES_CYCLES_PER_SCANLINE;
 #ifdef PANDORA
     Settings.SkipFrames = 1;
+    Settings.DisplayFrameRate = FALSE;
 #else
     Settings.SkipFrames = AUTO_FRAMERATE;
+    Settings.DisplayFrameRate = TRUE;
 #endif
-Settings.DisplayFrameRate = TRUE;
+    Settings.DisplayFrameRate = TRUE;
     Settings.ShutdownMaster = TRUE;
     Settings.FrameTimePAL = 20000;
     Settings.FrameTimeNTSC = 16667;
@@ -284,7 +286,11 @@ Settings.DisplayFrameRate = TRUE;
     Settings.MultiPlayer5 = FALSE;
     Settings.ControllerOption = SNES_MULTIPLAYER5;
     Settings.ControllerOption = 0;
+#ifdef PANDORA
+    Settings.Transparency = TRUE;
+#else
     Settings.Transparency = FALSE; //TRUE;
+#endif
     Settings.SixteenBit = TRUE;
     Settings.SupportHiRes = FALSE; //autodetected for known highres roms
     Settings.NetPlay = FALSE;

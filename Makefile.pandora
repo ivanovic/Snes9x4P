@@ -125,8 +125,8 @@ OPENGLDEPENDS=no_opengl
 OPENGLNO_DEPENDS=use_opengl
 endif
 
-#TOOLCHAINDIR := /home/nils/pandora-dev/arm-2009q3
-TOOLCHAINDIR := /home/nils/pandora-dev/arm-2010.09
+#TOOLCHAINDIR := /home/nils/pandora-dev/arm-2010.09
+TOOLCHAINDIR := ${PNDSDK}
 BINPATH    := ${TOOLCHAINDIR}/bin
 
 ARCH := arm-none-linux-gnueabi

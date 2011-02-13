@@ -23,7 +23,8 @@ then
 fi
 
 # run it!
-if [ $(echo "$1" | cut -d'.' -f2) = "7z" ] 
+file $i | grep -q "7-zip archive data"
+if [ "$?" -eq "0" ];
 then
 	FILEITEM=$(eval zenity --width=800 --height=400 --list --title="Which\ ROM?" --column="Name" `./util/7za l -slt "$1" | grep ^Path | sed -e's/^Path = /"/g' -e's/$/"/' | sed '1d'`)
 	if [ $? = 0 ]; then
