@@ -20,7 +20,7 @@
  
     <author name="snes9x team / SiENcE / skeezix / ivanovic" website="http://www.codejedi.com/"/>
  
-    <version major="1" minor="39ff" release="20110213" build="1"/><!--This programs version-->
+    <version major="1" minor="39ff" release="20110214" build="1"/><!--This programs version-->
  
     <categories>
       <category name="Game"><!--category like "Games", "Graphics", "Internet" etc-->

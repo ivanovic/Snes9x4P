@@ -15,11 +15,14 @@ export HOME
 #ARGS='-soundquality 7'
 ARGS=''
 
-PICKUPARGS=`cat args.txt`
-if [ $PICKUPARGS ]
+if [ -f "args.txt" ]
 then
-    # http://wiki.arcadecontrols.com/wiki/Snes9x#Command_Line_Parameters
-    ARGS=$PICKUPARGS
+	PICKUPARGS=`cat args.txt`
+	if [ $PICKUPARGS ]
+	then
+		# http://wiki.arcadecontrols.com/wiki/Snes9x#Command_Line_Parameters
+		ARGS=$PICKUPARGS
+	fi
 fi
 
 # run it!
@@ -28,9 +31,11 @@ if [ "$?" -eq "0" ];
 then
 	FILEITEM=$(eval zenity --width=800 --height=400 --list --title="Which\ ROM?" --column="Name" `./util/7za l -slt "$1" | grep ^Path | sed -e's/^Path = /"/g' -e's/$/"/' | sed '1d'`)
 	if [ $? = 0 ]; then
-		#zenity --info --title="$1" --text="Extracting ROM from 7z file, please wait..."
+		zenity --info --title="$1" --text="Extracting ROM from 7z file, please be patient after hitting 'OK'..."
 		./util/7za e -y -o"/tmp/" "$1" "$FILEITEM"
-		FILENAME="/tmp/$FILEITEM"
+		#the extracted name is without the internal PATH of the archive, so strip away this part!
+		FILENAME=`echo $FILEITEM | sed -e "s,^.*/,,g"`
+		FILENAME="/tmp/$FILENAME"
 		./snes9x $ARGS "$FILENAME"
 		rm "$FILENAME"
 	fi
