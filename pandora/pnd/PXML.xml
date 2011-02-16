@@ -2,32 +2,32 @@
 <PXML xmlns="http://openpandora.org/namespaces/PXML" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="PXML_schema.xsd">
 
   <application id="snes9x.skeezix.alpha">
-
-    <title lang="en_US">Snes9x4P</title>
  
     <exec command="./run.sh"/>
 
-    <previewpics>
-      <pic src="snes.png"/>
-    </previewpics>
-
-    <icon src="icon.png"/>
-
-    <info name="Snes9x4P Dokumentation" type="text" src="README_Snes9x4X.txt"/>
-
-    <description lang="en_US">Super Nintendo (SNES) emulator; derived from Snes9x4d (Dingoo) port.</description>
+    <title lang="en_US">Snes9x4P</title>
  
     <author name="snes9x team / SiENcE / skeezix / ivanovic" website="http://www.codejedi.com/"/>
  
-    <version major="1" minor="39ff" release="20110214" build="1"/><!--This programs version-->
+    <version major="1" minor="39ff" release="20110214" build="1"/>
+
+    <description lang="en_US">Super Nintendo (SNES) emulator; derived from Snes9x4d (Dingoo) port.</description>
+
+    <icon src="icon.png"/>
+
+    <previewpics>
+	  <pic src="snes.png"/>
+    </previewpics>
+
+    <info name="Snes9x4P Documentation" type="text/plain" src="README_Snes9x4X.txt"/>
  
     <categories>
-      <category name="Game"><!--category like "Games", "Graphics", "Internet" etc-->
-        <subcategory name="Emulator"/><!--subcategory, like "Board Games", "Strategy", "First Person Shooters"-->
+      <category name="Game">
+        <subcategory name="Emulator"/>
       </category>
     </categories>
  
-    <clockspeed frequency="600"/><!--Frequency in Hz-->
+    <clockspeed frequency="600"/>
 
   </application>
 
