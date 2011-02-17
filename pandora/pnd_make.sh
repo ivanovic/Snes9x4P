@@ -3,6 +3,7 @@
 ######adjust path of genpxml.sh if you want to use that "feture"#####
  
 TEMP=`getopt -o p:d:x:i:c -- "$@"`
+PXML_schema="PXML_schema.xsd"
  
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
  
@@ -36,7 +37,37 @@ if [ ! $PNDNAME ] || [ ! $FOLDER ] || [ ! $PXML ]; then
 fi
 if [ ! -d $FOLDER ]; then echo "$FOLDER doesnt exist"; exit 1; fi #check if folder actually exists
 if [ ! -f $PXML ]; then echo "$PXML doesnt exist"; exit 1; fi #check if pxml actually exists
- 
+
+#validate the PXML file (if xmllint is available)
+#errors in here are non fatal!
+echo -e
+echo -e "\E[32mTrying to validate $PXML now."
+tput sgr0 #reset terminal to "normal"
+which xmllint &> /dev/null
+if [ "$?" -ne "0" ];
+then
+	VALIDATED=false
+	echo "Could not find 'xmllint'. Validity check of '$PXML' is not possible!"
+else
+	if [ ! -f "$PXML_schema" ];
+	then
+		VALIDATED=false
+		echo "Could not find '$PXML_schema'. Please correct the variable at the top of this script to match your system."
+	else
+		xmllint --noout --schema $PXML_schema $PXML
+		if [ "$?" -ne "0" ]; then VALIDATED=false; else VALIDATED=true; fi
+	fi
+fi
+#print some message at the end about the validation in case the user missed the output above
+if [ $VALIDATED = "false" ]
+then
+	echo -e "\E[31mCould not successfully validate '$PXML'. Please check the output above. This does not mean that your pnd will be broken. Either you are not following the strict syntax required for validation or you don't have all files/programs required for validating."
+else
+	echo -e "\E[32mYour file '$PXML' was validated successfully. The resulting pnd should work nicely with libpnd."
+fi
+echo -e
+tput sgr0 #reset terminal to "normal"
+
 #make iso from folder
 if [ ! $SQUASH ]; then
         mkisofs -o $PNDNAME.iso -R $FOLDER
