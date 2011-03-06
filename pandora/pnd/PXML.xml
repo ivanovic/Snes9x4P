@@ -1,34 +1,55 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<PXML xmlns="http://openpandora.org/namespaces/PXML" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="PXML_schema.xsd">
+<PXML xmlns="http://openpandora.org/namespaces/PXML">
+	<package id="snes9x4p_ivanovic">
+		<author name="snes9x team / SiENcE / skeezix / ivanovic" website="http://www.gp32x.com/board/index.php?/topic/55378-snes9x4d4p-another-new-build-now-with-hi-res-and-new-rom-picker/"/>
+		
+		<version major="1" minor="39ff" release="20110214" build="1"/>
+		
+		<titles>
+			<title lang="en_US">Snes9x4P</title>
+		</titles>
+		
+		<descriptions>
+			<description lang="en_US">Super Nintendo (SNES) emulator; derived from Snes9x4d (Dingoo) port.</description>
+		</descriptions>
+		
+		<icon src="icon.png"/>
+	</package>
 
-  <application id="snes9x.skeezix.alpha">
- 
-    <exec command="./run.sh"/>
 
-    <title lang="en_US">Snes9x4P</title>
- 
-    <author name="snes9x team / SiENcE / skeezix / ivanovic" website="http://www.codejedi.com/"/>
- 
-    <version major="1" minor="39ff" release="20110214" build="1"/>
+	<application id="snes9x.skeezix.alpha">
+		<exec command="./run.sh"/>
 
-    <description lang="en_US">Super Nintendo (SNES) emulator; derived from Snes9x4d (Dingoo) port.</description>
+		<author name="snes9x team / SiENcE / skeezix / ivanovic" website="http://www.gp32x.com/board/index.php?/topic/55378-snes9x4d4p-another-new-build-now-with-hi-res-and-new-rom-picker/"/>
 
-    <icon src="icon.png"/>
+		<version major="1" minor="39ff" release="20110214" build="1"/>
 
-    <previewpics>
-	  <pic src="snes.png"/>
-    </previewpics>
+		<titles>
+			<title lang="en_US">Snes9x4P</title>
+		</titles>
+		<title lang="en_US">Snes9x4P</title> <!-- pre HF6 compatibility -->
+		<descriptions>
+			<description lang="en_US">Super Nintendo (SNES) emulator; derived from Snes9x4d (Dingoo) port.</description>
+		</descriptions>
+		<description lang="en_US">Super Nintendo (SNES) emulator; derived from Snes9x4d (Dingoo) port.</description> <!-- pre HF6 compatibility -->
 
-    <info name="Snes9x4P Documentation" type="text/plain" src="README_Snes9x4X.txt"/>
- 
-    <categories>
-      <category name="Game">
-        <subcategory name="Emulator"/>
-      </category>
-    </categories>
- 
-    <clockspeed frequency="600"/>
+		<licenses>
+			<license name="as-is non-commercial" />
+		</licenses>
 
-  </application>
+		<icon src="icon.png"/>
+
+		<previewpics>
+			<pic src="snes.png"/>
+		</previewpics>
+
+		<info name="Snes9x4P Documentation" type="text/plain" src="README_Snes9x4X.txt"/>
+
+		<categories>
+			<category name="Game">
+				<subcategory name="Emulator"/>
+			</category>
+		</categories>
+	</application>
 
 </PXML>
