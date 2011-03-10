@@ -20,18 +20,18 @@
 	<application id="snes9x.skeezix.alpha">
 		<exec command="./run.sh"/>
 
-		<author name="snes9x team / SiENcE / skeezix / ivanovic" website="http://www.gp32x.com/board/index.php?/topic/55378-snes9x4d4p-another-new-build-now-with-hi-res-and-new-rom-picker/"/>
+		<author name="snes9x team / SiENcE / skeezix / Ivanovic" website="http://www.gp32x.com/board/index.php?/topic/55378-snes9x4d4p-another-new-build-now-with-hi-res-and-new-rom-picker/"/>
 
-		<version major="1" minor="39ff" release="20110214" build="1"/>
+		<version major="1" minor="39ff" release="20110310" build="1"/>
 
 		<titles>
 			<title lang="en_US">Snes9x4P</title>
 		</titles>
 		<title lang="en_US">Snes9x4P</title> <!-- pre HF6 compatibility -->
 		<descriptions>
-			<description lang="en_US">Super Nintendo (SNES) emulator; derived from Snes9x4d (Dingoo) port.</description>
+			<description lang="en_US">Super Nintendo (SNES) emulator; derived from Snes9x4D (Dingoo) port.</description>
 		</descriptions>
-		<description lang="en_US">Super Nintendo (SNES) emulator; derived from Snes9x4d (Dingoo) port.</description> <!-- pre HF6 compatibility -->
+		<description lang="en_US">Super Nintendo (SNES) emulator; derived from Snes9x4D (Dingoo) port.</description> <!-- pre HF6 compatibility -->
 
 		<licenses>
 			<license name="as-is non-commercial" />
