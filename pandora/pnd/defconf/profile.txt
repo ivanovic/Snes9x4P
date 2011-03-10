@@ -1,18 +1,12 @@
 # Global Settings
+targetapp=
 filepath=/media/
 
+# Command Settings
+
 # Extension Settings
-[sfc]
-exepath=./snes.sh
-arg=,%filename%
-[smc]
-exepath=./snes.sh
-arg=,%filename%
-[7z]
-exepath=./snes.sh
-arg=,%filename%
-[zip]
-exepath=./snes.sh
-arg=,%filename%
+[7z;sfc;smc;zip]
+exepath=/media/8GB_PROGS/pandora/menu/pnd_tmp/snes.sh
+extarg=;0;%na%;%filename%
 
 # Custom Entries Settings
