@@ -1,9 +1,20 @@
 #!/bin/bash
+#
+# pnd_make.sh
+#
+# This script is meant to ease generation of a pnd file. Please consult the output
+# when running --help for a list of available parameters and an explaination of
+# those.
+#
+# Required tools when running the script:
+# bash
+# echo, cat, mv, rm
+# mkisofs or mksquashfs (the latter when using the -c param!)
+# xmllint (optional, only for validation of the PXML against the schema)
 
-######adjust path of genpxml.sh if you want to use that "feture"#####
 
-PXML_schema="PXML_schema.xsd"
-GENPXML_PATH="genpxml.sh"
+PXML_schema=$(dirname ${0})/PXML_schema.xsd
+GENPXML_PATH=$(dirname ${0})/genpxml.sh
 
 # useful functions ...
 black='\E[30m'
@@ -15,6 +26,16 @@ magenta='\E[35m'
 cyan='\E[36m'
 white='\E[37m'
 
+check_for_tool()
+{
+	which $1 &> /dev/null
+	if [ "$?" -ne "0" ];
+	then
+		cecho "ERROR: Could not find the program '$1'. Please make sure
+that it is available in your PATH since it is required to complete your request." $red
+		exit 1
+	fi
+}
 
 cecho ()	# Color-echo. Argument $1 = message, Argument $2 = color
 {
@@ -39,7 +60,7 @@ Usage:
 
 
 Switches:
-  --compress-squashfs / -c  Define wether or not the pnd should be compressed using
+  --compress-squashfs / -c  Define whether or not the pnd should be compressed using
                             squashfs. If this parameter is selected, a compressed pnd
                             will be created.
 
@@ -47,7 +68,12 @@ Switches:
                             to <folder>. This option is mandatory for the script to
                             function correctly.
 
-  --genpxml                 
+  --genpxml                 Sets the script used for generating a PXML file (if none
+                            is available already) to <file>. Please make sure to either
+                            provide a full path or prefix a script in the current folder
+                            with './' so that the script can actually be executed. If
+                            this variable is not specified, $GENPXML_PATH
+                            will be used.
 
   --help / -h               Displays this help text.
 
@@ -60,13 +86,13 @@ Switches:
   --pxml / -x               Sets the PXML file that is to be used to <file>. If you
                             neither provide a PXML file or set this entry to 'guess',
                             an existing 'PXML.xml' in your selected '--directory'
-                            will be used, or the script $GENPXML_PATH will be called
-                            to try to generate a basic PXML file for your.
+                            will be used, or the script $GENPXML_PATH
+                            will be called to try to generate a basic PXML file for you.
 
   --schema / -s             Sets the schema file, that is to be used for validation,
                             to <file. If this is not defined, the script will try to
-                            use the file 'PXML_schema.xsd'. If this fails, a warning
-                            is issued.
+                            use the file '$PXML_schema'. If this fails,
+                            a warning is issued.
 
 If you select the option to create a compressed squashfs, a version >=4.0 of squashfs
 is required to be available in your PATH.
@@ -111,24 +137,34 @@ while [ "${1}" != "" ]; do
 	else
 		cecho "ERROR: '$1' is not a known argument. Printing --help and aborting." $red
 		print_help
-		exit 1;
+		exit 1
 	fi
 done
 
 
 # Generate a PXML if the param is set to Guess or it is empty.
-#TODO: make sure this does still work nicely with the latest genpxml that sebt3 is working on!
 if [ ! $PXML ] || [ $PXML = "guess" ] && [ $PNDNAME ] && [ $FOLDER ];
 then
 	if [ -f $FOLDER/PXML.xml ]; # use the already existing PXML.xml file if there is one...
 	then
 		PXML=$FOLDER/PXML.xml
-		PWML_ALREADY_EXISTING="true"
+		PXML_ALREADY_EXISTING="true"
 	else
-		PXMLtxt=$($GENPXML_PATH $FOLDER $ICON)
-		PXML=$FOLDER/PXML.xml
-		echo "$PXMLtxt" > $FOLDER/PXML.xml
-		PXML_GENERATED="true"
+		if [ -f $GENPXML_PATH ];
+		then
+			$GENPXML_PATH --src $FOLDER --dest $FOLDER --author $USER
+			if [ -f $FOLDER/PXML.xml ];
+			then
+				PXML_GENERATED="true"
+			else
+				cecho "ERROR: Generating a PXML file using '$GENPXML_PATH' failed.
+Please generate a PXML file manually." $red
+				exit 1
+			fi
+		else
+			cecho "ERROR: Could not find '$GENPXML_PATH' for generating a PXML file." $red
+			exit 1
+		fi
 	fi
 fi
 
@@ -150,7 +186,7 @@ fi
 if [ ! -d $FOLDER ];
 then
 	echo -e
-	cecho "ERROR: '$FOLDER' doesnt exist or is not a folder." $red
+	cecho "ERROR: '$FOLDER' doesn't exist or is not a folder." $red
 	exit 1
 else
 	echo "FOLDER set to '$FOLDER'."
@@ -159,13 +195,13 @@ fi
 if [ ! -f $PXML ];
 then
 	echo -e
-	cecho "ERROR: '$PXML' doesnt exist or is not a file." $red
+	cecho "ERROR: '$PXML' doesn't exist or is not a file." $red
 	exit 1
 else
-	if [ $PWML_ALREADY_EXISTING ];
+	if [ $PXML_ALREADY_EXISTING ];
 	then
 		echo "You have not explicitly specified a PXML to use, but an existing file was
-fount. Will be using this one."
+found. Will be using this one."
 	elif [ $PXML_GENERATED ];
 	then
 		echo "A PXML file was generated for you using '$GENPXML_PATH'. This file will
@@ -181,7 +217,7 @@ if [ $ICON ];
 then
 	if [ ! -f $ICON ]
 	then
-		cecho "'$ICON' doesn't exist, will not append the selected icon to the pnd." $red
+		cecho "WARNING: '$ICON' doesn't exist, will not append the selected icon to the pnd." $red
 	else
 		echo "ICON set to '$ICON'."
 		USE_ICON="true"
@@ -206,8 +242,8 @@ else
 	if [ ! -f "$PXML_schema" ];
 	then
 		VALIDATED=false
-		cecho "WARNING: Could not find '$PXML_schema'. If you want to validate your PXML file
-please make sure to provide a schema using the --schema option." $red
+		cecho "WARNING: Could not find '$PXML_schema'. If you want to validate your
+PXML file please make sure to provide a schema using the --schema option." $red
 	else
 		xmllint --noout --schema $PXML_schema $PXML
 		if [ "$?" -ne "0" ]; then VALIDATED=false; else VALIDATED=true; fi
@@ -230,14 +266,24 @@ echo -e
 cecho "Creating an iso file based on '$FOLDER'." $green
 if [ $SQUASH ];
 then
+	check_for_tool mksquashfs
 	if [ $(mksquashfs -version | awk 'BEGIN{r=0} $3>=4{r=1} END{print r}') -eq 0 ];
 	then
-		cecho "ERROR: Your squashfs version is older then version 4, pleas upgrade to 4.0 or later" $red
+		cecho "ERROR: Your squashfs version is older then version 4, please upgrade to 4.0 or later" $red
 		exit 1
 	fi
 	mksquashfs $FOLDER $PNDNAME.iso -nopad -no-recovery
 else
+	check_for_tool mkisofs
 	mkisofs -o $PNDNAME.iso -R $FOLDER
+fi
+
+# Check that the iso file was actually created before continuing
+if [ ! -f $PNDNAME.iso ];
+then
+	cecho "ERROR: The temporary file '$PNDNAME.iso' could not be created.
+Please check the output above for any errors and retry after fixing them. Aborting." $red
+	exit 1
 fi
 
 
@@ -246,8 +292,8 @@ echo -e
 cecho "Appending '$PXML' to the created iso file." $green
 cat $PNDNAME.iso $PXML > $PNDNAME
 rm $PNDNAME.iso #cleanup
- 
- 
+
+
 # Append icon if specified and available
 if [ $USE_ICON ];
 then
@@ -263,10 +309,12 @@ fi
 echo -e
 if [ -f $PNDNAME ];
 then
-	cecho "Finished creating the pnd '$PNDNAME'." $green
+	cecho "Successfully finished creating the pnd '$PNDNAME'." $green
 else
 	cecho "There seems to have been a problem and '$PNDNAME' was not created. Please check
-the output above for any error messages." $red
+the output above for any error messages. A possible cause for this is that there was
+not enough space available." $red
+	exit 1
 fi
 
 
