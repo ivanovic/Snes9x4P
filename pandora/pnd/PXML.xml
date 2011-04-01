@@ -40,7 +40,13 @@
 		<icon src="icon.png"/>
 
 		<previewpics>
-			<pic src="snes.png"/>
+			<pic src="screenshots/snes.png"/>
+			<pic src="screenshots/snes1.png"/>
+			<pic src="screenshots/snes2.png"/>
+			<pic src="screenshots/snes3.png"/>
+			<pic src="screenshots/snes4.png"/>
+			<pic src="screenshots/snes5.png"/>
+			<pic src="screenshots/snes6.png"/>
 		</previewpics>
 
 		<info name="Snes9x4P Documentation" type="text/plain" src="README_Snes9x4X.txt"/>
