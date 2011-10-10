@@ -336,7 +336,11 @@ void menu_dispupdate(void)
 	strcpy(disptxt[8],"Full Screen         ");
 #endif
 	strcpy(disptxt[9],"Frameskip              ");
+#ifdef PANDORA
+	strcpy(disptxt[10],"Alt. Sample Decoding   ");
+#else
 	strcpy(disptxt[10],"Sound Volume           ");
+#endif
 	strcpy(disptxt[11],"Credit              ");
 	strcpy(disptxt[12],"Exit");
 #ifdef DINGOO
@@ -394,8 +398,16 @@ void menu_dispupdate(void)
 		strcpy(disptxt[9],temp);
 	}
 
+#ifdef PANDORA
+	if(Settings.AltSampleDecode)
+		sprintf(temp,"%s True",disptxt[10]);
+	else
+		sprintf(temp,"%sFalse",disptxt[10]);
+	strcpy(disptxt[10],temp);
+#else
 	sprintf(temp,"%s %3d%%",disptxt[10],vol);
 	strcpy(disptxt[10],temp);
+#endif
 
 #ifdef DINGOO
 	if      (batt_level() >= 3739)
@@ -689,6 +701,15 @@ void menu_loop(void)
 								Settings.SkipFrames = 1;
 						break;
 						case 10:
+//for the pandora, it does not make sense to offer volume stuff, since it ain't working...
+//better offer an option to change to alternative sample decoding
+//cf. http://www.gp32x.com/board/index.php?/topic/55378-snes9x4d4p-another-new-build-now-with-hi-res-and-new-rom-picker/page__view__findpost__p__958860
+#ifdef PANDORA
+							if (Settings.AltSampleDecode)
+								Settings.AltSampleDecode = 0;
+							else 
+								Settings.AltSampleDecode = 1;
+#else
 							if (keyssnes[sfc_key[LEFT_1]] == SDL_PRESSED)
 								vol -= 10;
 							else
@@ -699,6 +720,7 @@ void menu_loop(void)
 								vol = 100;
 							else if (vol<=0)
 								vol = 0;
+#endif
 						break;
 						case 11:
 							if (keyssnes[sfc_key[A_1]] == SDL_PRESSED)

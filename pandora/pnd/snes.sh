@@ -18,7 +18,7 @@ ARGS=''
 if [ -f "args.txt" ]
 then
 	PICKUPARGS=`cat args.txt`
-	if [ $PICKUPARGS ]
+	if [ ! -z "$PICKUPARGS" ]
 	then
 		# http://wiki.arcadecontrols.com/wiki/Snes9x#Command_Line_Parameters
 		ARGS=$PICKUPARGS
