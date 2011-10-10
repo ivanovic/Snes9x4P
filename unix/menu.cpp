@@ -649,15 +649,20 @@ void menu_loop(void)
 						break;
 						case 5:
 							if (keyssnes[sfc_key[LEFT_1]] == SDL_PRESSED)
-								SaveSlotNum--;
+							{
+								if ( SaveSlotNum == 0 )
+									SaveSlotNum = 3;
+								else
+									--SaveSlotNum;
+							}
 							else
 							if (keyssnes[sfc_key[RIGHT_1]] == SDL_PRESSED)
-								SaveSlotNum++;
-
-							if(SaveSlotNum>=3)
-								SaveSlotNum=3;		//3
-							else if(SaveSlotNum<=0)
-								SaveSlotNum=0;		//3
+							{
+								if ( SaveSlotNum == 3 )
+									SaveSlotNum = 0;
+								else
+									++SaveSlotNum;
+							}
 						break;
 						case 6:
 							Settings.DisplayFrameRate = !Settings.DisplayFrameRate;
