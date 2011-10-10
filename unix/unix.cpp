@@ -44,6 +44,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <iostream>
+#include <fstream>
 #include <unistd.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -265,6 +267,7 @@ int main (int argc, char **argv)
 	Settings.SoundBufferSize = 512; //256 //2048
     Settings.CyclesPercentage = 100;
     Settings.DisableSoundEcho = FALSE;
+    Settings.AltSampleDecode = 0;
     Settings.APUEnabled = Settings.NextAPUEnabled = TRUE;
     Settings.H_Max = SNES_CYCLES_PER_SCANLINE;
 #ifdef PANDORA
@@ -383,6 +386,92 @@ int main (int argc, char **argv)
 		    }
 		}
 		Memory.LoadSRAM (S9xGetFilename (".srm"));
+		
+#ifdef PANDORA
+		// load last preferences if available
+		std::string this_line;
+		std::string romSettingsFileName = std::string(S9xGetFilename (".scfg"));
+		std::ifstream ifs ( romSettingsFileName.c_str() , std::ifstream::in );
+
+		while (std::getline(ifs,this_line))
+		{
+			if (this_line != "")
+			{
+				if (this_line.find("#") != 0) // skip all lines that have a # at the *very* first position
+				{
+					if (this_line.find("alternative_sample_decoding=") == 0)
+					{
+						this_line = this_line.substr(this_line.find("=")+1);
+						if (this_line == "1")
+							Settings.AltSampleDecode = 1;
+						else
+							Settings.AltSampleDecode = 0;
+					}
+					else if (this_line.find("display_mode=") == 0)
+					{
+						this_line = this_line.substr(this_line.find("=")+1);
+						std::string current_scaler = blit_scalers [ g_scale ].desc_en;
+						int safe_abort = 0; // used to be able to break out of the loop in case something goes *really* bad!
+						while ( ( current_scaler != this_line || blit_scalers [ g_scale ].valid == bs_invalid ) && safe_abort < 20 )
+						{
+							g_scale = (blit_scaler_e) ( ( g_scale + 1 ) % bs_max );
+							current_scaler = blit_scalers [ g_scale ].desc_en;
+							++safe_abort;
+						}
+						if (safe_abort >= 20)
+						{
+							std::cerr << "unknown or broken entry for display_mode! switching to default '2x2 no-AA'." << std::endl;
+							g_scale = bs_1to2_double;
+						}
+					}
+					else if (this_line.find("frameskip=") == 0)
+					{
+						this_line = this_line.substr(this_line.find("=")+1);
+						Settings.SkipFrames = atoi ( this_line.c_str() );
+					}
+					else if (this_line.find("savestate_slot=") == 0)
+					{
+						this_line = this_line.substr(this_line.find("=")+1);
+						switch(atoi ( this_line.c_str() ))
+						{
+							case 1:
+								SaveSlotNum = 1;
+							break;
+							case 2:
+								SaveSlotNum = 2;
+							break;
+							case 3:
+								SaveSlotNum = 3;
+							break;
+							default:
+								SaveSlotNum = 0;
+						}
+					}
+					else if (this_line.find("show_fps=") == 0)
+					{
+						this_line = this_line.substr(this_line.find("=")+1);
+						if ( this_line == "1" )
+							Settings.DisplayFrameRate = TRUE;
+						else
+							Settings.DisplayFrameRate = FALSE;
+					}
+					else if (this_line.find("transparency=") == 0)
+					{
+						this_line = this_line.substr(this_line.find("=")+1);
+						if ( this_line == "1" )
+							Settings.Transparency = TRUE;
+						else
+							Settings.Transparency = FALSE;
+					}
+					else 
+					{
+						std::cerr << "unknown entry in list of rom specific settings, ignoring this entry" << std::endl;
+					}
+				}
+			}
+		}
+		ifs.close();
+#endif
     }
     else
     {
@@ -589,6 +678,44 @@ void OutOfMemory()
 
 void S9xExit()
 {
+#ifdef PANDORA
+	std::string romSettingsFileName = std::string(S9xGetFilename (".scfg"));
+	std::ofstream romSettingsFile;
+	romSettingsFile.open ( romSettingsFileName.c_str() );
+	if (romSettingsFile)
+	{
+		romSettingsFile << "# This file was automatically created. Please do not modify it!" << std::endl;
+		romSettingsFile << "# Filename: " << romSettingsFileName << std::endl;
+		
+		
+		if ( Settings.AltSampleDecode == 1 ) // there seem to be some issues with this data type, so got to work around it...
+			romSettingsFile << "alternative_sample_decoding=1"  << std::endl;
+		else
+			romSettingsFile << "alternative_sample_decoding=0" << std::endl;
+		romSettingsFile << "display_mode=" << blit_scalers [ g_scale ].desc_en << std::endl;
+		romSettingsFile << "frameskip=" << Settings.SkipFrames << std::endl;
+		switch(SaveSlotNum)
+		{
+			case 1:
+				romSettingsFile << "savestate_slot=1" << std::endl;
+			break;
+			case 2:
+				romSettingsFile << "savestate_slot=2" << std::endl;
+			break;
+			case 3:
+				romSettingsFile << "savestate_slot=3" << std::endl;
+			break;
+			default:
+				romSettingsFile << "savestate_slot=0" << std::endl;
+		}
+		romSettingsFile << "show_fps=" << Settings.DisplayFrameRate << std::endl;
+		romSettingsFile << "transparency=" << Settings.Transparency << std::endl;
+		romSettingsFile.close();
+	}
+	else
+		std::cerr << "could not open file for saving rom preferences!" << std::endl;
+#endif
+
 	S9xSetSoundMute(true);
 
 #ifdef USE_THREADS
