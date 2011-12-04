@@ -10,6 +10,9 @@ echo "PWD pre-run $PWD"
 HOME=.
 export HOME
 
+export SDL_VIDEODRIVER=omapdss
+export SDL_OMAP_VSYNC=1
+
 # enable higher quality audio
 #0 - off, 1 - 8192, 2 - 11025, 3 - 16000, 4 - 22050, 5 - 32000 (default), 6 - 44100, 7 - 48000
 #ARGS='-soundquality 7'
@@ -36,9 +39,9 @@ then
 		#the extracted name is without the internal PATH of the archive, so strip away this part!
 		FILENAME=`echo $FILEITEM | sed -e "s,^.*/,,g"`
 		FILENAME="/tmp/$FILENAME"
-		./snes9x $ARGS "$FILENAME"
+		LD_LIBRARY_PATH=lib/:$LD_LIBRARY_PATH ./snes9x $ARGS "$FILENAME"
 		rm "$FILENAME"
 	fi
 else
-	./snes9x $ARGS "$1"
+	LD_LIBRARY_PATH=lib/:$LD_LIBRARY_PATH ./snes9x $ARGS "$1"
 fi

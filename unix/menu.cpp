@@ -16,9 +16,12 @@
 #include "unistd.h"
 
 #ifdef PANDORA
+	#include <iostream>
 	#include "pandora_scaling/blitscale.h"
 	extern blit_scaler_option_t blit_scalers[];
 	extern blit_scaler_e g_scale;
+	extern SDL_Surface *screen,*gfxscreen;
+	extern unsigned char g_fullscreen;
 #endif
 
 #ifdef DINGOO
@@ -114,7 +117,7 @@ void loadmenu_dispupdate(int romcount)
 #if CAANOO
 	strcpy(disptxt[0],"  Snes9x4C v20101010");
 #elif PANDORA
-	strcpy(disptxt[0],"  Snes9x4P v20111010");
+	strcpy(disptxt[0],"  Snes9x4P v20111204");
 #elif CYGWIN32
 	strcpy(disptxt[0],"  Snes9x4W v20101010");
 #else
@@ -317,7 +320,7 @@ void menu_dispupdate(void)
 #if CAANOO
 	strcpy(disptxt[0],"Snes9x4C v20101010");
 #elif PANDORA
-	strcpy(disptxt[0],"Snes9x4P v20110310");
+	strcpy(disptxt[0],"Snes9x4P v20111204");
 #elif CYGWIN32
 	strcpy(disptxt[0],"Snes9x4W v20101010");
 #else
@@ -331,7 +334,7 @@ void menu_dispupdate(void)
 	strcpy(disptxt[6],"Display Frame Rate     ");
 	strcpy(disptxt[7],"Transparency           ");
 #ifdef PANDORA
-	strcpy(disptxt[8],"Display mode        ");
+	strcpy(disptxt[8],"Display mode   ");
 #else
 	strcpy(disptxt[8],"Full Screen         ");
 #endif
@@ -687,6 +690,9 @@ void menu_loop(void)
 									if (g_scale < 1) g_scale = (blit_scaler_e)(bs_max-1);
 								} while ( blit_scalers [ g_scale ].valid == bs_invalid );
 							}
+							// now force update the display, so that the new scaler is directly used (fixes some glitches)
+							S9xDeinitDisplay();
+							S9xInitDisplay(0, 0);
 #else
 							Scale_org = !Scale_org;
 #endif

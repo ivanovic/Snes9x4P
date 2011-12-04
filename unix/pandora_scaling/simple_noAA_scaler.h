@@ -5,6 +5,11 @@
 
 typedef unsigned short uint16;
 
+// used for rendering 1 pixel per source pixel in X direction and 1px per source pixel in Y direction
+// this is eg required for HiRes games in 512x244 mode
+void render_x_single_xy(uint16* destination_pointer_address, uint16 screen_pitch_half,
+                     uint16* gfx_screen, uint16 source_panewidth, int Width, int Height);
+
 // used for rendering 1 pixel per source pixel in X direction and 2px per source pixel in Y direction
 // this is eg required for HiRes games in 512x244 mode
 void render_x_single(uint16* destination_pointer_address, uint16 screen_pitch_half,

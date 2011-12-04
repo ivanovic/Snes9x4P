@@ -113,17 +113,22 @@ pthread_mutex_t mutex;
 	#include "pandora_scaling/blitscale.h"
 	blit_scaler_option_t blit_scalers[] = {
 		// KEEP IN SYNC TO BLIT_SCALER_E or Earth Crashes Into The Sun
-		{ bs_error,                bs_invalid, 0, 0,       "Error" },
-		{ bs_1to1,                 bs_invalid, 1, 1,       "1 to 1" },
-		{ bs_1to2_double,          bs_valid,   2, 2,       "2x2 no-AA" },
-		{ bs_1to2_scale2x,         bs_valid,   2, 2,       "2x2 Scale2x" },
-		{ bs_1to2_smooth,          bs_valid,   2, 2,       "2x2 Smoothed" },
-		{ bs_1to32_multiplied,     bs_valid,   3, 2,       "3x2 no-AA" },
-		{ bs_1to32_smooth,         bs_invalid, 3, 2,       "3x2 Smoothed" },
-		{ bs_fs_aspect_multiplied, bs_invalid, 0xFF, 0xFF, "Fullscreen (aspect) (unsmoothed)" },
-		{ bs_fs_aspect_smooth,     bs_invalid, 0xFF, 0xFF, "Fullscreen (aspect) (smoothed)" },
-		{ bs_fs_always_multiplied, bs_invalid, 0xFF, 0xFF, "Fullscreen (unsmoothed)" },
-		{ bs_fs_always_smooth,     bs_invalid, 0xFF, 0xFF, "Fullscreen (smoothed)" },
+		{ bs_error,            bs_invalid, 0, 0,     0, "Error",           "800x480" },
+		{ bs_1to1,             bs_invalid, 320, 240, 0, "1 to 1",          "800x480" },
+		{ bs_fs_aspect_ntsc,   bs_valid,   320, 240, 1, "HW: Aspect NTSC", "585x480" },
+		{ bs_fs_aspect_pal,    bs_valid,   320, 240, 1, "HW: Aspect PAL",  "512x480" },
+		{ bs_fs_4to3,          bs_valid,   320, 240, 1, "HW: 4:3",         "640x480" },
+		{ bs_fs_always,        bs_valid,   320, 240, 1, "HW: Fullscreen",  "800x480" },
+		{ bs_1to2_double,      bs_valid,   800, 480, 0, "2x2 no-AA",       "800x480" },
+		{ bs_1to2_scale2x,     bs_valid,   800, 480, 0, "2x2 Scale2x",     "800x480" },
+		{ bs_1to2_smooth,      bs_valid,   800, 480, 0, "2x2 Smoothed",    "800x480" },
+		{ bs_1to32_multiplied, bs_valid,   800, 480, 0, "3x2 no-AA",       "800x480" },
+// 		{ bs_1to32_smooth,         bs_invalid, 3, 2, 0,       "3x2 Smoothed", "800x480" },
+// 		{ bs_fs_aspect_multiplied, bs_invalid, 0xFF, 0xFF, 0, "Fullscreen (aspect) (unsmoothed)", "800x480" },
+// 		{ bs_fs_aspect_smooth,     bs_invalid, 0xFF, 0xFF, 0, "Fullscreen (aspect) (smoothed)", "800x480" },
+// 		{ bs_fs_always_multiplied, bs_invalid, 0xFF, 0xFF, 0, "Fullscreen (unsmoothed)", "800x480" },
+// 		{ bs_fs_always_smooth,     bs_invalid, 0xFF, 0xFF, 0, "Fullscreen (smoothed)", "800x480" },
+		{ bs_fs_always_smooth,     bs_invalid, 0xFF, 0xFF, 0, "Fullscreen (smoothed)", "800x480" },  //fake used to make sure that there is no segfault when scrolling through, don't delete!
 	};
 
 	blit_scaler_e g_scale = bs_1to2_double;
@@ -1006,101 +1011,127 @@ bool8_32 S9xInitUpdate ()
 //		uint32 xs = 320, ys = 240, cl = 0, cs = 0, mfs = 10;
 #ifdef PANDORA
 bool8_32 S9xDeinitUpdate ( int Width, int Height ) {
-
-  /* rules:
-   * if highres mode -> g_scale should always be 1 (ie: no scaling, since high res mode is 512x480
-   * for non-highres-mode -> g_scale can be 1 (1:1) or 2 (1:2, pixel doubling)
-   *
-   * future:
-   * g_scale -> to imply anti-aliasing or stretch-blit or other scaling modes
-   */
-
-  // NEEDS WORK, THIS IS JUST TO GET WORKING
-
-	// get the pitch only once...
-	// pitch is in 1b increments, so is 2* what you think!
-	uint16 screen_pitch_half = (screen -> pitch) >> 1;
-	
-	//pointer to the screen
-	uint16* screen_pixels = (uint16*)(screen -> pixels);
-	
-	// this line for centering in Y direction always assumes that Height<=240 and double scaling in Y is wanted (interlacing!)
-	// screen_pitch_half * (480-(Heigth*2))/2; due to shifting no "div by zero" not possible
-	// heigth is usually 224, 239 or 240!
-	uint16 widescreen_center_y = screen_pitch_half * ( ( 480 - ( Height << 1 ) ) >> 1 );
-	// centering in X direction depends on the scaling type used and is defined at the according places
-	uint16 widescreen_center_x;
-	// destination pointer address: pointer to screen_pixels plus moving for centering
-	uint16* destination_pointer_address;
-	
 	//fprintf (stderr, "width: %d, height: %d\n", Width, Height);
+	//std::cerr << "current size: " << screen -> w << "x" << screen -> h << std::endl;
 	
 	uint16 source_panewidth = 320; // LoRes games are rendered into a 320 wide SDL screen
 	if (Settings.SupportHiRes)
 		source_panewidth = 512; // HiRes games are rendered into a 512 wide SDL screen
 	
-	switch (g_scale) {
-		case bs_1to2_double:
-			// the pandora screen has a width of 800px, so everything above should be handled differently
-			// only some scenes in hires roms use 512px width, otherwise the max is 320px in the menu!
-			// hires modules themselves come with two modes, one with 512 width, one with 256
-			if (Width > 400 ) {
-				widescreen_center_x = ( screen -> w - Width ) >> 1; // ( screen -> w - Width ) / 2
-				destination_pointer_address = screen_pixels + widescreen_center_x + widescreen_center_y;
-				
-				render_x_single(destination_pointer_address, screen_pitch_half,
-				                (uint16*)(GFX.Screen), source_panewidth, Width, Height);
+	
+	if ( blit_scalers [ g_scale ].hw_fullscreen )
+	{
+		if (Settings.SupportHiRes)
+		{ 
+			std::cerr << "S9xDeinitUpdate: hardware scaling not enabled for hires mode!" << std::endl;
+			g_scale = bs_1to2_double;
+			S9xDeinitDisplay();
+			S9xInitDisplay(0, 0);
+		} else {
+			if ( ( screen->w != Width ) || ( screen->h != Height ))
+			{
+				//std::cerr << "resetting video mode in S9xDeinitUpdate:v2"<< std::endl;
+				setenv("SDL_OMAP_LAYER_SIZE",blit_scalers [ g_scale ].layersize,1);
+				screen = SDL_SetVideoMode( Width , Height, 16,
+						g_fullscreen ? SDL_SWSURFACE|SDL_FULLSCREEN : SDL_SWSURFACE);
 			}
-			else {
-				widescreen_center_x = ( screen -> w - ( Width << 1 ) ) >> 1; // ( screen -> w - ( Width * 2 ) ) / 2
-				// destination pointer address: pointer to screen_pixels plus moving for centering
-				destination_pointer_address = screen_pixels + widescreen_center_x + widescreen_center_y;
-				
-				render_x_double(destination_pointer_address, screen_pitch_half,
-				                (uint16*)(GFX.Screen), source_panewidth, Width, Height);
-			}
-			break;
-		case bs_1to32_multiplied:
-			//widescreen_center_x = 16; // screen -> w - 3*Width
-			// destination pointer address: pointer to screen_pixels plus moving for centering
-			destination_pointer_address = screen_pixels + 16 + widescreen_center_y;
 			
-			// the pandora screen has a width of 800px, so everything above should be handled differently
-			// only some scenes in hires roms use 512px width, otherwise the max is 320px in the menu!
-			// hires modules themselves come with two modes, one with 512 width, one with 256
-			if (Width > 400 ) {
-				render_x_oneandhalf(destination_pointer_address, screen_pitch_half,
-				                (uint16*)(GFX.Screen), source_panewidth, Width, Height);
-			}
-			else {
-				render_x_triple(destination_pointer_address, screen_pitch_half,
-				                (uint16*)(GFX.Screen), source_panewidth, Width, Height);
-			}
-			break;
-		case bs_1to2_smooth:
-			if (Settings.SupportHiRes) { 
-				fprintf ( stderr, "Smoothed not enabled for hires mode!\n" );
-				g_scale = bs_1to2_double;
-			} else {
-				hq2x_16((uint16*)(GFX.Screen), screen_pixels, Width, Height, screen->w, screen->h);
-			}
-			break;
-		case bs_1to2_scale2x:
-			if (Settings.SupportHiRes) { 
-				fprintf ( stderr, "Scale2x not enabled for hires mode!\n" );
-				g_scale = bs_1to2_double;
-			} else {
-				widescreen_center_x = ( screen -> w - ( Width << 1 ) ) >> 1; // ( screen -> w - ( Width * 2 ) ) / 2
-				destination_pointer_address = screen_pixels + widescreen_center_x + widescreen_center_y;
-				
-				scale(2, (uint16*)destination_pointer_address, screen->w*2, (uint16*)GFX.Screen, 320*2, 2, Width, Height);
-			}
-			break;
-		default:
-			// code error; unknown scaler
-			fprintf ( stderr, "invalid scaler option handed to render code; fix me!\n" );
-			exit ( 0 );
+			render_x_single_xy((uint16*)(screen -> pixels) /*destination_pointer_address*/, (screen -> pitch) >> 1 /*screen_pitch_half*/,
+							(uint16*)(GFX.Screen), source_panewidth, Width, Height);
+		}
 	}
+	else 
+	{
+		if ( ( screen->w != blit_scalers [ g_scale ].res_x ) || ( screen->h != blit_scalers [ g_scale ].res_y ) )
+		{
+			//std::cerr << "resetting video mode in S9xDeinitUpdate:v3"<< std::endl;
+			setenv("SDL_OMAP_LAYER_SIZE",blit_scalers [ g_scale ].layersize,1);
+			screen = SDL_SetVideoMode( blit_scalers [ g_scale ].res_x , blit_scalers [ g_scale ].res_y, 16,
+					g_fullscreen ? SDL_SWSURFACE|SDL_FULLSCREEN : SDL_SWSURFACE);
+		}
+		
+		// get the pitch only once...
+		// pitch is in 1b increments, so is 2* what you think!
+		uint16 screen_pitch_half = (screen -> pitch) >> 1;
+		
+		//pointer to the screen
+		uint16* screen_pixels = (uint16*)(screen -> pixels);
+		
+		// this line for centering in Y direction always assumes that Height<=240 and double scaling in Y is wanted (interlacing!)
+		// screen_pitch_half * (480-(Heigth*2))/2; due to shifting no "div by zero" not possible
+		// heigth is usually 224, 239 or 240!
+		uint16 widescreen_center_y = screen_pitch_half * ( ( 480 - ( Height << 1 ) ) >> 1 );
+		// centering in X direction depends on the scaling type used and is defined at the according places
+		uint16 widescreen_center_x;
+		// destination pointer address: pointer to screen_pixels plus moving for centering
+		uint16* destination_pointer_address;
+		
+		
+		switch (g_scale) {
+			case bs_1to2_double:
+				// the pandora screen has a width of 800px, so everything above should be handled differently
+				// only some scenes in hires roms use 512px width, otherwise the max is 320px in the menu!
+				// hires modules themselves come with two modes, one with 512 width, one with 256
+				if (Width > 400 ) {
+					widescreen_center_x = ( screen -> w - Width ) >> 1; // ( screen -> w - Width ) / 2
+					destination_pointer_address = screen_pixels + widescreen_center_x + widescreen_center_y;
+					
+					render_x_single(destination_pointer_address, screen_pitch_half,
+									(uint16*)(GFX.Screen), source_panewidth, Width, Height);
+				}
+				else {
+					widescreen_center_x = ( screen -> w - ( Width << 1 ) ) >> 1; // ( screen -> w - ( Width * 2 ) ) / 2
+					// destination pointer address: pointer to screen_pixels plus moving for centering
+					destination_pointer_address = screen_pixels + widescreen_center_x + widescreen_center_y;
+					
+					render_x_double(destination_pointer_address, screen_pitch_half,
+									(uint16*)(GFX.Screen), source_panewidth, Width, Height);
+				}
+				break;
+			case bs_1to32_multiplied:
+				//widescreen_center_x = 16; // screen -> w - 3*Width
+				// destination pointer address: pointer to screen_pixels plus moving for centering
+				destination_pointer_address = screen_pixels + 16 + widescreen_center_y;
+				
+				// the pandora screen has a width of 800px, so everything above should be handled differently
+				// only some scenes in hires roms use 512px width, otherwise the max is 320px in the menu!
+				// hires modules themselves come with two modes, one with 512 width, one with 256
+				if (Width > 400 ) {
+					render_x_oneandhalf(destination_pointer_address, screen_pitch_half,
+									(uint16*)(GFX.Screen), source_panewidth, Width, Height);
+				}
+				else {
+					render_x_triple(destination_pointer_address, screen_pitch_half,
+									(uint16*)(GFX.Screen), source_panewidth, Width, Height);
+				}
+				break;
+			case bs_1to2_smooth:
+				if (Settings.SupportHiRes) { 
+					fprintf ( stderr, "Smoothed not enabled for hires mode!\n" );
+					g_scale = bs_1to2_double;
+				} else {
+					hq2x_16((uint16*)(GFX.Screen), screen_pixels, Width, Height, screen->w, screen->h);
+				}
+				break;
+			case bs_1to2_scale2x:
+				if (Settings.SupportHiRes) { 
+					fprintf ( stderr, "Scale2x not enabled for hires mode!\n" );
+					g_scale = bs_1to2_double;
+				} else {
+					widescreen_center_x = ( screen -> w - ( Width << 1 ) ) >> 1; // ( screen -> w - ( Width * 2 ) ) / 2
+					destination_pointer_address = screen_pixels + widescreen_center_x + widescreen_center_y;
+					
+					scale(2, (uint16*)destination_pointer_address, screen->w*2, (uint16*)GFX.Screen, 320*2, 2, Width, Height);
+				}
+				break;
+			default:
+				// code error; unknown scaler
+				fprintf ( stderr, "invalid scaler option handed to render code; fix me!\n" );
+				exit ( 0 );
+		}
+	}
+	
+	
 
 
 //The part below is the version that should be used when you want scanline support.

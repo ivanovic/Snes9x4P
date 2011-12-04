@@ -74,6 +74,8 @@ extern bool8_32 Scale;
 
 #ifdef PANDORA
 	#include "pandora_scaling/blitscale.h"
+	#include <iostream>
+	extern blit_scaler_option_t blit_scalers[];
 	extern blit_scaler_e g_scale;
 	extern unsigned char g_fullscreen;
 #endif
@@ -113,15 +115,28 @@ void S9xInitDisplay (int /*argc*/, char ** /*argv*/)
 #ifdef PANDORA
 	//screen = SDL_SetVideoMode(xs * blit_scalers [ g_scale ].scale_x, ys * blit_scalers [ g_scale ].scale_y, 16,
 	//  g_fullscreen ? SDL_SWSURFACE|SDL_FULLSCREEN : SDL_SWSURFACE);
-	screen = SDL_SetVideoMode( 800 /* pandora horiz */, 480 /* pandora vert */, 16,
+ 	//screen = SDL_SetVideoMode( 800 /* pandora horiz */, 480 /* pandora vert */, 16,
+ 	//			   g_fullscreen ? SDL_SWSURFACE|SDL_FULLSCREEN : SDL_SWSURFACE);
+	std::cerr << "setting video mode in S9xInitDisplay, selected mode: " << (std::string) blit_scalers [ g_scale ].desc_en << std::endl;
+	if ( Settings.SupportHiRes && (blit_scalers [ g_scale ].scaler != bs_1to32_multiplied) && (blit_scalers [ g_scale ].scaler  != bs_1to2_double) ) 
+	{ 
+		std::cerr << "S9xInitDisplay: mode \"" << (std::string) blit_scalers [ g_scale ].desc_en << "\" not enabled for hires mode!" << std::endl;
+		g_scale = bs_1to2_double;
+	}
+	setenv("SDL_OMAP_LAYER_SIZE",blit_scalers [ g_scale ].layersize,1);
+	screen = SDL_SetVideoMode( blit_scalers [ g_scale ].res_x , blit_scalers [ g_scale ].res_y, 16,
 				   g_fullscreen ? SDL_SWSURFACE|SDL_FULLSCREEN : SDL_SWSURFACE);
 
 	// for vsync
+	// WARNING! this is used as framelimiter, too! The emulator will run by far
+	// too fast if you remove this next block!
+	// fb1 as well as fb0 seem to work (skeeziz coded it with fb0, but since
+	// fb1 works, too, I will leave it at that for the moment).
 	{
 	  extern int g_fb;
-	  g_fb = open ("/dev/fb0", O_RDONLY /* O_RDWR */ );
+	  g_fb = open ("/dev/fb1", O_RDONLY /* O_RDWR */ );
 	  if ( g_fb < 0 ) {
-	    fprintf ( stderr, "Couldn't open /dev/fb0 for vsync\n" );
+	    fprintf ( stderr, "Couldn't open /dev/fb1 for vsync\n" );
 	  }
 	}
 

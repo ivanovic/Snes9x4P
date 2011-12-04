@@ -3,7 +3,7 @@
 	<package id="snes9x4p_ivanovic">
 		<author name="snes9x team / SiENcE / skeezix / ivanovic" website="http://www.gp32x.com/board/index.php?/topic/55378-snes9x4d4p-another-new-build-now-with-hi-res-and-new-rom-picker/"/>
 		
-		<version major="1" minor="39ff" release="20111010" build="2" type="release"/>
+		<version major="1" minor="39ff" release="20111204" build="1" type="release"/>
 		
 		<titles>
 			<title lang="en_US">Snes9x4P</title>
@@ -22,7 +22,7 @@
 
 		<author name="snes9x team / SiENcE / skeezix / Ivanovic" website="http://www.gp32x.com/board/index.php?/topic/55378-snes9x4d4p-another-new-build-now-with-hi-res-and-new-rom-picker/"/>
 
-		<version major="1" minor="39ff" release="20111010" build="2" type="release"/>
+		<version major="1" minor="39ff" release="20111204" build="1" type="release"/>
 
 		<titles>
 			<title lang="en_US">Snes9x4P</title>
