@@ -117,7 +117,7 @@ void loadmenu_dispupdate(int romcount)
 #if CAANOO
 	strcpy(disptxt[0],"  Snes9x4C v20101010");
 #elif PANDORA
-	strcpy(disptxt[0],"  Snes9x4P v20111204");
+	strcpy(disptxt[0],"  Snes9x4P v20111205");
 #elif CYGWIN32
 	strcpy(disptxt[0],"  Snes9x4W v20101010");
 #else
@@ -320,7 +320,7 @@ void menu_dispupdate(void)
 #if CAANOO
 	strcpy(disptxt[0],"Snes9x4C v20101010");
 #elif PANDORA
-	strcpy(disptxt[0],"Snes9x4P v20111204");
+	strcpy(disptxt[0],"Snes9x4P v20111205");
 #elif CYGWIN32
 	strcpy(disptxt[0],"Snes9x4W v20101010");
 #else
@@ -681,14 +681,16 @@ void menu_loop(void)
 								do
 								{
 									g_scale = (blit_scaler_e) ( ( g_scale + 1 ) % bs_max );
-								} while ( blit_scalers [ g_scale ].valid == bs_invalid );
+								} while ( ( blit_scalers [ g_scale ].valid == bs_invalid )
+											|| ( highres_current && !(blit_scalers [ g_scale ].support_hires) ) );
 							} else if (keyssnes[sfc_key[LEFT_1]] == SDL_PRESSED)
 							{
 								do
 								{
 									g_scale = (blit_scaler_e) ( g_scale - 1 );
 									if (g_scale < 1) g_scale = (blit_scaler_e)(bs_max-1);
-								} while ( blit_scalers [ g_scale ].valid == bs_invalid );
+								} while ( ( blit_scalers [ g_scale ].valid == bs_invalid )
+											|| ( highres_current && !(blit_scalers [ g_scale ].support_hires) ) );
 							}
 							// now force update the display, so that the new scaler is directly used (fixes some glitches)
 							S9xDeinitDisplay();

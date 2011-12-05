@@ -68,6 +68,7 @@
 #endif
 
 #ifdef PANDORA
+#include "font.h"
 #include <linux/fb.h>
 #include "unix/pandora_scaling/simple_noAA_scaler.h"
 extern "C" {
@@ -113,16 +114,16 @@ pthread_mutex_t mutex;
 	#include "pandora_scaling/blitscale.h"
 	blit_scaler_option_t blit_scalers[] = {
 		// KEEP IN SYNC TO BLIT_SCALER_E or Earth Crashes Into The Sun
-		{ bs_error,            bs_invalid, 0, 0,     0, "Error",           "800x480" },
-		{ bs_1to1,             bs_invalid, 320, 240, 0, "1 to 1",          "800x480" },
-		{ bs_fs_aspect_ntsc,   bs_valid,   320, 240, 1, "HW: Aspect NTSC", "585x480" },
-		{ bs_fs_aspect_pal,    bs_valid,   320, 240, 1, "HW: Aspect PAL",  "512x480" },
-		{ bs_fs_4to3,          bs_valid,   320, 240, 1, "HW: 4:3",         "640x480" },
-		{ bs_fs_always,        bs_valid,   320, 240, 1, "HW: Fullscreen",  "800x480" },
-		{ bs_1to2_double,      bs_valid,   800, 480, 0, "2x2 no-AA",       "800x480" },
-		{ bs_1to2_scale2x,     bs_valid,   800, 480, 0, "2x2 Scale2x",     "800x480" },
-		{ bs_1to2_smooth,      bs_valid,   800, 480, 0, "2x2 Smoothed",    "800x480" },
-		{ bs_1to32_multiplied, bs_valid,   800, 480, 0, "3x2 no-AA",       "800x480" },
+		{ bs_error,            bs_invalid, 0, 0,     0, 0, "Error",           "800x480" },
+		{ bs_1to1,             bs_invalid, 800, 480, 0, 0, "1 to 1",          "800x480" },
+		{ bs_fs_4to3,          bs_valid,   800, 480, 1, 1, "HW: 4:3",         "640x480" },
+		{ bs_fs_always,        bs_valid,   800, 480, 1, 1, "HW: Fullscreen",  "800x480" },
+		{ bs_fs_aspect_ntsc,   bs_valid,   800, 480, 1, 1, "HW: Aspect NTSC", "585x480" },
+		{ bs_fs_aspect_pal,    bs_valid,   800, 480, 1, 1, "HW: Aspect PAL",  "512x480" },
+		{ bs_1to2_double,      bs_valid,   800, 480, 0, 1, "2x2 no-AA",       "800x480" },
+		{ bs_1to2_scale2x,     bs_valid,   800, 480, 0, 0, "2x2 Scale2x",     "800x480" },
+		{ bs_1to2_smooth,      bs_valid,   800, 480, 0, 0, "2x2 Smoothed",    "800x480" },
+		{ bs_1to32_multiplied, bs_valid,   800, 480, 0, 1, "3x2 no-AA",       "800x480" },
 // 		{ bs_1to32_smooth,         bs_invalid, 3, 2, 0,       "3x2 Smoothed", "800x480" },
 // 		{ bs_fs_aspect_multiplied, bs_invalid, 0xFF, 0xFF, 0, "Fullscreen (aspect) (unsmoothed)", "800x480" },
 // 		{ bs_fs_aspect_smooth,     bs_invalid, 0xFF, 0xFF, 0, "Fullscreen (aspect) (smoothed)", "800x480" },
@@ -131,7 +132,7 @@ pthread_mutex_t mutex;
 		{ bs_fs_always_smooth,     bs_invalid, 0xFF, 0xFF, 0, "Fullscreen (smoothed)", "800x480" },  //fake used to make sure that there is no segfault when scrolling through, don't delete!
 	};
 
-	blit_scaler_e g_scale = bs_1to2_double;
+	blit_scaler_e g_scale = bs_fs_4to3;
 	//blit_scaler_e g_scale = bs_1to32_multiplied;
 	unsigned char g_fullscreen = 1;
 	unsigned char g_scanline = 0; // pixel doubling, but skipping the vertical alternate lines
@@ -426,7 +427,7 @@ int main (int argc, char **argv)
 						if (safe_abort >= 20)
 						{
 							std::cerr << "unknown or broken entry for display_mode! switching to default '2x2 no-AA'." << std::endl;
-							g_scale = bs_1to2_double;
+							g_scale = bs_fs_4to3;
 						}
 					}
 					else if (this_line.find("frameskip=") == 0)
@@ -1018,33 +1019,26 @@ bool8_32 S9xDeinitUpdate ( int Width, int Height ) {
 	if (Settings.SupportHiRes)
 		source_panewidth = 512; // HiRes games are rendered into a 512 wide SDL screen
 	
+	SDL_LockSurface(screen);
 	
 	if ( blit_scalers [ g_scale ].hw_fullscreen )
 	{
-		if (Settings.SupportHiRes)
-		{ 
-			std::cerr << "S9xDeinitUpdate: hardware scaling not enabled for hires mode!" << std::endl;
-			g_scale = bs_1to2_double;
-			S9xDeinitDisplay();
-			S9xInitDisplay(0, 0);
-		} else {
-			if ( ( screen->w != Width ) || ( screen->h != Height ))
-			{
-				//std::cerr << "resetting video mode in S9xDeinitUpdate:v2"<< std::endl;
-				setenv("SDL_OMAP_LAYER_SIZE",blit_scalers [ g_scale ].layersize,1);
-				screen = SDL_SetVideoMode( Width , Height, 16,
-						g_fullscreen ? SDL_SWSURFACE|SDL_FULLSCREEN : SDL_SWSURFACE);
-			}
-			
-			render_x_single_xy((uint16*)(screen -> pixels) /*destination_pointer_address*/, (screen -> pitch) >> 1 /*screen_pitch_half*/,
-							(uint16*)(GFX.Screen), source_panewidth, Width, Height);
+		if ( ( screen->w != Width ) || ( screen->h != Height ))
+		{
+			//std::cerr << "resetting video mode in S9xDeinitUpdate:v2"<< std::endl;
+			setenv("SDL_OMAP_LAYER_SIZE",blit_scalers [ g_scale ].layersize,1);
+			screen = SDL_SetVideoMode( Width , Height, 16,
+					g_fullscreen ? SDL_SWSURFACE|SDL_FULLSCREEN : SDL_SWSURFACE);
 		}
+		
+		render_x_single_xy((uint16*)(screen -> pixels) /*destination_pointer_address*/, (screen -> pitch) >> 1 /*screen_pitch_half*/,
+						(uint16*)(GFX.Screen), source_panewidth, Width, Height);
 	}
 	else 
 	{
 		if ( ( screen->w != blit_scalers [ g_scale ].res_x ) || ( screen->h != blit_scalers [ g_scale ].res_y ) )
 		{
-			//std::cerr << "resetting video mode in S9xDeinitUpdate:v3"<< std::endl;
+			std::cerr << "resetting video mode in S9xDeinitUpdate:v3"<< std::endl;
 			setenv("SDL_OMAP_LAYER_SIZE",blit_scalers [ g_scale ].layersize,1);
 			screen = SDL_SetVideoMode( blit_scalers [ g_scale ].res_x , blit_scalers [ g_scale ].res_y, 16,
 					g_fullscreen ? SDL_SWSURFACE|SDL_FULLSCREEN : SDL_SWSURFACE);
@@ -1106,23 +1100,13 @@ bool8_32 S9xDeinitUpdate ( int Width, int Height ) {
 				}
 				break;
 			case bs_1to2_smooth:
-				if (Settings.SupportHiRes) { 
-					fprintf ( stderr, "Smoothed not enabled for hires mode!\n" );
-					g_scale = bs_1to2_double;
-				} else {
 					hq2x_16((uint16*)(GFX.Screen), screen_pixels, Width, Height, screen->w, screen->h);
-				}
 				break;
 			case bs_1to2_scale2x:
-				if (Settings.SupportHiRes) { 
-					fprintf ( stderr, "Scale2x not enabled for hires mode!\n" );
-					g_scale = bs_1to2_double;
-				} else {
 					widescreen_center_x = ( screen -> w - ( Width << 1 ) ) >> 1; // ( screen -> w - ( Width * 2 ) ) / 2
 					destination_pointer_address = screen_pixels + widescreen_center_x + widescreen_center_y;
 					
 					scale(2, (uint16*)destination_pointer_address, screen->w*2, (uint16*)GFX.Screen, 320*2, 2, Width, Height);
-				}
 				break;
 			default:
 				// code error; unknown scaler
@@ -1132,8 +1116,6 @@ bool8_32 S9xDeinitUpdate ( int Width, int Height ) {
 	}
 	
 	
-
-
 //The part below is the version that should be used when you want scanline support.
 //if you don't want scanlines, the other system should be faster.
 // 		for (register uint16 i = 0; i < Height; ++i) {
@@ -1162,7 +1144,9 @@ bool8_32 S9xDeinitUpdate ( int Width, int Height ) {
 // 		} // for each height unit
 
   if (Settings.DisplayFrameRate) {
-    S9xDisplayFrameRate ((uint8 *)screen->pixels + 64, 800 * 2 * 2 );
+    //S9xDisplayFrameRate ((uint8 *)screen->pixels + 64, 800 * 2 * 2 );
+    S9xDisplayFrameRate ((uint8 *)screen->pixels + 64 + ( screen->h - font_height - 1 ) * (screen -> pitch),
+						 (screen -> pitch) );
   }
 
 //the following part was once the cause of a segfault with savestates, this is no longer the case
@@ -1171,7 +1155,7 @@ bool8_32 S9xDeinitUpdate ( int Width, int Height ) {
 //    S9xDisplayString (GFX.InfoString, (uint8 *)screen->pixels + 64, 800 * 2 * 2, 240 );
 //  }
 
-  // SDL_UnlockSurface(screen);
+  SDL_UnlockSurface(screen);
 
   // vsync
   if ( g_vsync && g_fb >= 0 ) {
@@ -1582,23 +1566,17 @@ void S9xProcessEvents (bool8_32 block)
 #ifdef PANDORA
 				if ( event.key.keysym.sym == SDLK_q )
 				{
-					//exit ( 0 ); // just die
 					S9xExit();
 				}
 				if ( event.key.keysym.sym == SDLK_s )
 				{
-					//exit ( 0 ); // just die
-					//S9xExit();
-					if (g_scale == bs_1to2_double)
+					do
 					{
-						g_scale = bs_1to2_scale2x;
-					} else if (g_scale == bs_1to2_scale2x)
-					{
-						g_scale = bs_1to2_smooth;
-					} else
-					{
-						g_scale = bs_1to2_double;
-					}
+						g_scale = (blit_scaler_e) ( ( g_scale + 1 ) % bs_max );
+					} while ( ( blit_scalers [ g_scale ].valid == bs_invalid )
+								|| ( Settings.SupportHiRes && !(blit_scalers [ g_scale ].support_hires) ) );
+					S9xDeinitDisplay();
+					S9xInitDisplay(0, 0);
 				}
 
 #endif //PANDORA
