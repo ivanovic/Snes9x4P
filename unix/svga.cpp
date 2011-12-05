@@ -118,6 +118,7 @@ void S9xInitDisplay (int /*argc*/, char ** /*argv*/)
  	//screen = SDL_SetVideoMode( 800 /* pandora horiz */, 480 /* pandora vert */, 16,
  	//			   g_fullscreen ? SDL_SWSURFACE|SDL_FULLSCREEN : SDL_SWSURFACE);
 	std::cerr << "setting video mode in S9xInitDisplay, selected mode: " << (std::string) blit_scalers [ g_scale ].desc_en << std::endl;
+	//NOTE: the following block should not be required but is left for "safety reasons"
 	if ( Settings.SupportHiRes && !(blit_scalers [ g_scale ].support_hires) ) 
 	{ 
 		std::cerr << "S9xInitDisplay: mode \"" << (std::string) blit_scalers [ g_scale ].desc_en << "\" not enabled for hires mode!" << std::endl;

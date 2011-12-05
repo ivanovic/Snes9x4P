@@ -1036,13 +1036,15 @@ bool8_32 S9xDeinitUpdate ( int Width, int Height ) {
 	}
 	else 
 	{
-		if ( ( screen->w != blit_scalers [ g_scale ].res_x ) || ( screen->h != blit_scalers [ g_scale ].res_y ) )
-		{
-			std::cerr << "resetting video mode in S9xDeinitUpdate:v3"<< std::endl;
-			setenv("SDL_OMAP_LAYER_SIZE",blit_scalers [ g_scale ].layersize,1);
-			screen = SDL_SetVideoMode( blit_scalers [ g_scale ].res_x , blit_scalers [ g_scale ].res_y, 16,
-					g_fullscreen ? SDL_SWSURFACE|SDL_FULLSCREEN : SDL_SWSURFACE);
-		}
+		//NOTE: This block should no longer be required since only valid modes
+		//      are allowed to be selected when changing the display mode.
+		//if ( ( screen->w != blit_scalers [ g_scale ].res_x ) || ( screen->h != blit_scalers [ g_scale ].res_y ) )
+		//{
+		//	std::cerr << "resetting video mode in S9xDeinitUpdate:v3"<< std::endl;
+		//	setenv("SDL_OMAP_LAYER_SIZE",blit_scalers [ g_scale ].layersize,1);
+		//	screen = SDL_SetVideoMode( blit_scalers [ g_scale ].res_x , blit_scalers [ g_scale ].res_y, 16,
+		//			g_fullscreen ? SDL_SWSURFACE|SDL_FULLSCREEN : SDL_SWSURFACE);
+		//}
 		
 		// get the pitch only once...
 		// pitch is in 1b increments, so is 2* what you think!
