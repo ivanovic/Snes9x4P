@@ -891,17 +891,18 @@ void ShowCredit()
 #else
 	uint8 *keyssnes = 0;
 #endif
-	int line=0,ypix=0,maxlines=25;
+	int line=0,ypix=0,maxlines=26;
 #ifdef PANDORA
 	char disptxt[100][256]={
 	"",
 	"",
 	"",
-	"                                     ",
-	" Thank you for using this Emulator!  ",
-	"                                     ",
+	" Thank you for using this Emulator! ",
 	"",
-	" Originally created by SiENcE",
+	"",
+	" Created by the Snes9x team.",
+	"",
+	" Port to libSDL by SiENcE",
 	" crankgaming.blogspot.com",
 	"",
 	" regards to joyrider & g17",
@@ -926,7 +927,6 @@ void ShowCredit()
 	"",
 	"",
 	"",
-	"",
 	"                                     ",
 	" Thank you for using this Emulator!  ",
 	"                                     ",
@@ -935,9 +935,10 @@ void ShowCredit()
 	"",
 	"",
 	"",
+	" Created by the Snes9x team.",
 	"",
 	"",
-	" by SiENcE",
+	" Port to libSDL by SiENcE",
 	" crankgaming.blogspot.com",
 	"",
 	" regards to joyrider & g17",
