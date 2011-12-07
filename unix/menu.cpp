@@ -117,7 +117,7 @@ void loadmenu_dispupdate(int romcount)
 #if CAANOO
 	strcpy(disptxt[0],"  Snes9x4C v20101010");
 #elif PANDORA
-	strcpy(disptxt[0],"  Snes9x4P v20111205");
+	strcpy(disptxt[0],"  Snes9x4P v20111207");
 #elif CYGWIN32
 	strcpy(disptxt[0],"  Snes9x4W v20101010");
 #else
@@ -320,7 +320,7 @@ void menu_dispupdate(void)
 #if CAANOO
 	strcpy(disptxt[0],"Snes9x4C v20101010");
 #elif PANDORA
-	strcpy(disptxt[0],"Snes9x4P v20111205");
+	strcpy(disptxt[0],"Snes9x4P v20111207");
 #elif CYGWIN32
 	strcpy(disptxt[0],"Snes9x4W v20101010");
 #else

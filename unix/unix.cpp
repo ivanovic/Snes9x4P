@@ -1019,6 +1019,10 @@ bool8_32 S9xDeinitUpdate ( int Width, int Height ) {
 	if (Settings.SupportHiRes)
 		source_panewidth = 512; // HiRes games are rendered into a 512 wide SDL screen
 	
+	// the following two vars are used with the non HW scalers as well as when displaying text overlay
+	uint16 widescreen_center_x = 0;
+	uint16 widescreen_center_y = 0;
+	
 	SDL_LockSurface(screen);
 	
 	if ( blit_scalers [ g_scale ].hw_fullscreen )
@@ -1056,9 +1060,8 @@ bool8_32 S9xDeinitUpdate ( int Width, int Height ) {
 		// this line for centering in Y direction always assumes that Height<=240 and double scaling in Y is wanted (interlacing!)
 		// screen_pitch_half * (480-(Heigth*2))/2; due to shifting no "div by zero" not possible
 		// heigth is usually 224, 239 or 240!
-		uint16 widescreen_center_y = screen_pitch_half * ( ( 480 - ( Height << 1 ) ) >> 1 );
-		// centering in X direction depends on the scaling type used and is defined at the according places
-		uint16 widescreen_center_x;
+		widescreen_center_y = ( 480 - ( Height << 1 ) ) >> 1;
+		uint16 widescreen_center_y_fb = widescreen_center_y * screen_pitch_half;
 		// destination pointer address: pointer to screen_pixels plus moving for centering
 		uint16* destination_pointer_address;
 		
@@ -1069,25 +1072,25 @@ bool8_32 S9xDeinitUpdate ( int Width, int Height ) {
 				// only some scenes in hires roms use 512px width, otherwise the max is 320px in the menu!
 				// hires modules themselves come with two modes, one with 512 width, one with 256
 				if (Width > 400 ) {
-					widescreen_center_x = ( screen -> w - Width ) >> 1; // ( screen -> w - Width ) / 2
-					destination_pointer_address = screen_pixels + widescreen_center_x + widescreen_center_y;
+					widescreen_center_x = ( 800 - Width ) >> 1; // ( screen -> w - Width ) / 2
+					destination_pointer_address = screen_pixels + widescreen_center_x + widescreen_center_y_fb;
 					
 					render_x_single(destination_pointer_address, screen_pitch_half,
 									(uint16*)(GFX.Screen), source_panewidth, Width, Height);
 				}
 				else {
-					widescreen_center_x = ( screen -> w - ( Width << 1 ) ) >> 1; // ( screen -> w - ( Width * 2 ) ) / 2
+					widescreen_center_x = ( 800 - ( Width << 1 ) ) >> 1; // ( screen -> w - ( Width * 2 ) ) / 2
 					// destination pointer address: pointer to screen_pixels plus moving for centering
-					destination_pointer_address = screen_pixels + widescreen_center_x + widescreen_center_y;
+					destination_pointer_address = screen_pixels + widescreen_center_x + widescreen_center_y_fb;
 					
 					render_x_double(destination_pointer_address, screen_pitch_half,
 									(uint16*)(GFX.Screen), source_panewidth, Width, Height);
 				}
 				break;
 			case bs_1to32_multiplied:
-				//widescreen_center_x = 16; // screen -> w - 3*Width
+				widescreen_center_x = 16; // screen -> w - 3*Width // 800-3*Width
 				// destination pointer address: pointer to screen_pixels plus moving for centering
-				destination_pointer_address = screen_pixels + 16 + widescreen_center_y;
+				destination_pointer_address = screen_pixels + 16 + widescreen_center_y_fb;
 				
 				// the pandora screen has a width of 800px, so everything above should be handled differently
 				// only some scenes in hires roms use 512px width, otherwise the max is 320px in the menu!
@@ -1102,11 +1105,12 @@ bool8_32 S9xDeinitUpdate ( int Width, int Height ) {
 				}
 				break;
 			case bs_1to2_smooth:
+					widescreen_center_x = ( 800 - ( Width << 1 ) ) >> 1; // ( screen -> w - ( Width * 2 ) ) / 2
 					hq2x_16((uint16*)(GFX.Screen), screen_pixels, Width, Height, screen->w, screen->h);
 				break;
 			case bs_1to2_scale2x:
-					widescreen_center_x = ( screen -> w - ( Width << 1 ) ) >> 1; // ( screen -> w - ( Width * 2 ) ) / 2
-					destination_pointer_address = screen_pixels + widescreen_center_x + widescreen_center_y;
+					widescreen_center_x = ( 800 - ( Width << 1 ) ) >> 1; // ( screen -> w - ( Width * 2 ) ) / 2
+					destination_pointer_address = screen_pixels + widescreen_center_x + widescreen_center_y_fb;
 					
 					scale(2, (uint16*)destination_pointer_address, screen->w*2, (uint16*)GFX.Screen, 320*2, 2, Width, Height);
 				break;
@@ -1145,17 +1149,34 @@ bool8_32 S9xDeinitUpdate ( int Width, int Height ) {
 // 			} // scanline
 // 		} // for each height unit
 
-  if (Settings.DisplayFrameRate) {
-    //S9xDisplayFrameRate ((uint8 *)screen->pixels + 64, 800 * 2 * 2 );
-    S9xDisplayFrameRate ((uint8 *)screen->pixels + 64 + ( screen->h - font_height - 1 ) * (screen -> pitch),
-						 (screen -> pitch) );
-  }
+	if (Settings.DisplayFrameRate) {
+		//S9xDisplayFrameRate ((uint8 *)screen->pixels + 64, 800 * 2 * 2 );
+		
+		widescreen_center_x = widescreen_center_x << 1; // the pitch has to be taken into account here, so double the values!
+		
+		uint8* temp_pointer = (uint8 *) screen->pixels
+								+ 16
+								+ widescreen_center_x // move to the right if we are in "non hw scaling mode"
+								+ ( screen->h - font_height - 1 - widescreen_center_y ) * (screen -> pitch);
+		S9xDisplayFrameRate ( temp_pointer, (screen -> pitch) );
+	}
 
-//the following part was once the cause of a segfault with savestates, this is no longer the case
-//sadly it is not removed correctly in every screen mode, so commenting it out for the moment
-//  if (GFX.InfoString) {
-//    S9xDisplayString (GFX.InfoString, (uint8 *)screen->pixels + 64, 800 * 2 * 2, 240 );
-//  }
+	//display the info string above the possibly active framerate display
+	if (GFX.InfoString) {
+		//S9xDisplayString (GFX.InfoString, (uint8 *)screen->pixels + 64, 800 * 2 * 2, 240 );
+		
+		if ( ! Settings.DisplayFrameRate ) // only take the pitch into account if this was not done before!
+			widescreen_center_x = widescreen_center_x << 1; // the pitch has to be taken into account here, so double the values!
+		
+		uint16 string_x_startpos = 14 // 2px indention applied by function, resulting in the same 16 as with the framerate counter
+									+ (font_width - 1) * sizeof (uint16) // framerate counter starts with empty char, so move to the right by one
+									+ widescreen_center_x; // move to the right if we are in "non hw scaling mode"
+		
+		S9xDisplayString (GFX.InfoString,
+						  (uint8 *)screen->pixels + string_x_startpos,
+						  (screen -> pitch),
+						  screen->h + font_height * 3 - 2 - widescreen_center_y); // "font_height * 3 - 2" to place it in the line above the framerate counter
+	}
 
   SDL_UnlockSurface(screen);
 
@@ -1566,7 +1587,7 @@ void S9xProcessEvents (bool8_32 block)
 
 				// shortcut
 #ifdef PANDORA
-				if ( event.key.keysym.sym == SDLK_q )
+				if ( (event.key.keysym.sym == SDLK_q) || (event.key.keysym.sym == SDLK_ESCAPE) )
 				{
 					S9xExit();
 				}

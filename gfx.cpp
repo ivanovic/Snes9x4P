@@ -3260,19 +3260,18 @@ void S9xDisplayFrameRate (uint8 *screen, uint32 pitch)
 
 void S9xDisplayString (const char *string, uint8 *screen, uint32 pitch, int ypos)
 {
-  uint8 *Screen = screen + 2 + (ypos - font_height * 5) * pitch;
+	uint8 *Screen = screen + 2 + (ypos - font_height * 5) * pitch;
 
-    int len = strlen (string);
-    int max_chars = IPPU.RenderedScreenWidth / (font_width - 1);
-    int char_count = 0;
-    int i;
+	if(ypos == 0)
+		Screen = screen + 2 + (IPPU.RenderedScreenHeight - font_height * 1) * pitch;
 
-    if(ypos == 0)
-        Screen = screen + 2 + (IPPU.RenderedScreenHeight - font_height * 1) * pitch;
-	
+	int len = strlen (string);
+	int max_chars = IPPU.RenderedScreenWidth / (font_width - 1);
+	int char_count = 0;
+	int i;
 
-    for (i = 0; i < len; i++, char_count++)
-    {
+	for (i = 0; i < len; i++, char_count++)
+	{
 		if (char_count >= max_chars || string [i] < 32)
 		{
 		    Screen -= (font_width - 1) * sizeof (uint16) * max_chars;
@@ -3285,7 +3284,7 @@ void S9xDisplayString (const char *string, uint8 *screen, uint32 pitch, int ypos
 		    continue;
 		DisplayChar (Screen, string [i], pitch);
 		Screen += (font_width - 1) * sizeof (uint16); 
-    }
+	}
 }
 
 void S9xUpdateScreen () // ~30-50ms! (called from FLUSH_REDRAW())
