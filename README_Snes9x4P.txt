@@ -9,7 +9,9 @@ Credit to SiENcE
 (http://boards.dingoonity.org/dingux-releases/snes9x4d-%28for-dingux%29-v20100330/)
 for doing most of the work. Besides this credits go to skeezix for doing the
 initial port to the Pandora. Thanks to pickle for creating his fantastic
-picklelauncher which is included in this package, too.
+picklelauncher which is included in this package, too. Besides this emulator is
+using a modified libSDL from notaz which e.g. allows hardware accelerated
+scaling.
 
 This SNES emulator is running pretty well; for now there are no ASM CPU cores in
 place, so try overclocking to keep speed up where needed. This will be remedied

@@ -891,7 +891,36 @@ void ShowCredit()
 #else
 	uint8 *keyssnes = 0;
 #endif
-	int line=0,ypix=0;
+	int line=0,ypix=0,maxlines=25;
+#ifdef PANDORA
+	char disptxt[100][256]={
+	"",
+	"",
+	"",
+	"                                     ",
+	" Thank you for using this Emulator!  ",
+	"                                     ",
+	"",
+	" Originally created by SiENcE",
+	" crankgaming.blogspot.com",
+	"",
+	" regards to joyrider & g17",
+	"",
+	"",
+	" Pandora port started by:",
+	" skeezix",
+	"",
+	" Further work and maintenance:",
+	" Ivanovic",
+	"",
+	" Special thanks to:",
+	" EvilDragon (picklelauncher theme)",
+	" Notaz (modified libSDL for Pandora)",
+	" pickle (picklelauncher, Scale2x)",
+	" WizardStan (smooth scaler)",
+	"",
+	};
+#else
 	char disptxt[100][256]={
 	"",
 	"",
@@ -899,7 +928,7 @@ void ShowCredit()
 	"",
 	"",
 	"                                     ",
-	" Thank you using this Emulator!      ",
+	" Thank you for using this Emulator!  ",
 	"                                     ",
 	"",
 	"",
@@ -914,7 +943,13 @@ void ShowCredit()
 	" regards to joyrider & g17",
 	"",
 	"",
+	"",
+	"",
+	"",
+	"",
+	"",
 	};
+#endif
 
 	do
 	{
@@ -928,14 +963,14 @@ void ShowCredit()
 #endif
 
 		for(int y=12; y<=212; y++){
-			for(int x=10; x<246*2; x+=2){
+			for(int x=10; x<260*2; x+=2){
 				memset(GFX.Screen + 320*y*2+x,0x11,2);
 			}	
 		}
 		
 		for(int i=0;i<=16;i++){
 			int j=i+line;
-			if(j>=20) j-=20;
+			if(j>=maxlines) j-=maxlines;
 			S9xDisplayString (disptxt[j], GFX.Screen, 640,i*10+80-ypix);
 		}
 		
@@ -944,7 +979,7 @@ void ShowCredit()
 			line++;
 			ypix=0;
 		}
-		if(line == 20) line = 0;
+		if(line == maxlines) line = 0;
 		S9xDeinitUpdate (320, 240);
 		sys_sleep(3000);
 	}
