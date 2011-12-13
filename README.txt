@@ -257,6 +257,31 @@ v1.39-ff
 -base source see changes.txt
 
 
+=======
+Credits
+=======
+Created by the Snes9x team.
+
+Port to libSDL by:
+* SiENcE
+  crankgaming.blogspot.com
+  regards to joyrider & g17
+
+Pandora port started and initially created by:
+* skeezix
+
+Further work and maintenance:
+* Ivanovic
+
+Special thanks to:
+* EvilDragon (picklelauncher theme)
+* john4p (support for cutting borders in HW-accel mode)
+* Notaz (modified libSDL for Pandora allowing HW-accelerated scaling)
+* pickle (picklelauncher, Scale2x)
+* WizardStan (smooth scaler)
+* every user reporting issues and providing feedback!
+
+
 ==================================================================
 KNOW ISSUES (possibly outdated or not valid for the Pandora port!)
 ==================================================================
