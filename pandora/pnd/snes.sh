@@ -39,9 +39,11 @@ then
 		#the extracted name is without the internal PATH of the archive, so strip away this part!
 		FILENAME=`echo $FILEITEM | sed -e "s,^.*/,,g"`
 		FILENAME="/tmp/$FILENAME"
-		LD_LIBRARY_PATH=lib/:$LD_LIBRARY_PATH ./snes9x $ARGS "$FILENAME"
+#		LD_LIBRARY_PATH=lib/:$LD_LIBRARY_PATH ./snes9x $ARGS "$FILENAME"
+		LD_PRELOAD=lib/libSDL-1.2.so.0 ./snes9x $ARGS "$FILENAME"
 		rm "$FILENAME"
 	fi
 else
-	LD_LIBRARY_PATH=lib/:$LD_LIBRARY_PATH ./snes9x $ARGS "$1"
+#	LD_LIBRARY_PATH=lib/:$LD_LIBRARY_PATH ./snes9x $ARGS "$1"
+	LD_PRELOAD=lib/libSDL-1.2.so.0 ./snes9x $ARGS "$1"
 fi

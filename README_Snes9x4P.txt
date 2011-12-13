@@ -74,6 +74,11 @@ since the details are unknown.
 3) At the buttom are the changes that were done in Snes9x4X compared to mainline
 Snes9x and were done by SiENcE to allow porting to various decives.
 
+Changes in "1.39ff.20111208.1" compared to "1.39ff.20111207.1":
+* Added the possibility to cut black borders in the GUI (useful for SF2- and
+  Final Fight-series and Batman Returns)
+* Values for cut borders automatically get stored and restored per game
+
 
 Changes in "1.39ff.20111207.1" compared to "1.39ff.20111205.2":
 * Make sure the (rather useless!) fps counter is displayed on the game screen

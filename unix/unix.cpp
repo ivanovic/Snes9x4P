@@ -138,6 +138,10 @@ pthread_mutex_t mutex;
 	unsigned char g_scanline = 0; // pixel doubling, but skipping the vertical alternate lines
 	unsigned char g_vsync = 1; // if >0, do vsync
 	int g_fb = -1; // fb for framebuffer
+	int cut_top = 0;
+	int cut_bottom = 0;
+	int cut_left = 0;
+	int cut_right = 0;
 #endif
 
 #ifdef CAANOO
@@ -430,6 +434,26 @@ int main (int argc, char **argv)
 							g_scale = bs_fs_4to3;
 						}
 					}
+					else if (this_line.find("cut_top=") == 0)
+					{
+						this_line = this_line.substr(this_line.find("=")+1);
+						cut_top = atoi ( this_line.c_str() );
+					}
+					else if (this_line.find("cut_bottom=") == 0)
+					{
+						this_line = this_line.substr(this_line.find("=")+1);
+						cut_bottom = atoi ( this_line.c_str() );
+					}
+					else if (this_line.find("cut_left=") == 0)
+					{
+						this_line = this_line.substr(this_line.find("=")+1);
+						cut_left = atoi ( this_line.c_str() );
+					}
+					else if (this_line.find("cut_right=") == 0)
+					{
+						this_line = this_line.substr(this_line.find("=")+1);
+						cut_right = atoi ( this_line.c_str() );
+					}
 					else if (this_line.find("frameskip=") == 0)
 					{
 						this_line = this_line.substr(this_line.find("=")+1);
@@ -699,6 +723,10 @@ void S9xExit()
 		else
 			romSettingsFile << "alternative_sample_decoding=0" << std::endl;
 		romSettingsFile << "display_mode=" << blit_scalers [ g_scale ].desc_en << std::endl;
+		romSettingsFile << "cut_top=" << cut_top << std::endl;
+		romSettingsFile << "cut_bottom=" << cut_bottom << std::endl;
+		romSettingsFile << "cut_left=" << cut_left << std::endl;
+		romSettingsFile << "cut_right=" << cut_right << std::endl;
 		romSettingsFile << "frameskip=" << Settings.SkipFrames << std::endl;
 		switch(SaveSlotNum)
 		{
@@ -1030,7 +1058,14 @@ bool8_32 S9xDeinitUpdate ( int Width, int Height ) {
 		if ( ( screen->w != Width ) || ( screen->h != Height ))
 		{
 			//std::cerr << "resetting video mode in S9xDeinitUpdate:v2"<< std::endl;
+			//set sdl layersize environment variable
 			setenv("SDL_OMAP_LAYER_SIZE",blit_scalers [ g_scale ].layersize,1);
+
+			//set sdl bordercut environment variable
+			char cutborders[20];
+			sprintf(cutborders, "%d,%d,%d,%d", cut_left, cut_right, cut_top, cut_bottom);
+			setenv("SDL_OMAP_BORDER_CUT",cutborders,1);
+
 			screen = SDL_SetVideoMode( Width , Height, 16,
 					g_fullscreen ? SDL_SWSURFACE|SDL_FULLSCREEN : SDL_SWSURFACE);
 		}

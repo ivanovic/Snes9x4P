@@ -22,6 +22,7 @@
 	extern blit_scaler_e g_scale;
 	extern SDL_Surface *screen,*gfxscreen;
 	extern unsigned char g_fullscreen;
+	extern int cut_top, cut_bottom, cut_left, cut_right;
 #endif
 
 #ifdef DINGOO
@@ -117,7 +118,7 @@ void loadmenu_dispupdate(int romcount)
 #if CAANOO
 	strcpy(disptxt[0],"  Snes9x4C v20101010");
 #elif PANDORA
-	strcpy(disptxt[0],"  Snes9x4P v20111207");
+	strcpy(disptxt[0],"  Snes9x4P v20111208");
 #elif CYGWIN32
 	strcpy(disptxt[0],"  Snes9x4W v20101010");
 #else
@@ -320,7 +321,7 @@ void menu_dispupdate(void)
 #if CAANOO
 	strcpy(disptxt[0],"Snes9x4C v20101010");
 #elif PANDORA
-	strcpy(disptxt[0],"Snes9x4P v20111207");
+	strcpy(disptxt[0],"Snes9x4P v20111208");
 #elif CYGWIN32
 	strcpy(disptxt[0],"Snes9x4W v20101010");
 #else
@@ -346,7 +347,13 @@ void menu_dispupdate(void)
 #endif
 	strcpy(disptxt[11],"Credit              ");
 	strcpy(disptxt[12],"Exit");
-#ifdef DINGOO
+#ifdef PANDORA
+	strcpy(disptxt[13],"--------------");
+	strcpy(disptxt[14],"Cut Top      ");
+	strcpy(disptxt[15],"Cut Bottom   ");
+	strcpy(disptxt[16],"Cut Left     ");
+	strcpy(disptxt[17],"Cut Right    ");
+#elif DINGOO
 	strcpy(disptxt[13],"--------------");
 	strcpy(disptxt[14],"BATT:");
 //	strcpy(disptxt[15],"     ");
@@ -407,6 +414,14 @@ void menu_dispupdate(void)
 	else
 		sprintf(temp,"%sFalse",disptxt[10]);
 	strcpy(disptxt[10],temp);
+	sprintf(temp,"%s%d",disptxt[14],cut_top);
+	strcpy(disptxt[14],temp);
+	sprintf(temp,"%s%d",disptxt[15],cut_bottom);
+	strcpy(disptxt[15],temp);
+	sprintf(temp,"%s%d",disptxt[16],cut_left);
+	strcpy(disptxt[16],temp);
+	sprintf(temp,"%s%d",disptxt[17],cut_right);
+	strcpy(disptxt[17],temp);
 #else
 	sprintf(temp,"%s %3d%%",disptxt[10],vol);
 	strcpy(disptxt[10],temp);
@@ -430,7 +445,9 @@ void menu_dispupdate(void)
 //	strcpy(disptxt[15],temp);	
 #endif
 
-#ifdef DINGOO
+#ifdef PANDORA
+	for(int i=0;i<=17;i++)
+#elif DINGOO
 	for(int i=0;i<=14;i++)
 #else
 	for(int i=0;i<=12;i++)
@@ -743,15 +760,68 @@ void menu_loop(void)
 							if (keyssnes[sfc_key[A_1]] == SDL_PRESSED)
 								S9xExit();
 						break;
+#ifdef PANDORA
+						case 14:
+							// cut lines from top
+							if (keyssnes[sfc_key[RIGHT_1]] == SDL_PRESSED)
+								cut_top++;
+							else if (keyssnes[sfc_key[LEFT_1]] == SDL_PRESSED && cut_top>0)
+								cut_top--;
+							// now force update the display, so that the new scaler is directly used (fixes some glitches)
+							S9xDeinitDisplay();
+							S9xInitDisplay(0, 0);
+						break;
+						case 15:
+							// cut lines from bottom
+							if (keyssnes[sfc_key[RIGHT_1]] == SDL_PRESSED)
+								cut_bottom++;
+							else if (keyssnes[sfc_key[LEFT_1]] == SDL_PRESSED && cut_bottom>0)
+								cut_bottom--;
+							S9xDeinitDisplay();
+							S9xInitDisplay(0, 0);
+						break;
+						case 16:
+							// cut from the left
+							if (keyssnes[sfc_key[RIGHT_1]] == SDL_PRESSED)
+								cut_left++;
+							else if (keyssnes[sfc_key[LEFT_1]] == SDL_PRESSED && cut_left>0)
+								cut_left--;
+							S9xDeinitDisplay();
+							S9xInitDisplay(0, 0);
+						break;
+						case 17:
+							// cut from the right
+							if (keyssnes[sfc_key[RIGHT_1]] == SDL_PRESSED)
+								cut_right++;
+							else if (keyssnes[sfc_key[LEFT_1]] == SDL_PRESSED && cut_right>0)
+								cut_right--;
+							S9xDeinitDisplay();
+							S9xInitDisplay(0, 0);
+						break;
+#endif
 					}
 				}
 #endif
 
+#ifdef PANDORA
+				if(cursor==1)
+					cursor=17;
+				else if(cursor==18)	
+					cursor=2;
+				if(cursor==13)
+				{
+					if(keyssnes[sfc_key[UP_1]] == SDL_PRESSED)
+						cursor--;
+					else if(keyssnes[sfc_key[DOWN_1]] == SDL_PRESSED)
+						cursor++;
+				}
+#else
 				if(cursor==1)
 					cursor=12;	//11
 				else if(cursor==13)	//12
 					cursor=2;
-				
+#endif
+
 				menu_dispupdate();
 				sys_sleep(1000);
 
