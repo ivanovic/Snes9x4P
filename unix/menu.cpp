@@ -20,13 +20,9 @@
 	#include "pandora_scaling/blitscale.h"
 	extern blit_scaler_option_t blit_scalers[];
 	extern blit_scaler_e g_scale;
+	extern unsigned char g_vsync;
 	extern SDL_Surface *screen,*gfxscreen;
 	extern int cut_top, cut_bottom, cut_left, cut_right;
-#endif
-
-#ifdef DINGOO
-	int batt_level(void);
-	int chk_hold(void);
 #endif
 
 extern Uint16 sfc_key[256];
@@ -42,7 +38,7 @@ void capt_screenshot(void);
 void menu_dispupdate(void);
 void ShowCredit(void);
 
-int cursor = 3;
+int cursor = 6; //set cursor start to "save state"
 int loadcursor = 0;
 int romcount_maxrows = 16;
 
@@ -52,7 +48,7 @@ bool8_32 highres_current = false;
 char snapscreen[17120]={};
 
 char temp[256];
-char disptxt[20][256];
+char disptxt[21][256];
 
 void sys_sleep(int us)
 {
@@ -60,8 +56,6 @@ void sys_sleep(int us)
 		SDL_Delay(us/100);
 }
 
-#ifndef DINGOO
-//------------------------------------------------------------------------------------------
 struct dirent **namelist;
 
 int isFile(const struct dirent *nombre) {
@@ -108,21 +102,14 @@ int FileDir(char *dir, const char *ext)
 void loadmenu_dispupdate(int romcount)
 {
 	//draw blue screen
-	for(int y=12;y<=212;y++){
-		for(int x=10;x<246*2;x+=2){
+	for(int y=0;y<240;y++){
+		for(int x=0;x<256*2;x+=2){
 			memset(GFX.Screen + 320*y*2+x,0x11,2);
-		}	
+		}
 	}
 
-#if CAANOO
-	strcpy(disptxt[0],"  Snes9x4C v20101010");
-#elif PANDORA
+
 	strcpy(disptxt[0],"  Snes9x4P v20111213");
-#elif CYGWIN32
-	strcpy(disptxt[0],"  Snes9x4W v20101010");
-#else
-	strcpy(disptxt[0],"  Snes9x4D v20101010");
-#endif
 
 	//copy roms filenames to disp[] cache
 	for(int i=0;i<=romcount_maxrows;i++)
@@ -167,11 +154,8 @@ char* menu_romselector()
 
 	bool8_32 exit_loop = false;
 
-#ifdef CAANOO
-	SDL_Joystick* keyssnes = 0;
-#else
 	uint8 *keyssnes = 0;
-#endif
+
 
 	//Read ROM-Directory
 	romcount = FileDir("./roms", "sfc,smc");
@@ -196,39 +180,6 @@ char* menu_romselector()
 
 		while(SDL_PollEvent(&event)==1)
 		{
-#ifdef CAANOO
-			// CAANOO -------------------------------------------------------------
-			keyssnes = SDL_JoystickOpen(0);
-			if ( (SDL_JoystickGetAxis(keyssnes, 1) < -16384) || SDL_JoystickGetButton(keyssnes, sfc_key[START_1]) )
-				loadcursor--;
-			else if( (SDL_JoystickGetAxis(keyssnes, 1) > 16384) || SDL_JoystickGetButton(keyssnes, sfc_key[SELECT_1]) )
-				loadcursor++;
-//			else if ( SDL_JoystickGetButton(keyssnes, sfc_key[L_1]) )
-//				loadcursor=loadcursor-10;
-//			else if ( SDL_JoystickGetButton(keyssnes, sfc_key[R_1]) )
-//				loadcursor=loadcursor+10;
-			else if ( SDL_JoystickGetButton(keyssnes, sfc_key[QUIT]) )
-				S9xExit();
-			else if( SDL_JoystickGetButton(keyssnes, sfc_key[A_1]) ||
-					(SDL_JoystickGetAxis(keyssnes, 0) < -16384) ||
-					(SDL_JoystickGetAxis(keyssnes, 0) > 16384)
-					)
-			{
-					switch(loadcursor)
-					{
-						default:
-							if ( SDL_JoystickGetButton(keyssnes, sfc_key[A_1]) )
-							{
-								if ((loadcursor>=0) && (loadcursor<(romcount)))
-								{
-									rom_filename=namelist[loadcursor]->d_name;
-									exit_loop = TRUE;
-								}
-							}
-							break;
-					}
-			}
-#else
 			//PANDORA & DINGOO & WIN32 -----------------------------------------------------
 			keyssnes = SDL_GetKeyState(NULL);
 			switch(event.type)
@@ -269,7 +220,6 @@ char* menu_romselector()
 					}
 					break;
 			}
-#endif
 
 			if(loadcursor==-1)
 			{
@@ -284,13 +234,7 @@ char* menu_romselector()
 			break;
 		}
 	}
-#ifdef CAANOO
-	while( exit_loop!=TRUE && SDL_JoystickGetButton(keyssnes, sfc_key[QUIT])!=TRUE );
-#elif CYGWIN32
-	while( exit_loop!=TRUE && keyssnes[sfc_key[SELECT_1]] != SDL_PRESSED );
-#else
 	while( exit_loop!=TRUE && keyssnes[sfc_key[B_1]] != SDL_PRESSED );
-#endif
 
 	// TODO:
 	///free(). 	namelist
@@ -304,7 +248,6 @@ char* menu_romselector()
 }
 
 //------------------------------------------------------------------------------------------
-#endif // DINGOO
 
 void menu_dispupdate(void)
 {
@@ -312,145 +255,86 @@ void menu_dispupdate(void)
 //	char disptxt[20][256];
 
 	//memset(GFX.Screen + 320*12*2,0x11,320*200*2);
-	for(int y=12;y<=212;y++){
-		for(int x=10;x<246*2;x+=2){
+	//draw blue screen
+	for(int y=0;y<240;y++){
+		for(int x=0;x<256*2;x+=2){
 			memset(GFX.Screen + 320*y*2+x,0x11,2);
-		}	
+		}
 	}
-#if CAANOO
-	strcpy(disptxt[0],"Snes9x4C v20101010");
-#elif PANDORA
-	strcpy(disptxt[0],"Snes9x4P v20111213");
-#elif CYGWIN32
-	strcpy(disptxt[0],"Snes9x4W v20101010");
-#else
-	strcpy(disptxt[0],"Snes9x4D v20101010");
-#endif
-	strcpy(disptxt[1],"");
-	strcpy(disptxt[2],"Reset Game           ");
-	strcpy(disptxt[3],"Save State           ");
-	strcpy(disptxt[4],"Load State           ");
-	strcpy(disptxt[5],"State Slot              No.");
-	strcpy(disptxt[6],"Display Frame Rate     ");
-	strcpy(disptxt[7],"Transparency           ");
-#ifdef PANDORA
-	strcpy(disptxt[8],"Display mode   ");
-#else
-	strcpy(disptxt[8],"Full Screen         ");
-#endif
-	strcpy(disptxt[9],"Frameskip              ");
-#ifdef PANDORA
-	strcpy(disptxt[10],"Alt. Sample Decoding   ");
-#else
-	strcpy(disptxt[10],"Sound Volume           ");
-#endif
-	strcpy(disptxt[11],"Credit              ");
-	strcpy(disptxt[12],"Exit");
-#ifdef PANDORA
-	strcpy(disptxt[13],"--------------");
-	strcpy(disptxt[14],"Cut Top      ");
-	strcpy(disptxt[15],"Cut Bottom   ");
-	strcpy(disptxt[16],"Cut Left     ");
-	strcpy(disptxt[17],"Cut Right    ");
-#elif DINGOO
-	strcpy(disptxt[13],"--------------");
-	strcpy(disptxt[14],"BATT:");
-//	strcpy(disptxt[15],"     ");
-//	strcpy(disptxt[16],"MHZ :");
-//	strcpy(disptxt[17],"BACKLIGHT:");
-#endif
-
-	sprintf(temp,"%s%d",disptxt[5],SaveSlotNum);
-	strcpy(disptxt[5],temp);
-
-	if(Settings.DisplayFrameRate)
-		sprintf(temp,"%s True",disptxt[6]);
-	else
-		sprintf(temp,"%sFalse",disptxt[6]);
-	strcpy(disptxt[6],temp);
 	
-	if(Settings.Transparency)
-		sprintf(temp,"%s   On",disptxt[7]);
-	else
-		sprintf(temp,"%s  Off",disptxt[7]);
-	strcpy(disptxt[7],temp);
 
-#ifdef PANDORA
-	{
-	  sprintf ( temp, "%s%s", disptxt [ 8 ], blit_scalers [ g_scale ].desc_en );
-	  strcpy ( disptxt[8], temp );
-	}
-#else
-	if (highres_current==false)
-	{
-		if(Scale_org)
-			sprintf(temp,"%s    True",disptxt[8]);
-		else
-			sprintf(temp,"%s   False",disptxt[8]);
-		strcpy(disptxt[8],temp);
-	}
-	else
-	{
-		sprintf(temp,"%sinactive",disptxt[8]);
-		strcpy(disptxt[8],temp);
-	}
-#endif
+	strcpy(disptxt[0],"Snes9x4P v20111213");
 
+	strcpy(disptxt[1],"");
+	strcpy(disptxt[2],"Reset Game");
+	strcpy(disptxt[3],"Exit Emulator");
+	strcpy(disptxt[4],"Credits");
+	strcpy(disptxt[5],"------------------");
+	strcpy(disptxt[6],"Save State");
+	strcpy(disptxt[7],"Load State");
+	strcpy(disptxt[8],"State Slot                  No.");
+	sprintf(temp,"%s%d",disptxt[8],SaveSlotNum);
+	strcpy(disptxt[8],temp);
+	strcpy(disptxt[9],"------------------");
+	
+	strcpy(disptxt[10],"Display mode     ");
+	sprintf ( temp, "%s%s", disptxt [10], blit_scalers [ g_scale ].desc_en );
+	strcpy ( disptxt[10], temp );
+	
+	strcpy(disptxt[11],"Frameskip                  ");
 	if (Settings.SkipFrames == AUTO_FRAMERATE)
-	{
-		sprintf(temp,"%s Auto",disptxt[9]);
-		strcpy(disptxt[9],temp);
-	}
+		sprintf(temp,"%s Auto",disptxt[11]);
 	else
-	{
-		sprintf(temp,"%s %02d/%d",disptxt[9],(int) Memory.ROMFramesPerSecond, Settings.SkipFrames);
-		strcpy(disptxt[9],temp);
-	}
-
-#ifdef PANDORA
-	if(Settings.AltSampleDecode)
-		sprintf(temp,"%s True",disptxt[10]);
+		sprintf(temp,"%s %02d/%d",disptxt[11],(int) Memory.ROMFramesPerSecond, Settings.SkipFrames);
+	strcpy(disptxt[11],temp);
+	
+	strcpy(disptxt[12],"V-Sync                     ");
+	if(g_vsync)
+		sprintf(temp,"%s   On",disptxt[12]);
 	else
-		sprintf(temp,"%sFalse",disptxt[10]);
-	strcpy(disptxt[10],temp);
-	sprintf(temp,"%s%d",disptxt[14],cut_top);
+		sprintf(temp,"%s  Off",disptxt[12]);
+	strcpy(disptxt[12],temp);
+	
+	strcpy(disptxt[13],"Display Frame Rate         ");
+	if(Settings.DisplayFrameRate)
+		sprintf(temp,"%s   On",disptxt[13]);
+	else
+		sprintf(temp,"%s  Off",disptxt[13]);
+	strcpy(disptxt[13],temp);
+	
+	strcpy(disptxt[14],"Transparency               ");
+	if(Settings.Transparency)
+		sprintf(temp,"%s   On",disptxt[14]);
+	else
+		sprintf(temp,"%s  Off",disptxt[14]);
 	strcpy(disptxt[14],temp);
-	sprintf(temp,"%s%d",disptxt[15],cut_bottom);
+	
+	strcpy(disptxt[15],"Cut Top                        ");
+	sprintf(temp,"%s%d",disptxt[15],cut_top);
 	strcpy(disptxt[15],temp);
-	sprintf(temp,"%s%d",disptxt[16],cut_left);
+	strcpy(disptxt[16],"Cut Bottom                     ");
+	sprintf(temp,"%s%d",disptxt[16],cut_bottom);
 	strcpy(disptxt[16],temp);
-	sprintf(temp,"%s%d",disptxt[17],cut_right);
+	strcpy(disptxt[17],"Cut Left                       ");
+	sprintf(temp,"%s%d",disptxt[17],cut_left);
 	strcpy(disptxt[17],temp);
-#else
-	sprintf(temp,"%s %3d%%",disptxt[10],vol);
-	strcpy(disptxt[10],temp);
-#endif
+	strcpy(disptxt[18],"Cut Right                      ");
+	sprintf(temp,"%s%d",disptxt[18],cut_right);
+	strcpy(disptxt[18],temp);
+	
+	strcpy(disptxt[19],"------------------");
+	
+	strcpy(disptxt[20],"Alt. Sample Decoding       ");
+	if(Settings.AltSampleDecode)
+		sprintf(temp,"%s   On",disptxt[20]);
+	else
+		sprintf(temp,"%s  Off",disptxt[20]);
+	strcpy(disptxt[20],temp);
+	
+	
 
-#ifdef DINGOO
-	if      (batt_level() >= 3739)
-		sprintf(temp,"%s  (#####)",disptxt[14]);
-	else if (batt_level() >= 3707)
-		sprintf(temp,"%s  ( ####)",disptxt[14]);
-	else if (batt_level() >= 3675)
-		sprintf(temp,"%s  (  ###)",disptxt[14]);
-    	else if (batt_level() >= 3643)
-		sprintf(temp,"%s  (   ##)",disptxt[14]);
-	else if (batt_level() >= 3611)
-		sprintf(temp,"%s  (    #)",disptxt[14]);
-   	else   sprintf(temp,"%s  (     )",disptxt[14]);
-	strcpy(disptxt[14],temp);
 
-//	sprintf(temp,"%s  (%5d)",disptxt[15],(batt_level()/10)*10);
-//	strcpy(disptxt[15],temp);	
-#endif
-
-#ifdef PANDORA
-	for(int i=0;i<=17;i++)
-#elif DINGOO
-	for(int i=0;i<=14;i++)
-#else
-	for(int i=0;i<=12;i++)
-#endif
+	for(int i=0;i<=20;i++)
 	{
 		if(i==cursor)
 			sprintf(temp," >%s",disptxt[i]);
@@ -458,15 +342,15 @@ void menu_dispupdate(void)
 			sprintf(temp,"  %s",disptxt[i]);
 		strcpy(disptxt[i],temp);
 
-		S9xDisplayString (disptxt[i], GFX.Screen, 640,i*10+64);		
+		S9xDisplayString (disptxt[i], GFX.Screen, 640,i*10+50);
 	}
 
 	//show screen shot for snapshot
 	if(SaveSlotNum_old != SaveSlotNum)
 	{
-		strcpy(temp,"Loading...");
-		S9xDisplayString (temp, GFX.Screen +280, 640,210/*204*/);
-		S9xDeinitUpdate (320, 240);
+		//strcpy(temp,"Loading...");
+		//S9xDisplayString (temp, GFX.Screen +280, 640,210/*204*/);
+		//S9xDeinitUpdate (320, 240);
 		char fname[256], ext[8];
 		sprintf(ext, ".s0%d", SaveSlotNum);
 		strcpy(fname, S9xGetFilename (ext));
@@ -483,11 +367,7 @@ void menu_loop(void)
 	char fname[256], ext[8];
 	char snapscreen_tmp[17120];
 
-#ifdef CAANOO
-	SDL_Joystick* keyssnes = 0;
-#else
 	uint8 *keyssnes = 0;
-#endif
 
 	SaveSlotNum_old = -1;
 
@@ -511,114 +391,7 @@ void menu_loop(void)
 	{
 		while(SDL_PollEvent(&event)==1)
 		{
-#ifdef CAANOO
-				keyssnes = SDL_JoystickOpen(0);
-				// CAANOO -------------------------------------------------------------
-				if ( (SDL_JoystickGetAxis(keyssnes, 1) < -16384) || SDL_JoystickGetButton(keyssnes, sfc_key[START_1]) )
-					cursor--;
-				else if( (SDL_JoystickGetAxis(keyssnes, 1) > 16384) || SDL_JoystickGetButton(keyssnes, sfc_key[SELECT_1]) )
-					cursor++;
-				else if( SDL_JoystickGetButton(keyssnes, sfc_key[A_1]) ||
-						(SDL_JoystickGetAxis(keyssnes, 0) < -16384) ||
-						(SDL_JoystickGetAxis(keyssnes, 0) > 16384)
-						)
-				{
-					switch(cursor)
-					{
-						case 2:
-							if ( SDL_JoystickGetButton(keyssnes, sfc_key[A_1]) )
-							{
-								S9xReset();
-								exit_loop = TRUE;
-							}
-						break;
-						case 3:
-							if ( SDL_JoystickGetButton(keyssnes, sfc_key[A_1]) )
-							{
-								memcpy(snapscreen,snapscreen_tmp,16050);
-								show_screenshot();
-								strcpy(fname," Saving...");
-								S9xDisplayString (fname, GFX.Screen +280, 640,204);
-								S9xDeinitUpdate (320, 240);
-								sprintf(ext, ".s0%d", SaveSlotNum);
-								strcpy(fname, S9xGetFilename (ext));
-								save_screenshot(fname);
-								sprintf(ext, ".00%d", SaveSlotNum);
-								strcpy(fname, S9xGetFilename (ext));
-								S9xFreezeGame (fname);
-								sync();
-								exit_loop = TRUE;
-							}
-						break;
-						case 4:
-							if ( SDL_JoystickGetButton(keyssnes, sfc_key[A_1]) )
-							{
-								sprintf(ext, ".00%d", SaveSlotNum);
-								strcpy(fname, S9xGetFilename (ext));
-								S9xLoadSnapshot (fname);
-								exit_loop = TRUE;
-							}
-						break;
-						case 5:
-							if ( SDL_JoystickGetAxis(keyssnes, 0) < -16384 )
-								SaveSlotNum--;
-							else if (SDL_JoystickGetAxis(keyssnes, 0) > 16384)
-								SaveSlotNum++;
 
-							if(SaveSlotNum>=3)
-								SaveSlotNum=3;			//0
-							else if(SaveSlotNum<=0)
-								SaveSlotNum=0;			//3
-						break;
-						case 6:
-							Settings.DisplayFrameRate = !Settings.DisplayFrameRate;
-						break;
-						case 7:
-							Settings.Transparency = !Settings.Transparency;
-						break;
-						case 8:
-							Scale_org = !Scale_org;
-						break;
-						case 9:
-							if (Settings.SkipFrames == AUTO_FRAMERATE)
-								Settings.SkipFrames = 10;
-	
-							if ( SDL_JoystickGetAxis(keyssnes, 0) < -16384 )
-								Settings.SkipFrames--;
-							else if (SDL_JoystickGetAxis(keyssnes, 0) > 16384)
-								Settings.SkipFrames++;
-	
-							if(Settings.SkipFrames>=10)
-								Settings.SkipFrames = AUTO_FRAMERATE;
-							else if (Settings.SkipFrames<=1)
-								Settings.SkipFrames = 1;
-						break;
-						case 10:
-							if ( SDL_JoystickGetAxis(keyssnes, 0) < -16384 )
-								vol -= 10;
-							else if (SDL_JoystickGetAxis(keyssnes, 0) > 16384)
-								vol += 10;
-
-							if(vol>=100)
-							{
-								vol = 100;
-							}
-							else if (vol <=0)
-							{
-								vol = 0;
-							}
-						break;
-						case 11:
-							if ( SDL_JoystickGetButton(keyssnes, sfc_key[A_1]) )
-								ShowCredit();
-						break;
-						case 12:
-							if ( SDL_JoystickGetButton(keyssnes, sfc_key[A_1]) )
-								S9xExit();
-						break;
-					}
-				}
-#else
 				//PANDORA & DINGOO & WIN32 -----------------------------------------------------
 				keyssnes = SDL_GetKeyState(NULL);
 
@@ -632,14 +405,22 @@ void menu_loop(void)
 				{
 					switch(cursor)
 					{
-						case 2:
+						case 2: //reset snes9x
 							if ((keyssnes[sfc_key[A_1]] == SDL_PRESSED))
 							{
 								S9xReset();
 								exit_loop = TRUE;
 							}
-						break;
-						case 3:
+							break;
+						case 3: //exit snes9x
+							if (keyssnes[sfc_key[A_1]] == SDL_PRESSED)
+								S9xExit();
+							break;
+						case 4:
+							if (keyssnes[sfc_key[A_1]] == SDL_PRESSED)
+								ShowCredit();
+							break;
+						case 6: //save state
 							if (keyssnes[sfc_key[A_1]] == SDL_PRESSED)
 							{
 								memcpy(snapscreen,snapscreen_tmp,16050);
@@ -656,8 +437,8 @@ void menu_loop(void)
 								sync();
 								exit_loop = TRUE;
 							}
-						break;
-						case 4:
+							break;
+						case 7: //load state
 							if (keyssnes[sfc_key[A_1]] == SDL_PRESSED)
 							{
 								sprintf(ext, ".00%d", SaveSlotNum);
@@ -665,8 +446,8 @@ void menu_loop(void)
 								S9xLoadSnapshot (fname);
 								exit_loop = TRUE;
 							}
-						break;
-						case 5:
+							break;
+						case 8: //select save state slot
 							if (keyssnes[sfc_key[LEFT_1]] == SDL_PRESSED)
 							{
 								if ( SaveSlotNum == 0 )
@@ -682,16 +463,8 @@ void menu_loop(void)
 								else
 									++SaveSlotNum;
 							}
-						break;
-						case 6:
-							Settings.DisplayFrameRate = !Settings.DisplayFrameRate;
-						break;
-						case 7:
-							Settings.Transparency = !Settings.Transparency;
-						break;
-						case 8:
-#ifdef PANDORA
-						  // rotate through scalers
+							break;
+						case 10: // rotate through scalers
 							if (keyssnes[sfc_key[RIGHT_1]] == SDL_PRESSED)
 							{
 								do
@@ -711,11 +484,8 @@ void menu_loop(void)
 							// now force update the display, so that the new scaler is directly used (fixes some glitches)
 							S9xDeinitDisplay();
 							S9xInitDisplay(0, 0);
-#else
-							Scale_org = !Scale_org;
-#endif
-						break;
-						case 9:
+							break;
+						case 11: // set frameskip
 							if (Settings.SkipFrames == AUTO_FRAMERATE)
 								Settings.SkipFrames = 10;
 	
@@ -728,40 +498,20 @@ void menu_loop(void)
 								Settings.SkipFrames = AUTO_FRAMERATE;
 							else if (Settings.SkipFrames<=1)
 								Settings.SkipFrames = 1;
-						break;
-						case 10:
-//for the pandora, it does not make sense to offer volume stuff, since it ain't working...
-//better offer an option to change to alternative sample decoding
-//cf. http://www.gp32x.com/board/index.php?/topic/55378-snes9x4d4p-another-new-build-now-with-hi-res-and-new-rom-picker/page__view__findpost__p__958860
-#ifdef PANDORA
-							if (Settings.AltSampleDecode)
-								Settings.AltSampleDecode = 0;
+							break;
+						case 12: // set vsync
+							if (g_vsync)
+								g_vsync = 0;
 							else 
-								Settings.AltSampleDecode = 1;
-#else
-							if (keyssnes[sfc_key[LEFT_1]] == SDL_PRESSED)
-								vol -= 10;
-							else
-							if (keyssnes[sfc_key[RIGHT_1]] == SDL_PRESSED)
-								vol += 10;
-
-							if(vol>=100)
-								vol = 100;
-							else if (vol<=0)
-								vol = 0;
-#endif
-						break;
-						case 11:
-							if (keyssnes[sfc_key[A_1]] == SDL_PRESSED)
-								ShowCredit();
-						break;
-						case 12:
-							if (keyssnes[sfc_key[A_1]] == SDL_PRESSED)
-								S9xExit();
-						break;
-#ifdef PANDORA
-						case 14:
-							// cut lines from top
+								g_vsync = 1;
+							break;
+						case 13: // set display fps
+							Settings.DisplayFrameRate = !Settings.DisplayFrameRate;
+							break;
+						case 14: // set transparency
+							Settings.Transparency = !Settings.Transparency;
+							break;
+						case 15: // cut lines from top
 							if (keyssnes[sfc_key[RIGHT_1]] == SDL_PRESSED)
 								cut_top++;
 							else if (keyssnes[sfc_key[LEFT_1]] == SDL_PRESSED && cut_top>0)
@@ -769,57 +519,52 @@ void menu_loop(void)
 							// now force update the display, so that the new scaler is directly used (fixes some glitches)
 							S9xDeinitDisplay();
 							S9xInitDisplay(0, 0);
-						break;
-						case 15:
-							// cut lines from bottom
+							break;
+						case 16: // cut lines from bottom
 							if (keyssnes[sfc_key[RIGHT_1]] == SDL_PRESSED)
 								cut_bottom++;
 							else if (keyssnes[sfc_key[LEFT_1]] == SDL_PRESSED && cut_bottom>0)
 								cut_bottom--;
 							S9xDeinitDisplay();
 							S9xInitDisplay(0, 0);
-						break;
-						case 16:
-							// cut from the left
+							break;
+						case 17: // cut from the left
 							if (keyssnes[sfc_key[RIGHT_1]] == SDL_PRESSED)
 								cut_left++;
 							else if (keyssnes[sfc_key[LEFT_1]] == SDL_PRESSED && cut_left>0)
 								cut_left--;
 							S9xDeinitDisplay();
 							S9xInitDisplay(0, 0);
-						break;
-						case 17:
-							// cut from the right
+							break;
+						case 18: // cut from the right
 							if (keyssnes[sfc_key[RIGHT_1]] == SDL_PRESSED)
 								cut_right++;
 							else if (keyssnes[sfc_key[LEFT_1]] == SDL_PRESSED && cut_right>0)
 								cut_right--;
 							S9xDeinitDisplay();
 							S9xInitDisplay(0, 0);
-						break;
-#endif
+							break;
+						case 20:
+//offer an option to change to alternative sample decoding
+//cf. http://www.gp32x.com/board/index.php?/topic/55378-snes9x4d4p-another-new-build-now-with-hi-res-and-new-rom-picker/page__view__findpost__p__958860
+							if (Settings.AltSampleDecode)
+								Settings.AltSampleDecode = 0;
+							else 
+								Settings.AltSampleDecode = 1;
+							break;
 					}
 				}
-#endif
 
-#ifdef PANDORA
 				if(cursor==1)
-					cursor=17;
-				else if(cursor==18)	
+					cursor=20;
+				else if(cursor==21)	
 					cursor=2;
-				if(cursor==13)
-				{
+				if(cursor==5 || cursor==9 || cursor==19) {
 					if(keyssnes[sfc_key[UP_1]] == SDL_PRESSED)
 						cursor--;
 					else if(keyssnes[sfc_key[DOWN_1]] == SDL_PRESSED)
 						cursor++;
 				}
-#else
-				if(cursor==1)
-					cursor=12;	//11
-				else if(cursor==13)	//12
-					cursor=2;
-#endif
 
 				menu_dispupdate();
 				sys_sleep(1000);
@@ -827,11 +572,7 @@ void menu_loop(void)
 				break;
 		}
 	}
-#ifdef CAANOO
-	while( exit_loop!=TRUE && SDL_JoystickGetButton(keyssnes, sfc_key[QUIT])!=TRUE );
-#else
 	while( exit_loop!=TRUE && keyssnes[sfc_key[B_1]] != SDL_PRESSED );
-#endif
 
 	Scale = Scale_org;
 	Settings.SupportHiRes=highres_current;
@@ -913,8 +654,8 @@ void show_screenshot()
 {
 	int s=0;
 //	for(int y=126;y<126+80;y++){
-	for(int y=132;y<130+80;y++){
-		for(int x=248; x<248+107*2; x+=2){
+	for(int y=2;y<2+80;y++){
+		for(int x=294; x<294+107*2; x+=2){
 			uint8 *d = GFX.Screen + y*320*2 + x;
 			*d++ = snapscreen[s++];
 			*d++ = snapscreen[s++];
@@ -922,46 +663,12 @@ void show_screenshot()
 	}
 }
 
-#ifdef DINGOO
-int batt_level(void)
-{
-	FILE *FP;
-	int mvolts;
-	char buf[6]={};
-	FP = fopen("/proc/jz/battery", "rb");
-	if (!FP) return(0);
-	fgets(buf, 5, FP);
-	fclose(FP);
- 	sscanf(buf, "%d", &mvolts);
-	return (mvolts);
-}
 
-int chk_hold(void)
-{
-	FILE *FP;
-	uint32 hold=0;
-	char buf[12]={};
-	FP = fopen("/proc/jz/gpio3_pxpin", "rb");
-	if (!FP) return(0);
-	fgets(buf, 11, FP);
-	fclose(FP);
- 	sscanf(buf, "%x", &hold);
-	if((hold & 0x400000) == 0)
-		return (1);
-	else
-		return (0);
-}
-#endif
 
 void ShowCredit()
 {
-#ifdef CAANOO
-	SDL_Joystick* keyssnes = 0;
-#else
 	uint8 *keyssnes = 0;
-#endif
 	int line=0,ypix=0,maxlines=26;
-#ifdef PANDORA
 	char disptxt[100][256]={
 	"",
 	"",
@@ -990,52 +697,19 @@ void ShowCredit()
 	" WizardStan (smooth scaler)",
 	"",
 	};
-#else
-	char disptxt[100][256]={
-	"",
-	"",
-	"",
-	"",
-	"                                     ",
-	" Thank you for using this Emulator!  ",
-	"                                     ",
-	"",
-	"",
-	"",
-	"",
-	"",
-	" Created by the Snes9x team.",
-	"",
-	"",
-	" Port to libSDL by SiENcE",
-	" crankgaming.blogspot.com",
-	"",
-	" regards to joyrider & g17",
-	"",
-	"",
-	"",
-	"",
-	"",
-	"",
-	"",
-	};
-#endif
 
 	do
 	{
 		SDL_Event event;
 		SDL_PollEvent(&event);
 
-#ifdef CAANOO
-		keyssnes = SDL_JoystickOpen(0);
-#else
 		keyssnes = SDL_GetKeyState(NULL);
-#endif
 
-		for(int y=12; y<=212; y++){
-			for(int x=10; x<260*2; x+=2){
+		//draw blue screen
+		for(int y=0;y<240;y++){
+			for(int x=0;x<256*2;x+=2){
 				memset(GFX.Screen + 320*y*2+x,0x11,2);
-			}	
+			}
 		}
 		
 		for(int i=0;i<=16;i++){
@@ -1053,11 +727,7 @@ void ShowCredit()
 		S9xDeinitUpdate (320, 240);
 		sys_sleep(3000);
 	}
-#ifdef CAANOO
-	while( SDL_JoystickGetButton(keyssnes, sfc_key[B_1])!=TRUE );
-#else
 	while(keyssnes[sfc_key[B_1]] != SDL_PRESSED);
-#endif
 
 	return;
 }

@@ -114,16 +114,16 @@ pthread_mutex_t mutex;
 	#include "pandora_scaling/blitscale.h"
 	blit_scaler_option_t blit_scalers[] = {
 		// KEEP IN SYNC TO BLIT_SCALER_E or Earth Crashes Into The Sun
-		{ bs_error,            bs_invalid, 0, 0,     0, 0, "Error",           "800x480" },
-		{ bs_1to1,             bs_invalid, 800, 480, 0, 0, "1 to 1",          "800x480" },
-		{ bs_fs_4to3,          bs_valid,   800, 480, 1, 1, "HW: 4:3",         "640x480" },
-		{ bs_fs_always,        bs_valid,   800, 480, 1, 1, "HW: Fullscreen",  "800x480" },
+		{ bs_error,            bs_invalid, 0, 0,     0, 0, "          Error", "800x480" },
+		{ bs_1to1,             bs_invalid, 800, 480, 0, 0, "         1 to 1", "800x480" },
+		{ bs_fs_4to3,          bs_valid,   800, 480, 1, 1, "        HW: 4:3", "640x480" },
+		{ bs_fs_always,        bs_valid,   800, 480, 1, 1, " HW: Fullscreen", "800x480" },
 		{ bs_fs_aspect_ntsc,   bs_valid,   800, 480, 1, 1, "HW: Aspect NTSC", "585x480" },
-		{ bs_fs_aspect_pal,    bs_valid,   800, 480, 1, 1, "HW: Aspect PAL",  "512x480" },
-		{ bs_1to2_double,      bs_valid,   800, 480, 0, 1, "2x2 no-AA",       "800x480" },
-		{ bs_1to2_scale2x,     bs_valid,   800, 480, 0, 0, "2x2 Scale2x",     "800x480" },
-		{ bs_1to2_smooth,      bs_valid,   800, 480, 0, 0, "2x2 Smoothed",    "800x480" },
-		{ bs_1to32_multiplied, bs_valid,   800, 480, 0, 1, "3x2 no-AA",       "800x480" },
+		{ bs_fs_aspect_pal,    bs_valid,   800, 480, 1, 1, " HW: Aspect PAL", "512x480" },
+		{ bs_1to2_double,      bs_valid,   800, 480, 0, 1, "      2x2 no-AA", "800x480" },
+		{ bs_1to2_scale2x,     bs_valid,   800, 480, 0, 0, "    2x2 Scale2x", "800x480" },
+		{ bs_1to2_smooth,      bs_valid,   800, 480, 0, 0, "   2x2 Smoothed", "800x480" },
+		{ bs_1to32_multiplied, bs_valid,   800, 480, 0, 1, "      3x2 no-AA", "800x480" },
 // 		{ bs_1to32_smooth,         bs_invalid, 3, 2, 0,       "3x2 Smoothed", "800x480" },
 // 		{ bs_fs_aspect_multiplied, bs_invalid, 0xFF, 0xFF, 0, "Fullscreen (aspect) (unsmoothed)", "800x480" },
 // 		{ bs_fs_aspect_smooth,     bs_invalid, 0xFF, 0xFF, 0, "Fullscreen (aspect) (smoothed)", "800x480" },
@@ -416,23 +416,6 @@ int main (int argc, char **argv)
 						else
 							Settings.AltSampleDecode = 0;
 					}
-					else if (this_line.find("display_mode=") == 0)
-					{
-						this_line = this_line.substr(this_line.find("=")+1);
-						std::string current_scaler = blit_scalers [ g_scale ].desc_en;
-						int safe_abort = 0; // used to be able to break out of the loop in case something goes *really* bad!
-						while ( ( current_scaler != this_line || blit_scalers [ g_scale ].valid == bs_invalid ) && safe_abort < 20 )
-						{
-							g_scale = (blit_scaler_e) ( ( g_scale + 1 ) % bs_max );
-							current_scaler = blit_scalers [ g_scale ].desc_en;
-							++safe_abort;
-						}
-						if (safe_abort >= 20)
-						{
-							std::cerr << "unknown or broken entry for display_mode! switching to default '2x2 no-AA'." << std::endl;
-							g_scale = bs_fs_4to3;
-						}
-					}
 					else if (this_line.find("cut_top=") == 0)
 					{
 						this_line = this_line.substr(this_line.find("=")+1);
@@ -453,6 +436,23 @@ int main (int argc, char **argv)
 						this_line = this_line.substr(this_line.find("=")+1);
 						cut_right = atoi ( this_line.c_str() );
 					}
+					else if (this_line.find("display_mode=") == 0)
+					{
+						this_line = this_line.substr(this_line.find("=")+1);
+						std::string current_scaler = blit_scalers [ g_scale ].desc_en;
+						int safe_abort = 0; // used to be able to break out of the loop in case something goes *really* bad!
+						while ( ( current_scaler != this_line || blit_scalers [ g_scale ].valid == bs_invalid ) && safe_abort < 20 )
+						{
+							g_scale = (blit_scaler_e) ( ( g_scale + 1 ) % bs_max );
+							current_scaler = blit_scalers [ g_scale ].desc_en;
+							++safe_abort;
+						}
+						if (safe_abort >= 20)
+						{
+							std::cerr << "unknown or broken entry for display_mode! switching to default '2x2 no-AA'." << std::endl;
+							g_scale = bs_fs_4to3;
+						}
+					}
 					else if (this_line.find("frameskip=") == 0)
 					{
 						this_line = this_line.substr(this_line.find("=")+1);
@@ -461,20 +461,9 @@ int main (int argc, char **argv)
 					else if (this_line.find("savestate_slot=") == 0)
 					{
 						this_line = this_line.substr(this_line.find("=")+1);
-						switch(atoi ( this_line.c_str() ))
-						{
-							case 1:
-								SaveSlotNum = 1;
-							break;
-							case 2:
-								SaveSlotNum = 2;
-							break;
-							case 3:
-								SaveSlotNum = 3;
-							break;
-							default:
-								SaveSlotNum = 0;
-						}
+						SaveSlotNum = atoi ( this_line.c_str() );
+						if ( SaveSlotNum > 5 || SaveSlotNum < 0 )
+							SaveSlotNum = 0;
 					}
 					else if (this_line.find("show_fps=") == 0)
 					{
@@ -491,6 +480,14 @@ int main (int argc, char **argv)
 							Settings.Transparency = TRUE;
 						else
 							Settings.Transparency = FALSE;
+					}
+					else if (this_line.find("vsync=") == 0)
+					{
+						this_line = this_line.substr(this_line.find("=")+1);
+						if (this_line == "1")
+							g_vsync = 1;
+						else
+							g_vsync = 0;
 					}
 					else 
 					{
