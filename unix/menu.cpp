@@ -494,9 +494,9 @@ void menu_loop(void)
 							else
 								Settings.SkipFrames++;
 	
-							if(Settings.SkipFrames>=10)
+							if(Settings.SkipFrames<=0 || Settings.SkipFrames==10)
 								Settings.SkipFrames = AUTO_FRAMERATE;
-							else if (Settings.SkipFrames<=1)
+							else if (Settings.SkipFrames>=11)
 								Settings.SkipFrames = 1;
 							break;
 						case 12: // set vsync
