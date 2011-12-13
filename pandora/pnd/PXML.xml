@@ -10,7 +10,9 @@
 		</titles>
 		
 		<descriptions>
-			<description lang="en_US">Super Nintendo (SNES) emulator; derived from Snes9x4d (Dingoo) port.</description>
+			<description lang="en_US">Super Nintendo (SNES) emulator for the OpenPandora, derived from Snes9x4d (Dingoo) port.
+				
+				This SNES emulator is running pretty well; for now there are no ASM CPU cores in place, so try overclocking to keep speed up where needed. This might be remedied once someone finds the time and energy to work on things (patches are welcome! ;) ). This emulator should run all games at full speed pretty easily if you overclock a little. Press SPACE to bring up the menu. The menu lets you change scaling mode, save and load states, quit, ...</description>
 		</descriptions>
 		
 		<icon src="icon.png"/>
@@ -29,12 +31,15 @@
 		</titles>
 		<title lang="en_US">Snes9x4P</title> <!-- pre HF6 compatibility -->
 		<descriptions>
-			<description lang="en_US">Super Nintendo (SNES) emulator; derived from Snes9x4D (Dingoo) port.</description>
+			<description lang="en_US">Super Nintendo (SNES) emulator for the OpenPandora, derived from Snes9x4d (Dingoo) port.
+				
+				This SNES emulator is running pretty well; for now there are no ASM CPU cores in place, so try overclocking to keep speed up where needed. This might be remedied once someone finds the time and energy to work on things (patches are welcome! ;) ). This emulator should run all games at full speed pretty easily if you overclock a little. Press SPACE to bring up the menu. The menu lets you change scaling mode, save and load states, quit, ...</description>
 		</descriptions>
-		<description lang="en_US">Super Nintendo (SNES) emulator; derived from Snes9x4D (Dingoo) port.</description> <!-- pre HF6 compatibility -->
-
+		<description lang="en_US">Super Nintendo (SNES) emulator for the OpenPandora, derived from Snes9x4d (Dingoo) port.
+				
+				This SNES emulator is running pretty well; for now there are no ASM CPU cores in place, so try overclocking to keep speed up where needed. This might be remedied once someone finds the time and energy to work on things (patches are welcome! ;) ). This emulator should run all games at full speed pretty easily if you overclock a little. Press SPACE to bring up the menu. The menu lets you change scaling mode, save and load states, quit, ...</description> <!-- pre HF6 compatibility -->
 		<licenses>
-			<license name="as-is non-commercial" />
+			<license name="as-is non-commercial" sourcecodeurl="git://github.com/ivanovic-wesnoth/Snes9x4P.git"/>
 		</licenses>
 
 		<icon src="icon.png"/>
