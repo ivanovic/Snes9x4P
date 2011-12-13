@@ -293,7 +293,6 @@ Special thanks to:
 ==================================================================
 KNOW ISSUES (possibly outdated or not valid for the Pandora port!)
 ==================================================================
--No Fullscreen support for HighRes Games
 -known Games having issues:
 FX1
 *Stunt Race FX (Wild Trax) (graphic glitches)
