@@ -966,7 +966,6 @@ void ShowCredit()
 	char disptxt[100][256]={
 	"",
 	"",
-	"",
 	" Thank you for using this Emulator! ",
 	"",
 	"",
@@ -986,6 +985,7 @@ void ShowCredit()
 	"",
 	" Special thanks to:",
 	" EvilDragon (picklelauncher theme)",
+	" john4p (cutting borders)",
 	" Notaz (modified libSDL for Pandora)",
 	" pickle (picklelauncher, Scale2x)",
 	" WizardStan (smooth scaler)",
