@@ -1138,6 +1138,8 @@ bool8_32 S9xDeinitUpdate ( int Width, int Height ) {
 									(uint16*)(GFX.Screen), source_panewidth, Width, Height);
 				}
 				else {
+					if ( Width > 266 ) //crash in hardware mode if Width is too high... 266*3 < 800
+						Width = 256;
 					render_x_triple(destination_pointer_address, screen_pitch_half,
 									(uint16*)(GFX.Screen), source_panewidth, Width, Height);
 				}
