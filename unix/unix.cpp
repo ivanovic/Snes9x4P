@@ -1226,6 +1226,10 @@ bool8_32 S9xDeinitUpdate ( int Width, int Height ) {
 
 	// update the actual screen
 	//SDL_UpdateRect(screen,0,0,0,0);
+	// The following line only makes "real" sense if in doublebuffering mode.
+	// this is currently not working as nicely as it could/should, so not
+	// activating it. While in a swsurface this just behaves the same as a plain
+	// SDL_UpdateRect(screen,0,0,0,0);
 	SDL_Flip(screen);
 
   return(TRUE);
