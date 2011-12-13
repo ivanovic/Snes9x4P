@@ -76,6 +76,14 @@ since the details are unknown.
 Snes9x and were done by SiENcE to allow porting to various decives.
 
 
+Changes in "1.39ff.20111213.1" compared to "1.39ff.20111208.1":
+* Don't quit the emulator when pressing the 'q' button on the Keyboard.
+Quitingnow works using 'Esc' (fn+q) or via the menu.
+* Some rendering code cleanups leading to tiny (neglectible!) speed improvements
+for the HW scaled modes as well as HiRes games when using 2x2 no-AA and the rom
+requires a width of 512px.
+* Update of the README to list credits and point to the new repo at github.
+
 Changes in "1.39ff.20111208.1" compared to "1.39ff.20111207.1":
 * Added the possibility to cut black borders in the GUI (useful for SF2- and
   Final Fight-series and Batman Returns)
