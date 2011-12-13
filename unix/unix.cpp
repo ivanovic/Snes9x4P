@@ -1070,7 +1070,8 @@ bool8_32 S9xDeinitUpdate ( int Width, int Height ) {
 					g_fullscreen ? SDL_SWSURFACE|SDL_FULLSCREEN : SDL_SWSURFACE);
 		}
 		
-		render_x_single_xy((uint16*)(screen -> pixels) /*destination_pointer_address*/, (screen -> pitch) >> 1 /*screen_pitch_half*/,
+		render_x_single_xy((uint16*)(screen -> pixels) /*destination_pointer_address*/,
+						(screen -> pitch) >> 1 /*screen_pitch_half*/,
 						(uint16*)(GFX.Screen), source_panewidth, Width, Height);
 	}
 	else 
