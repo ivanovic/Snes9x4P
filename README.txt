@@ -32,7 +32,7 @@ keyboard. If you have to press several buttons at the same time this is marked
 using a '+' between the keys.
 
 SPACE - opens the menu
-q or ESC - exit the emulator
+ESC - exit the emulator
 s - change the current display mode
 Start+R - create a savestate in the currently selected slot
 Start+L - load the savestate from the currently selected slot
