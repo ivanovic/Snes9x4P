@@ -21,7 +21,6 @@
 	extern blit_scaler_option_t blit_scalers[];
 	extern blit_scaler_e g_scale;
 	extern SDL_Surface *screen,*gfxscreen;
-	extern unsigned char g_fullscreen;
 	extern int cut_top, cut_bottom, cut_left, cut_right;
 #endif
 

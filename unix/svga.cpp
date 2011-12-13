@@ -77,7 +77,6 @@ extern bool8_32 Scale;
 	#include <iostream>
 	extern blit_scaler_option_t blit_scalers[];
 	extern blit_scaler_e g_scale;
-	extern unsigned char g_fullscreen;
 #endif
 
 #ifndef _ZAURUS
@@ -114,9 +113,9 @@ void S9xInitDisplay (int /*argc*/, char ** /*argv*/)
 
 #ifdef PANDORA
 	//screen = SDL_SetVideoMode(xs * blit_scalers [ g_scale ].scale_x, ys * blit_scalers [ g_scale ].scale_y, 16,
-	//  g_fullscreen ? SDL_SWSURFACE|SDL_FULLSCREEN : SDL_SWSURFACE);
+	//			   SDL_SWSURFACE|SDL_FULLSCREEN);
  	//screen = SDL_SetVideoMode( 800 /* pandora horiz */, 480 /* pandora vert */, 16,
- 	//			   g_fullscreen ? SDL_SWSURFACE|SDL_FULLSCREEN : SDL_SWSURFACE);
+ 	//			   SDL_SWSURFACE|SDL_FULLSCREEN);
 	std::cerr << "setting video mode in S9xInitDisplay, selected mode: " << (std::string) blit_scalers [ g_scale ].desc_en << std::endl;
 	//NOTE: the following block should not be required but is left for "safety reasons"
 	if ( Settings.SupportHiRes && !(blit_scalers [ g_scale ].support_hires) ) 
@@ -126,8 +125,10 @@ void S9xInitDisplay (int /*argc*/, char ** /*argv*/)
 	}
 	
 	setenv("SDL_OMAP_LAYER_SIZE",blit_scalers [ g_scale ].layersize,1);
+// 	screen = SDL_SetVideoMode( blit_scalers [ g_scale ].res_x , blit_scalers [ g_scale ].res_y, 16,
+// 				   SDL_DOUBLEBUF|SDL_FULLSCREEN);
 	screen = SDL_SetVideoMode( blit_scalers [ g_scale ].res_x , blit_scalers [ g_scale ].res_y, 16,
-				   g_fullscreen ? SDL_SWSURFACE|SDL_FULLSCREEN : SDL_SWSURFACE);
+				   SDL_SWSURFACE|SDL_FULLSCREEN);
 
 	// for vsync
 	// WARNING! this is used as framelimiter, too! The emulator will run by far

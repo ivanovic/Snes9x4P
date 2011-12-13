@@ -134,7 +134,6 @@ pthread_mutex_t mutex;
 
 	blit_scaler_e g_scale = bs_fs_4to3;
 	//blit_scaler_e g_scale = bs_1to32_multiplied;
-	unsigned char g_fullscreen = 1;
 	unsigned char g_scanline = 0; // pixel doubling, but skipping the vertical alternate lines
 	unsigned char g_vsync = 1; // if >0, do vsync
 	int g_fb = -1; // fb for framebuffer
@@ -1066,8 +1065,11 @@ bool8_32 S9xDeinitUpdate ( int Width, int Height ) {
 			sprintf(cutborders, "%d,%d,%d,%d", cut_left, cut_right, cut_top, cut_bottom);
 			setenv("SDL_OMAP_BORDER_CUT",cutborders,1);
 
+// 			screen = SDL_SetVideoMode( Width , Height, 16,
+// 					SDL_DOUBLEBUF|SDL_FULLSCREEN);
+
 			screen = SDL_SetVideoMode( Width , Height, 16,
-					g_fullscreen ? SDL_SWSURFACE|SDL_FULLSCREEN : SDL_SWSURFACE);
+					SDL_SWSURFACE|SDL_FULLSCREEN);
 		}
 		
 		render_x_single_xy((uint16*)(screen -> pixels) /*destination_pointer_address*/,
@@ -1083,7 +1085,7 @@ bool8_32 S9xDeinitUpdate ( int Width, int Height ) {
 		//	std::cerr << "resetting video mode in S9xDeinitUpdate:v3"<< std::endl;
 		//	setenv("SDL_OMAP_LAYER_SIZE",blit_scalers [ g_scale ].layersize,1);
 		//	screen = SDL_SetVideoMode( blit_scalers [ g_scale ].res_x , blit_scalers [ g_scale ].res_y, 16,
-		//			g_fullscreen ? SDL_SWSURFACE|SDL_FULLSCREEN : SDL_SWSURFACE);
+		//			SDL_SWSURFACE|SDL_FULLSCREEN);
 		//}
 		
 		// get the pitch only once...
@@ -1214,16 +1216,17 @@ bool8_32 S9xDeinitUpdate ( int Width, int Height ) {
 						  screen->h + font_height * 3 - 2 - widescreen_center_y); // "font_height * 3 - 2" to place it in the line above the framerate counter
 	}
 
-  SDL_UnlockSurface(screen);
+	SDL_UnlockSurface(screen);
 
-  // vsync
-  if ( g_vsync && g_fb >= 0 ) {
-    int arg = 0;
-    ioctl ( g_fb, FBIO_WAITFORVSYNC, &arg );
-  }
+	// vsync
+	if ( g_vsync && g_fb >= 0 ) {
+		int arg = 0;
+		ioctl ( g_fb, FBIO_WAITFORVSYNC, &arg );
+	}
 
-  // update the actual screen
-  SDL_UpdateRect(screen,0,0,0,0);
+	// update the actual screen
+	//SDL_UpdateRect(screen,0,0,0,0);
+	SDL_Flip(screen);
 
   return(TRUE);
 }
