@@ -290,7 +290,7 @@ Supported devices:
 Blog:
 http://crankgaming.blogspot.com/
 
-Sources:
+Sources: (of the "initial" port up to version "1.39ff.20111207.1")
 svn://zwischenwelt.org:20684/dingoo/Snes9x-sdl-1.39ff
 
 Hint: I removed a speedhack from old 1.39 source, just because it only fakes fps.
