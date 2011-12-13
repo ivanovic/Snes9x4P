@@ -1623,7 +1623,7 @@ void S9xProcessEvents (bool8_32 block)
 
 				// shortcut
 #ifdef PANDORA
-				if ( (event.key.keysym.sym == SDLK_q) || (event.key.keysym.sym == SDLK_ESCAPE) )
+				if ( event.key.keysym.sym == SDLK_ESCAPE )
 				{
 					S9xExit();
 				}
