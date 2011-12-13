@@ -41,12 +41,13 @@ Start+L - load the savestate from the currently selected slot
 ========================
 Compiling Snes9x4P
 ========================
-Feel free to get yourself a checkout of it yourself and improve the emulator:
-* Get a checkout of the latest sources:
-    svn co svn://zwischenwelt.org:20684/dingoo/Snes9x-sdl-1.39ff
+Feel free to get yourself a checkout of it yourself and improve the emulator.
+The sources are now available using github to ease collaboration.
+* Clone the git repository with the latest sources
+    git clone git://github.com/ivanovic-wesnoth/Snes9x4P.git
 
 * Change into the checkout dir:
-    cd Snes9x-sdl-1.39ff
+    cd Snes9x4P
 
 * Edit Makefile.pandora and put in the correct path in the var TOOLCHAINDIR.
 
@@ -74,11 +75,11 @@ since the details are unknown.
 3) At the buttom are the changes that were done in Snes9x4X compared to mainline
 Snes9x and were done by SiENcE to allow porting to various decives.
 
+
 Changes in "1.39ff.20111208.1" compared to "1.39ff.20111207.1":
 * Added the possibility to cut black borders in the GUI (useful for SF2- and
   Final Fight-series and Batman Returns)
 * Values for cut borders automatically get stored and restored per game
-
 
 Changes in "1.39ff.20111207.1" compared to "1.39ff.20111205.2":
 * Make sure the (rather useless!) fps counter is displayed on the game screen
