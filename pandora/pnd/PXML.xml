@@ -46,12 +46,13 @@
 
 		<previewpics>
 			<pic src="screenshots/snes.png"/>
-			<pic src="screenshots/snes1.png"/>
-			<pic src="screenshots/snes2.png"/>
-			<pic src="screenshots/snes3.png"/>
-			<pic src="screenshots/snes4.png"/>
-			<pic src="screenshots/snes5.png"/>
-			<pic src="screenshots/snes6.png"/>
+			<pic src="screenshots/snes9x_actraiser2_2x2.png"/>
+			<pic src="screenshots/snes9x_actraiser2_menu.png"/>
+			<pic src="screenshots/snes9x_mario_smooth.png"/>
+			<pic src="screenshots/snes9x_mario_3x2.png"/>
+			<pic src="screenshots/snes9x_som_ingame1_2x2.png"/>
+			<pic src="screenshots/snes9x_som_ingame2_2x2.png"/>
+			<pic src="screenshots/snes9x_som_ingame2_3x2.png"/>
 		</previewpics>
 
 		<info name="Snes9x4P Documentation" type="text/plain" src="README.txt"/>
