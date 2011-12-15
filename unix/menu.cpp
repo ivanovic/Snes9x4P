@@ -366,8 +366,8 @@ void menu_dispupdate(void)
 	//show screen shot for snapshot
 	if(SaveSlotNum_old != SaveSlotNum)
 	{
-		//strcpy(temp,"Loading...");
-		//S9xDisplayString (temp, GFX.Screen +280, 640,210/*204*/);
+		strcpy(temp," Loading...");
+		S9xDisplayString (temp, GFX.Screen +320/*280*/, 640,80/*204*/);
 		//S9xDeinitUpdate (320, 240);
 		char fname[256], ext[8];
 		sprintf(ext, ".s0%d", SaveSlotNum);
@@ -447,7 +447,7 @@ void menu_loop(void)
 								memcpy(snapscreen,snapscreen_tmp,16050);
 								show_screenshot();
 								strcpy(fname," Saving...");
-								S9xDisplayString (fname, GFX.Screen +280, 640,204);
+								S9xDisplayString (temp, GFX.Screen +320/*280*/, 640,80/*204*/);
 								S9xDeinitUpdate (320, 240);
 								sprintf(ext, ".s0%d", SaveSlotNum);
 								strcpy(fname, S9xGetFilename (ext));
