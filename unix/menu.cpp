@@ -271,8 +271,8 @@ void menu_dispupdate(void)
 	strcpy(disptxt[0],"Snes9x4P v20111213");
 
 	strcpy(disptxt[1],"");
-	strcpy(disptxt[2],"Reset Game");
-	strcpy(disptxt[3],"Exit Emulator");
+	strcpy(disptxt[2],"Exit Emulator");
+	strcpy(disptxt[3],"Reset Game");
 	strcpy(disptxt[4],"Credits");
 	strcpy(disptxt[5],"------------------");
 	strcpy(disptxt[6],"Save State");
@@ -423,7 +423,11 @@ void menu_loop(void)
 				{
 					switch(cursor)
 					{
-						case 2: //reset snes9x
+						case 2: //exit snes9x
+							if (keyssnes[sfc_key[A_1]] == SDL_PRESSED)
+								S9xExit();
+							break;
+						case 3: //reset snes9x
 							if ((keyssnes[sfc_key[A_1]] == SDL_PRESSED))
 							{
 								//make sure the sram is stored before resetting the console
@@ -432,10 +436,6 @@ void menu_loop(void)
 								S9xReset();
 								exit_loop = TRUE;
 							}
-							break;
-						case 3: //exit snes9x
-							if (keyssnes[sfc_key[A_1]] == SDL_PRESSED)
-								S9xExit();
 							break;
 						case 4:
 							if (keyssnes[sfc_key[A_1]] == SDL_PRESSED)
