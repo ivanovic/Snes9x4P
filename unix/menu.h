@@ -10,4 +10,4 @@ void show_screenshot(void);
 void capt_screenshot(void);
 int batt_level(void);
 
-#endif // ___EXTRA_DEFINES_h_
+#endif // ___MENU_h_

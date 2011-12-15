@@ -1,3 +1,6 @@
+#ifndef ___KEYDEF_h_
+#define ___KEYDEF_h_
+
 /*
 #ifdef CAANOO
 
@@ -58,3 +61,4 @@
 #define CTRLR 33
 
 //#endif
+#endif // ___KEYDEF_h_
