@@ -270,7 +270,7 @@ void menu_dispupdate(void)
 
 	strcpy(disptxt[0],"Snes9x4P v20111213");
 
-	strcpy(disptxt[1],"");
+	strcpy(disptxt[1],"------------------");
 	strcpy(disptxt[2],"Exit Emulator");
 	strcpy(disptxt[3],"Reset Game");
 	strcpy(disptxt[4],"Credits");
