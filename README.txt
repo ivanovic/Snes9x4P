@@ -32,10 +32,12 @@ keyboard. If you have to press several buttons at the same time this is marked
 using a '+' between the keys.
 
 SPACE - opens the menu
-ESC - exit the emulator
-s - change the current display mode
+ESC or Start+Select+Y - exit the emulator
+Start+Select+X - reset the currently running rom
 Start+R - create a savestate in the currently selected slot
 Start+L - load the savestate from the currently selected slot
+s - change the current display mode
+t - toggle turbo mode (on or off; turbo mode setting is not stored!)
 
 
 ========================
@@ -75,6 +77,10 @@ since the details are unknown.
 3) At the buttom are the changes that were done in Snes9x4X compared to mainline
 Snes9x and were done by SiENcE to allow porting to various decives.
 
+Changes in HEAD compared to "1.39ff.20111213.1":
+* Added a "toggle turbo mode" key and mapped it to 't' on the keyboard.
+* Increased the number of savestate slots to 10 (instead of 4).
+* Updated preview pics.
 
 Changes in "1.39ff.20111213.1" compared to "1.39ff.20111208.1":
 * Don't quit the emulator when pressing the 'q' button on the Keyboard. Quiting

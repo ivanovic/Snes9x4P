@@ -110,6 +110,8 @@ pthread_mutex_t mutex;
 #include "soundux.h"
 #include "spc700.h"
 
+#include "unix/extra_defines.h"
+
 #ifdef PANDORA
 	#include "pandora_scaling/blitscale.h"
 	blit_scaler_option_t blit_scalers[] = {
@@ -155,7 +157,7 @@ pthread_mutex_t mutex;
 #endif
 
 // SaveSlotNumber
-char SaveSlotNum = 0;
+int SaveSlotNum = 0;
 
 bool8_32 Scale = FALSE;
 char msg[256];
@@ -462,7 +464,7 @@ int main (int argc, char **argv)
 					{
 						this_line = this_line.substr(this_line.find("=")+1);
 						SaveSlotNum = atoi ( this_line.c_str() );
-						if ( SaveSlotNum > 5 || SaveSlotNum < 0 )
+						if ( SaveSlotNum >= MAX_SAVE_SLOTS || SaveSlotNum < 0 )
 							SaveSlotNum = 0;
 					}
 					else if (this_line.find("show_fps=") == 0)
@@ -724,20 +726,9 @@ void S9xExit()
 		romSettingsFile << "cut_left=" << cut_left << std::endl;
 		romSettingsFile << "cut_right=" << cut_right << std::endl;
 		romSettingsFile << "frameskip=" << Settings.SkipFrames << std::endl;
-		switch(SaveSlotNum)
-		{
-			case 1:
-				romSettingsFile << "savestate_slot=1" << std::endl;
-			break;
-			case 2:
-				romSettingsFile << "savestate_slot=2" << std::endl;
-			break;
-			case 3:
-				romSettingsFile << "savestate_slot=3" << std::endl;
-			break;
-			default:
-				romSettingsFile << "savestate_slot=0" << std::endl;
-		}
+		if ( SaveSlotNum >= MAX_SAVE_SLOTS || SaveSlotNum < 0 )
+			SaveSlotNum = 0; //reset savestate_slot number to 0 if "out of bounds"
+		romSettingsFile << "savestate_slot=" << SaveSlotNum << std::endl;
 		romSettingsFile << "show_fps=" << Settings.DisplayFrameRate << std::endl;
 		romSettingsFile << "transparency=" << Settings.Transparency << std::endl;
 		romSettingsFile.close();
@@ -1653,6 +1644,9 @@ void S9xProcessEvents (bool8_32 block)
 				//RESET ROM Playback
 				else if ((keyssnes[sfc_key[SELECT_1]] == SDL_PRESSED) && (keyssnes[sfc_key[START_1]] == SDL_PRESSED) && (keyssnes[sfc_key[B_1]] == SDL_PRESSED))
 				{
+					//make sure the sram is stored before resetting the console
+					//it should work without, but better safe than sorry...
+					Memory.SaveSRAM (S9xGetFilename (".srm"));
 					S9xReset();
 				}
 				//SAVE State
@@ -1696,10 +1690,14 @@ void S9xProcessEvents (bool8_32 block)
 				// another shortcut I'm afraid
 				else if (event.key.keysym.sym == SDLK_SPACE)
 				{
-						S9xSetSoundMute(true);
-						menu_loop();
-						S9xSetSoundMute(false);
-						//S9xSetMasterVolume (vol, vol);
+					S9xSetSoundMute(true);
+					menu_loop();
+					S9xSetSoundMute(false);
+					//S9xSetMasterVolume (vol, vol);
+				}
+				else if (event.key.keysym.sym == SDLK_t)
+				{
+					Settings.TurboMode = !Settings.TurboMode;
 #endif //PANDORA
 				}
 				break;

@@ -15,6 +15,8 @@
 #include "gfx.h"
 #include "unistd.h"
 
+#include "unix/extra_defines.h"
+
 #ifdef PANDORA
 	#include <iostream>
 	#include "pandora_scaling/blitscale.h"
@@ -27,7 +29,7 @@
 
 extern Uint16 sfc_key[256];
 extern bool8_32 Scale;
-extern char SaveSlotNum;
+extern int SaveSlotNum;
 extern short vol;
 
 extern void S9xDisplayString (const char *string, uint8 *, uint32, int ypos);
@@ -408,6 +410,9 @@ void menu_loop(void)
 						case 2: //reset snes9x
 							if ((keyssnes[sfc_key[A_1]] == SDL_PRESSED))
 							{
+								//make sure the sram is stored before resetting the console
+								//it should work without, but better safe than sorry...
+								Memory.SaveSRAM (S9xGetFilename (".srm"));
 								S9xReset();
 								exit_loop = TRUE;
 							}
@@ -451,14 +456,14 @@ void menu_loop(void)
 							if (keyssnes[sfc_key[LEFT_1]] == SDL_PRESSED)
 							{
 								if ( SaveSlotNum == 0 )
-									SaveSlotNum = 3;
+									SaveSlotNum = MAX_SAVE_SLOTS-1; // slots start at 0, so 10 slots means slot 0 to 9
 								else
 									--SaveSlotNum;
 							}
 							else
 							if (keyssnes[sfc_key[RIGHT_1]] == SDL_PRESSED)
 							{
-								if ( SaveSlotNum == 3 )
+								if ( SaveSlotNum == MAX_SAVE_SLOTS-1 ) // slots start at 0, so 10 slots means slot 0 to 9
 									SaveSlotNum = 0;
 								else
 									++SaveSlotNum;
