@@ -16,6 +16,7 @@
 #include "unistd.h"
 
 #include "unix/extra_defines.h"
+#include "unix/menu.h"
 
 #ifdef PANDORA
 	#include <iostream>
@@ -44,13 +45,15 @@ int cursor = 6; //set cursor start to "save state"
 int loadcursor = 0;
 int romcount_maxrows = 16;
 
+int battery_level;
+
 char SaveSlotNum_old=255;
 bool8_32 Scale_org=Scale;
 bool8_32 highres_current = false;
 char snapscreen[17120]={};
 
 char temp[256];
-char disptxt[21][256];
+char disptxt[23][256];
 
 void sys_sleep(int us)
 {
@@ -333,10 +336,20 @@ void menu_dispupdate(void)
 		sprintf(temp,"%s  Off",disptxt[20]);
 	strcpy(disptxt[20],temp);
 	
+	strcpy(disptxt[21],"");
+	battery_level = batt_level();
+	strcpy(disptxt[22],"                   Battery:");
+	if (battery_level >= 100)
+		sprintf(temp,"%s %d%%",disptxt[22],battery_level);
+	else if (battery_level >=10)
+		sprintf(temp,"%s  %d%%",disptxt[22],battery_level);
+	else
+		sprintf(temp,"%s   %d%%",disptxt[22],battery_level);
+	strcpy(disptxt[22],temp);
 	
 
 
-	for(int i=0;i<=20;i++)
+	for(int i=0;i<=22;i++)
 	{
 		if(i==cursor)
 			sprintf(temp," >%s",disptxt[i]);
@@ -344,7 +357,10 @@ void menu_dispupdate(void)
 			sprintf(temp,"  %s",disptxt[i]);
 		strcpy(disptxt[i],temp);
 
-		S9xDisplayString (disptxt[i], GFX.Screen, 640,i*10+50);
+		if ( i<=21 )
+			S9xDisplayString (disptxt[i], GFX.Screen, 640,i*10+50);
+		else //put the last line (for the battery indicator) a little lower than the rest
+			S9xDisplayString (disptxt[i], GFX.Screen, 640,i*10+55);
 	}
 
 	//show screen shot for snapshot
@@ -668,7 +684,25 @@ void show_screenshot()
 	}
 }
 
-
+int batt_level(void)
+{
+	char temp[LINE_MAX];
+	FILE *f;
+	int percentage;
+	/* capacity */
+	f = fopen("/sys/class/power_supply/bq27500-0/capacity", "r");
+	if(f)
+	{
+		//fgets( temp, LINE_MAX, f );
+		fscanf( f, "%d", &percentage);
+		fclose(f);
+		//percentage = atoi(temp);
+	}
+	else
+		percentage = 0;
+	
+	return percentage;
+}
 
 void ShowCredit()
 {
