@@ -31,6 +31,7 @@ letter means a gamepad button and small letters mean a button on the Pandoras
 keyboard. If you have to press several buttons at the same time this is marked
 using a '+' between the keys.
 
+Keys while inside the emulator and not in the emulators menu:
 SPACE - opens the menu
 ESC or Start+Select+Y - exit the emulator
 Start+Select+X - reset the currently running rom
@@ -39,10 +40,28 @@ Start+L - load the savestate from the currently selected slot
 s - change the current display mode
 t - toggle turbo mode (on or off; turbo mode setting is not stored!)
 
+Keys inside the (in emulator) menu:
+X - abort (and go back to the game)
+B - select current entry (execute something)
+Up or Down - change the selected entry
+Left or Right - change the value for the selected entry
 
-========================
+Keys inside picklelauncher (the touchscreen works, too!):
+Esc - leave picklelauncher
+Up - one entry up in the list
+Down - one entry down in the list
+Right - ten entries down in the list
+Left - ten entries up in the list
+A - switch into the marked folder
+X - one folder down
+B - switch into the marked folder or start the selected rom
+any letter on the keyboard - filter for roms with the selected letter(s)
+backspace - remove last entered letter
+
+
+==================
 Compiling Snes9x4P
-========================
+==================
 Feel free to get yourself a checkout of it yourself and improve the emulator.
 The sources are now available using github to ease collaboration.
 * Clone the git repository with the latest sources
