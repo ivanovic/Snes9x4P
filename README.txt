@@ -96,8 +96,9 @@ since the details are unknown.
 3) At the buttom are the changes that were done in Snes9x4X compared to mainline
 Snes9x and were done by SiENcE to allow porting to various decives.
 
-Changes in HEAD compared to "1.39ff.20111213.1":
+Changes in "1.39ff.20111215.1" compared to "1.39ff.20111213.1":
 * Added a "toggle turbo mode" key and mapped it to 't' on the keyboard.
+* Added a battery level indicator in the menu.
 * Increased the number of savestate slots to 10 (instead of 4).
 * Updated preview pics.
 

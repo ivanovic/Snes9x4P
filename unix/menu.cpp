@@ -114,7 +114,7 @@ void loadmenu_dispupdate(int romcount)
 	}
 
 
-	strcpy(disptxt[0],"  Snes9x4P v20111213");
+	strcpy(disptxt[0],"  Snes9x4P v20111215");
 
 	//copy roms filenames to disp[] cache
 	for(int i=0;i<=romcount_maxrows;i++)
@@ -268,7 +268,7 @@ void menu_dispupdate(void)
 	}
 	
 
-	strcpy(disptxt[0],"Snes9x4P v20111213");
+	strcpy(disptxt[0],"Snes9x4P v20111215");
 
 	strcpy(disptxt[1],"------------------");
 	strcpy(disptxt[2],"Exit Emulator");
