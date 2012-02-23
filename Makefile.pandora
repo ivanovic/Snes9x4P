@@ -142,7 +142,7 @@ GASM	= ${BINPATH}/$(ARCH)-g++
 
 INCLUDES=
 
-OPTIMISE = -D_ZAURUS -O3 -march=armv7-a -mcpu=cortex-a8 -mfpu=neon -mfloat-abi=softfp -msoft-float -ffast-math -fsingle-precision-constant
+OPTIMISE = -D_ZAURUS -O3 -march=armv7-a -mcpu=cortex-a8 -mfpu=neon -mfloat-abi=softfp -msoft-float -ffast-math -fsingle-precision-constant -fvariable-expansion-in-unroller -funsafe-loop-optimizations -Wunsafe-loop-optimizations
 
 CCFLAGS = $(OPTIMISE) \
 -I. \
