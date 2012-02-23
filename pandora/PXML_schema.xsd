@@ -118,7 +118,7 @@
 		<xs:attribute name="email" use="optional" type="emailAddress" />
 	</xs:complexType>
 	
-	<!-- type used for version informations (full entry as well as os version) -->
+	<!-- type used for version informations (full entry) -->
 	<xs:complexType name="app_version_info">
 		<xs:attribute name="major" use="required" type="versionNumber" />
 		<xs:attribute name="minor" use="required" type="versionNumber" />
@@ -126,11 +126,12 @@
 		<xs:attribute name="build" use="required" type="versionNumber" />
 		<xs:attribute name="type" use="optional" type="releaseType" />
 	</xs:complexType>
+	<!-- type used for OS version information (os version only) -->
 	<xs:complexType name="os_version_info">
-		<xs:attribute name="major" use="required" type="versionNumber" />
-		<xs:attribute name="minor" use="required" type="versionNumber" />
-		<xs:attribute name="release" use="required" type="versionNumber" />
-		<xs:attribute name="build" use="required" type="versionNumber" />
+		<xs:attribute name="major" use="required" type="xs:nonNegativeInteger" />
+		<xs:attribute name="minor" use="required" type="xs:nonNegativeInteger" />
+		<xs:attribute name="release" use="required" type="xs:nonNegativeInteger" />
+		<xs:attribute name="build" use="required" type="xs:nonNegativeInteger" />
 	</xs:complexType>
 	
 	<!-- type used for exec entries -->
