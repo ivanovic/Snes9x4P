@@ -76,21 +76,21 @@ then
 		#the extracted name is without the internal PATH of the archive, so strip away this part!
 		FILENAME=`echo $FILEITEM | sed -e "s,^.*/,,g"`
 		FILENAME="/tmp/$FILENAME"
-		if [ "$REQUIRED_VERSION_FOUND" -eq "no" ]
+		if [ "$REQUIRED_VERSION_FOUND" = "yes" ]
 		then
+			./snes9x $ARGS "$FILENAME"
+		else
 #			LD_LIBRARY_PATH=lib/:$LD_LIBRARY_PATH ./snes9x $ARGS "$FILENAME"
 			LD_PRELOAD=lib/libSDL-1.2.so.0 ./snes9x $ARGS "$FILENAME"
-		else
-			./snes9x $ARGS "$FILENAME"
 		fi
 		rm "$FILENAME"
 	fi
 else
-	if [ "$REQUIRED_VERSION_FOUND" -eq "no" ]
+	if [ "$REQUIRED_VERSION_FOUND" = "yes" ]
 	then
+		./snes9x $ARGS "$1"
+	else
 #		LD_LIBRARY_PATH=lib/:$LD_LIBRARY_PATH ./snes9x $ARGS "$1"
 		LD_PRELOAD=lib/libSDL-1.2.so.0 ./snes9x $ARGS "$1"
-	else
-		./snes9x $ARGS "$1"
 	fi
 fi
