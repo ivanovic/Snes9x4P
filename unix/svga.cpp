@@ -121,7 +121,7 @@ void S9xInitDisplay (int /*argc*/, char ** /*argv*/)
 	if ( Settings.SupportHiRes && !(blit_scalers [ g_scale ].support_hires) ) 
 	{ 
 		std::cerr << "S9xInitDisplay: mode \"" << (std::string) blit_scalers [ g_scale ].desc_en << "\" not enabled for hires mode!" << std::endl;
-		g_scale = bs_fs_4to3;
+		g_scale = bs_1to2_double;
 	}
 	
 	setenv("SDL_OMAP_LAYER_SIZE",blit_scalers [ g_scale ].layersize,1);

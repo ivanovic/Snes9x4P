@@ -134,7 +134,7 @@ pthread_mutex_t mutex;
 		{ bs_fs_always_smooth,     bs_invalid, 0xFF, 0xFF, 0, "Fullscreen (smoothed)", "800x480" },  //fake used to make sure that there is no segfault when scrolling through, don't delete!
 	};
 
-	blit_scaler_e g_scale = bs_fs_4to3;
+	blit_scaler_e g_scale = bs_1to2_double;
 	//blit_scaler_e g_scale = bs_1to32_multiplied;
 	unsigned char g_scanline = 0; // pixel doubling, but skipping the vertical alternate lines
 	unsigned char g_vsync = 1; // if >0, do vsync
@@ -452,7 +452,7 @@ int main (int argc, char **argv)
 						if (safe_abort >= 20)
 						{
 							std::cerr << "unknown or broken entry for display_mode! switching to default '2x2 no-AA'." << std::endl;
-							g_scale = bs_fs_4to3;
+							g_scale = bs_1to2_double;
 						}
 					}
 					else if (this_line.find("frameskip=") == 0)
