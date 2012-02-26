@@ -96,6 +96,18 @@ since the details are unknown.
 3) At the buttom are the changes that were done in Snes9x4X compared to mainline
 Snes9x and were done by SiENcE to allow porting to various decives.
 
+Changes in "1.39ff.20120226.1" compared to "1.39ff.20111215.3":
+* Finally fixed OS Version detection.
+* Changed default scaling mode to "2x2 no-AA" to make sure that the emulator always starts even if problems with hardware acceleration might occur (eg. with the experimental kernel or further problems due to libSDL and the OS version).
+
+Changes in "1.39ff.20111215.3" compared to "1.39ff.20111215.2":
+* Switched to the latest libSDL from notaz as of his thread, not the same as in the firmware. Also changed to script invoking it so that the lib is actually preloaded correctly.
+
+Changes in "1.39ff.20111215.2" compared to "1.39ff.20111215.1":
+* Compiled using a more recent toolchain (including additional compiler flags).
+* Detect the OS version and use the system libsdl if >=HF7 is used.
+* Ship the latest libsdl from Notaz as of SuperZaxxon Beta 1.1.
+
 Changes in "1.39ff.20111215.1" compared to "1.39ff.20111213.1":
 * Added a "toggle turbo mode" key and mapped it to 't' on the keyboard.
 * Added a battery level indicator in the menu.
